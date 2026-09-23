@@ -1,0 +1,39 @@
+{
+  "name": "ratchet",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "node scripts/compile.js",
+    "test": "node --test \"test/*.test.js\"",
+    "chain": "hardhat node --port 8545",
+    "demo": "node demo/run.js",
+    "deploy": "node scripts/deploy.js",
+    "keygen": "node scripts/keygen.js"
+  },
+  "license": "MIT",
+  "description": "Pay-per-call API metering on Arc, settled with USDC payment channels.",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1",
+    "express": "^4.22.3",
+    "hardhat": "^2.29.1",
+    "solc": "^0.8.28",
+    "viem": "^2.56.8"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js",
+    "./server": "./src/server.js",
+    "./client": "./src/client.js",
+    "./voucher": "./src/voucher.js",
+    "./vault": "./src/vault.js",
+    "./usdc": "./src/usdc.js"
+  },
+  "files": [
+    "src",
+    "contracts",
+    "build",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  }
+}
