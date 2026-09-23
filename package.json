@@ -9,10 +9,11 @@
     "deploy": "node scripts/deploy.js",
     "keygen": "node scripts/keygen.js",
     "demo:service": "node demo/service.js",
-    "serve": "node service/server.js"
+    "serve": "node service/server.js",
+    "demo:verdict": "node demo/verdict.js"
   },
   "license": "MIT",
-  "description": "A code sandbox AI agents can pay for per millisecond in USDC, on Arc.",
+  "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",
     "express": "^4.22.3",
@@ -28,13 +29,16 @@
     "./voucher": "./src/voucher.js",
     "./vault": "./src/vault.js",
     "./usdc": "./src/usdc.js",
-    "./sandbox": "./src/sandbox.js"
+    "./sandbox": "./src/sandbox.js",
+    "./evaluator": "./evaluator/index.js"
   },
   "files": [
     "src",
     "service",
+    "evaluator",
     "contracts",
     "build",
+    "scripts",
     "README.md"
   ],
   "engines": {

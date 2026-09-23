@@ -1,108 +1,108 @@
-# Ratchet
+# Verdict
 
-**A code sandbox that AI agents can pay for — per millisecond, in USDC, with no account.**
+**A neutral evaluator for agent work on [Arc](https://arc.io).**
 
-An agent writes code and needs somewhere to run it. Today that means a human
-signs up, enters a credit card, manages an API key, and pays a monthly minimum
-whether the agent runs six jobs or six million.
+ERC-8183 lets one agent hire another and hold the payment in escrow. Someone
+has to decide whether the work was any good — the standard calls that role the
+**evaluator**, and it lets the client name anyone to it.
 
-This removes the human. An agent with a wallet and a budget can run code. That
-is the entire relationship: no signup, no key, no card, no subscription.
+Circle's own quickstart names the *client*. The buyer judges their own
+purchase. They can reject good work and take the escrow back, and no provider
+should accept those terms once real money is involved.
+
+That seat needs an occupant with nothing to gain from the answer. This is one.
 
 ```
-  task                   result                          time        cost
-  ────────────────────── ────────────────────────── ───────── ───────────
-  arithmetic             333283335000                555.53ms     $0.0005
-  parse + aggregate      {"apac": 239800, "emea": …  519.64ms     $0.0005
-  string work (js)       ["eht","kciuq","nworb","x…  133.82ms     $0.0003
-  heavier compute        primes under 2m: 148933     556.23ms     $0.0005
-  code that crashes      exit 1: Traceback (most r…  512.74ms     $0.0005
-  code that hangs        timed out, killed          1539.08ms      $0.001
+  1. honest provider                      2. buggy provider
+  ─────────────────────                   ─────────────────────
+  verdict: PASSED (3/3)                   verdict: FAILED (1/3)
+    pass  adds two numbers                  FAIL  adds two numbers
+    pass  handles zero                            expected "5", got "6"
+    pass  handles negatives                 pass  handles zero
+                                            FAIL  handles negatives
+  status    Completed                             expected "-2", got "-8"
+  provider  +$10.00
+  client    unchanged                      status    Rejected
+                                           provider  unchanged
+                                           client    +$10.00
 
-  now 100 runs back to back... done in 13.7s ($0.03005, $0.0003/run)
+  3. provider swaps the code after committing
+  ───────────────────────────────────────────
+  verdict: ABSTAIN
+    deliverable hashes to 0x1e3be931…, but the provider committed to 0x9f5a4eeb…
 
-  agent spent            $0.0333 across 106 runs
-  average per run        $0.000314
-  authorised (ceilings)  $0.0382  ← reserved, not spent
-  never charged          $0.0049 of reserved headroom
-
-  on-chain transactions  4
-  gas paid by provider   $0.00030902
-  cost of collection     0.93% of revenue
+  status    Submitted        escrow untouched — the evaluator refused to
+  provider  unchanged        take a side. The job expires and the client
+  client    unchanged        reclaims it without anyone judging.
 ```
 
-*Measured, not estimated — `npm run demo:service` reproduces it.*
+*`npm run demo:verdict` reproduces this.*
 
 ---
 
-## Why this exists
+## How it decides
 
-Selling compute in tenth-of-a-cent units has never worked, for two reasons.
+1. **The client publishes a spec** — the tests the work must pass — and names
+   it in the job description by URI and hash.
+2. **The provider publishes a deliverable** and commits its hash on-chain via
+   `submit()`.
+3. **The evaluator fetches both**, checks each against its committed hash,
+   re-runs the tests in a sandbox, and calls `complete()` or `reject()`.
+4. **The verdict is published in full** — every test, its output, the reason it
+   passed or failed — and signed. Either party can re-run it and compare.
 
-**Collecting the money cost more than the money.** A card charge has a fixed
-fee measured in cents; an on-chain transfer costs gas. Either way, billing
-$0.0003 per run is absurd — so everyone sells subscriptions instead, and light
-users subsidise heavy ones.
+Everything is content-addressed. That is the load-bearing property: a hash
+committed on-chain *before* evaluation means neither side can swap the content
+afterwards and argue about what was really submitted.
 
-**The buyer had to be a person.** Signup, KYC, a card, a billing address. An
-autonomous agent has none of these and cannot acquire them.
+## Abstaining
 
-Both constraints have quietly lifted. Agents now do real work on their own, and
-Arc makes moving small amounts of money cheap enough to be worth doing. So the
-natural unit of sale changes from *a seat per month* to *a millisecond*.
-
-## How the billing works
-
-A **payment channel**, shaped for metered usage. It's a bar tab:
-
-1. The agent locks USDC in a vault, once.
-2. Before each run it signs a voucher: *"you may take up to $X in total."*
-   Signing is local — no transaction, no block, no wait.
-3. Each voucher's total is higher than the last. It only ratchets forward.
-4. We keep **only the newest voucher** and bin the rest. Redeeming that one
-   settles the entire history in a single transaction.
-
-Thousands of runs cost two on-chain transactions, not two thousand.
-
-Neither side can cheat. We can't forge a voucher — it needs the agent's
-signature. We can't take more than was signed for, or more than the deposit.
-The agent can't run out on the tab — the money is already locked, and reclaiming
-it starts a challenge window during which we can still redeem what we're owed.
-
-### Charging for work whose cost you don't know in advance
-
-This is the part that makes it fit compute rather than flat-rate API calls.
-
-One run takes 8ms; the next takes 4 seconds. So the voucher authorises a
-**ceiling** — the worst case for the timeout you requested — and we charge what
-the run actually used. Ask for a 30-second timeout and finish in 50ms, and you
-pay for 50ms. The ceiling only reserves headroom.
-
-That creates one subtlety worth stating plainly, because it is where a careless
-implementation would quietly overcharge. A voucher says *"you may take up to X"*,
-and redeeming one takes **all** of X. Since the newest voucher always authorises
-more than has actually been used, redeeming it would overcharge. So settlement
-uses the newest voucher whose total is at or **below** genuine usage. It lags
-real usage by roughly one run, and is never a penny more than owed.
-
-`test/meter.test.js` asserts this directly: *"never settles a voucher worth more
-than was actually used."*
-
-## Pricing
+There are three outcomes, not two:
 
 | | |
 |---|---|
-| Per run | $0.0002 |
-| Per second of wall time | $0.0005 |
-| Billing increment | 100ms, rounded up |
-| Max timeout | 30s |
+| `passed` | every test passed → escrow released |
+| `failed` | the work is real but wrong → escrow refused |
+| `abstain` | **we could not judge honestly → nothing happens** |
 
-A typical script costs **$0.0003** — about 3,000 runs per dollar. You are
-charged for crashes and timeouts, because the compute was spent either way.
-Malformed requests are free.
+If the deliverable won't fetch, or doesn't hash to what was committed, or the
+spec is malformed, the evaluator declines to act. It does not guess, and it
+does not default to whichever side is asking. The escrow is left alone and the
+job's own expiry returns the money to the client with no one having taken a
+view.
 
-`GET /pricing` returns this as JSON, along with the payment terms. It needs no
-payment.
+An evaluator that guesses under uncertainty is worse than no evaluator, because
+both parties relied on it. Scenario 3 above is this working: the provider
+committed to good code, then served bad code from the same URL. The evaluator
+noticed, and refused to move anyone's money.
+
+## What it plugs into
+
+| | |
+|---|---|
+| **ERC-8183** | Holds the `evaluator` seat. `complete()` / `reject()` against the verdict hash. |
+| **ERC-8004** | Answers `validationRequest()` with a 0–100 `validationResponse()`. |
+
+Addresses are configuration, so the same code runs against the local mocks,
+Arc testnet, and mainnet.
+
+## Status, honestly
+
+**The market this serves does not exist yet.** Measured on 2026-09-24:
+
+- ERC-8004's registries are on Arc **testnet only** — the documented addresses
+  have no code on mainnet. No real money has ever moved through an agent job.
+- 51,664 agent identities are registered, but that is an **airdrop campaign**,
+  not agents. There's a live points program and quest campaign ahead of an
+  unconfirmed ARC token.
+- Validation traffic tells the story: ~300 addresses, almost exactly **one
+  transaction each**, over three days in September, then nothing. Real
+  validators validate repeatedly. One-and-done per address is a quest step.
+
+So this is built ahead of demand, deliberately. Arc's mainnet is days old and
+Circle is pushing the agent stack hard, with Visa, BlackRock and Mastercard as
+founding validators. Being early is a choice, not an accident — but nobody
+should read the 51k number as a market.
 
 ## Quickstart
 
@@ -111,144 +111,138 @@ npm install
 npm run build
 ```
 
-Two terminals:
-
 ```bash
-npm run chain              # local node
+npm run chain          # local node
 ```
 
 ```bash
-npm run demo:service       # the product: an agent runs code and pays
-npm run demo               # raw throughput: 1000 calls, 4 transactions
-npm test                   # 57 tests
+npm run demo:verdict   # the evaluator, four scenarios
+npm run demo:service   # the metered sandbox it runs on
+npm test               # 87 tests
 ```
 
-### Running it for real
-
-```bash
-npm run keygen -- 2                     # a provider and a payer key
-# fund both at https://faucet.circle.com (network: Arc testnet)
-
-RATCHET_DEPLOYER_KEY=0x... npm run deploy
-RATCHET_PROVIDER_KEY=0x... RATCHET_VAULT=0x... npm run serve
-```
-
-### Using it, as an agent
+## Using it
 
 ```js
-import { RatchetClient } from "ratchet/client";
+import { Evaluator } from "ratchet/evaluator";
 
-const agent = new RatchetClient({
-  wallet, publicClient, chain: arcTestnet,
-  budget: "5.00",          // hard cap; throws rather than exceed it
+const evaluator = new Evaluator({
+  publicClient, wallet,
+  jobs: AGENTIC_COMMERCE_ADDRESS,
+  validation: VALIDATION_REGISTRY_ADDRESS,
+  publish: store.publisher(),   // where verdicts go
 });
 
-const res = await agent.fetch("https://sandbox.example.com/v1/run", {
-  method: "POST",
-  headers: { "content-type": "application/json" },
-  body: JSON.stringify({ language: "python", code: "print(6*7)", timeoutMs: 5000 }),
-});
-
-const { stdout, durationMs, billing } = await res.json();
+await evaluator.scan({ fromBlock });   // find work addressed to us, judge it
 ```
 
-The first call costs a 402 round-trip while the client learns the terms and
-opens a channel. Everything after that pays up front from cache.
-`agent.summary()` reports actual spend versus authorised ceilings.
+Writing a spec:
+
+```js
+import { jobSpec, encodeJobDescription } from "ratchet/evaluator";
+
+const spec = jobSpec({
+  language: "python",
+  timeoutMs: 10_000,
+  tests: [
+    { name: "adds two numbers", stdin: "2 3", expect: { stdout: "5" } },
+    { name: "handles negatives", stdin: "-4 2", expect: { stdout: "-2" } },
+  ],
+});
+
+const { uri, hash } = store.put(spec);
+const description = encodeJobDescription({ uri, hash, summary: "sum two integers" });
+// -> pass as `description` to createJob()
+```
+
+## The sandbox underneath
+
+Re-execution is the verification method — EIP-8004's own first suggestion — so
+the evaluator is built on a metered code sandbox that also stands alone as a
+service: agents pay per millisecond in USDC, with no account and no card.
+
+```
+  106 runs · 4 on-chain transactions · $0.0003/run · collection costs 0.93% of revenue
+```
+
+That works because of **Ratchet**, a payment channel underneath: the agent
+locks USDC once, signs a cumulative voucher per call instead of transacting,
+and the provider redeems only the newest. Thousands of calls settle in two
+transactions. See `src/server.js` for the metering and the subtlety about never
+redeeming a voucher worth more than was actually used.
 
 ## Security
 
-Two separate problems: not getting robbed, and not getting owned.
+**Payment.** The vault has no owner, no admin function, no upgrade path and no
+pause. EIP-712 binds every voucher to one chain and one vault; channel ids come
+from a counter that never resets; signature malleability is rejected.
 
-### Payment
+**The sandbox.** Under Docker: no network at all, capped memory and pids,
+read-only root, dropped capabilities, non-root user, output caps, stripped
+environment. **The `process` backend is not a security boundary** — it's a bare
+child process with a timeout, fine for development, and it will let submitted
+code read your filesystem. The service warns on startup when Docker is absent.
 
-The vault is 6.4 KB with no owner, no admin function, no upgrade path and no
-pause. It holds deposits and pays them out against signatures.
-
-EIP-712 binds every voucher to one chain id and one vault address. Channel ids
-come from a counter that never resets, so a voucher from a closed channel can
-never be replayed against a later one. Signature malleability is rejected. Payouts
-forward a gas stipend and fall back to a withdrawable credit, so a contract that
-reverts on receive cannot block its counterparty.
-
-Tested adversarially: forged signatures, stale vouchers, cross-channel and
-cross-vault replay, malleated signatures, overdrafts, early sweeps, handlers
-that try to charge more than their ceiling, and 25 concurrent calls racing one
-ledger.
-
-### The sandbox
-
-Under Docker — memory and CPU caps, **no network at all**, read-only root,
-dropped capabilities, no-new-privileges, a pid limit against fork bombs, and a
-non-root user. Output is capped so a print loop can't exhaust our memory, and
-the environment is stripped so our own credentials never reach submitted code.
-
-**The `process` backend is not a security boundary.** It's a bare child process
-with a timeout — convenient for development, and it will happily let submitted
-code read your filesystem and open sockets. The service prints a warning on
-startup if Docker isn't available. Don't accept untrusted callers without it.
+**87 tests**, mostly adversarial: forged and malleated signatures, stale-voucher
+replay, cross-channel and cross-vault replay, overdrafts, early sweeps,
+concurrent calls racing one ledger, content swapped after commitment, specs
+that assert nothing, handlers charging past their ceiling, and a restarted
+evaluator trying to settle a job twice.
 
 ## What this is not
 
-- **Not audited.** 57 tests are not an audit. Don't put real money on it yet.
-- **The ledger is in memory.** A restart loses unsettled vouchers — not funds
-  already on-chain, but the un-redeemed tail. `settleAll()` runs on SIGINT/SIGTERM
-  to limit the damage, but a crash still costs you. `MemoryLedger` is a
-  four-method interface; back it with Postgres before production. **This is the
-  biggest gap between this and a real deployment.**
-- **Cold starts dominate.** Python takes ~500ms to start, which is most of the
-  bill for a short script. A warm pool of pre-started sandboxes would cut the
-  typical cost several-fold, and is the obvious next optimisation.
-- **One channel per provider.** Paying fifty services means fifty deposits.
-- **Trust within a call.** The agent authorises before seeing the result, so a
-  dishonest provider could bill for garbage. Reputation and dispute mechanisms
-  are out of scope here.
-- **Nobody is buying yet.** The tech works. Whether agents actually show up to
-  buy compute this way is the open question, and no amount of code answers it.
+- **Not audited.** 87 tests are not an audit.
+- **The ledger is in memory.** A crash loses unsettled vouchers — not on-chain
+  funds, but the un-redeemed tail. Back `MemoryLedger` with Postgres before
+  production. Biggest gap between this and a real deployment.
+- **Only verifiable work.** Re-execution judges code, computation, data
+  transforms. It cannot tell you whether marketing copy is good. Start where
+  the answer is checkable.
+- **The evaluator is trusted, not trustless.** Verdicts are signed, published
+  in full, and reproducible, so cheating is *detectable* — but nothing stakes
+  or slashes it yet. EIP-8004 explicitly leaves incentives out of scope.
+- **Mocks, not the real contracts.** `contracts/Mocks.sol` implements the
+  published ERC-8183 and ERC-8004 interfaces so the thing can be tested. The
+  real registries are addressed by configuration; the mocks never ship.
 
 ## Arc notes
 
-Things that bit me, or would have:
-
 - **Native USDC is 18 decimals; the ERC-20 view of the same balance is 6.** One
-  balance, not two. Everything here is recorded in 18dp — rounding to 6dp first
-  would truncate sub-cent prices, which is exactly the range we bill in.
+  balance, not two. ERC-8183 moves the ERC-20 form; the payment channel uses
+  native. Rounding to 6dp first would truncate sub-cent prices.
 - **Block timestamps are only non-decreasing, never strictly increasing.** Every
-  deadline in the contract is a block number for that reason. At ~0.5s a block,
-  a day is 172,800.
-- **The base fee floor is 20 gwei, paid to the block producer rather than burned.**
-  Transactions below the floor are dropped silently, with no receipt.
-- **`PREVRANDAO` is always 0.** No on-chain randomness; use an oracle.
-- **Value transfers to the zero address revert.** Burning is forbidden.
+  deadline in the vault is a block number for that reason. Job deadlines come
+  from the chain's clock, never the local one.
+- **The base fee floor is 20 gwei**, paid to the block producer, not burned.
+  Transactions below it are dropped silently, with no receipt.
+- **`PREVRANDAO` is always 0.** No on-chain randomness.
+- **Arc's public RPC refuses wide `eth_getLogs` ranges.** `scan()` takes a block
+  window; use an indexing provider for anything broad.
 - The docs list the testnet RPC under `arc.io`; viem ships `arc.network`. Both
-  answer and report chain id 5042002.
+  answer, both report chain id 5042002.
 
 | | mainnet | testnet |
 |---|---|---|
 | chain id | 5042 | 5042002 |
 | RPC | `https://rpc.mainnet.arc.io` | `https://rpc.testnet.arc.io` |
-| explorer | [explorer.arc.io](https://explorer.arc.io) | [explorer.testnet.arc.io](https://explorer.testnet.arc.io) |
+| ERC-8004 | **not deployed** | `0x8004A8…` / `0x8004B6…` / `0x8004Cb…` |
 | faucet | — | [faucet.circle.com](https://faucet.circle.com) |
 
 ## Layout
 
 ```
-service/            the product — sandbox API and its rate card
-  index.js          routes, wired to the meter
-  pricing.js        what a run costs
-  server.js         standalone entry point
+evaluator/          the product
+  spec.js           the Verdict protocol — specs, deliverables, canonical hashing
+  verify.js         resolve, check commitments, run, decide (incl. abstain)
+  index.js          holds the seat: ERC-8183 and ERC-8004 actions
+  abi.js            published interfaces + known registry addresses
+  store.js          content-addressed document store
 
-src/                the billing engine
-  sandbox.js        isolated execution (docker | process)
-  server.js         metering middleware, reservations, settlement policy
-  client.js         agent-side fetch wrapper
-  voucher.js        EIP-712 signing and wire format
-  vault.js          contract calls
-  usdc.js           18dp/6dp handling
-
-contracts/RatchetVault.sol   the whole protocol, 6.4 KB
-test/               57 tests, mostly about cheating
-demo/               service.js (the product), run.js (raw throughput)
+service/            the metered sandbox, also sellable on its own
+src/                sandbox, payment channel, metering, client
+contracts/          RatchetVault.sol + Mocks.sol (test scaffolding)
+test/               87 tests
+demo/               verdict.js, service.js, run.js
 ```
 
 ## License
