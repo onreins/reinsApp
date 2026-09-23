@@ -84,6 +84,23 @@ describe("opening channels", () => {
     );
   });
 
+  test("rejects a challenge window long enough to brick the channel", async () => {
+    // block.number + challengeBlocks must fit uint64, or initiateClose reverts
+    // forever under checked arithmetic and the payer strands their own funds.
+    const vault = await deployVault(0);
+    await expectRevert(
+      openChannel({
+        wallet: payer,
+        publicClient,
+        vault,
+        provider: PROVIDER,
+        deposit: usdc("1"),
+        challengeBlocks: 2n ** 64n - 1n,
+      }),
+      "ChallengeTooLong",
+    );
+  });
+
   test("rejects an empty deposit", async () => {
     const vault = await deployVault(0);
     await expectRevert(
@@ -299,11 +316,48 @@ describe("closing", () => {
     const providerBefore = await balanceOf(PROVIDER);
 
     const voucher = await voucherFor(vault, channelId, usdc("7.5"));
-    await claimAndClose({ wallet: stranger, publicClient, vault, voucher });
+    // The provider submits it — see the theft test below for why that matters.
+    await claimAndClose({ wallet: provider, publicClient, vault, voucher });
 
-    assert.equal((await balanceOf(PROVIDER)) - providerBefore, usdc("7.5"));
+    // The provider pays gas here, so compare against the payer's clean delta
+    // and assert the provider simply came out ahead.
+    assert.ok((await balanceOf(PROVIDER)) > providerBefore);
     assert.equal((await balanceOf(PAYER)) - payerBefore, usdc("2.5"));
     await expectRevert(getChannel({ publicClient, vault, channelId }), "ChannelNotFound");
+  });
+
+  test("a payer cannot close the channel and destroy an unsettled voucher", async () => {
+    // Regression for a real hole: claimAndClose had no caller check, and the
+    // payer is the only party who signs vouchers. So a payer could mint a
+    // minimal ascending voucher, close the channel themselves, and make the
+    // provider's held voucher for delivered work permanently unredeemable —
+    // paying a single wei for it. Measured at $93 destroyed before the fix.
+    const { vault, channelId } = await setup({ deposit: usdc("100") });
+
+    await claim({
+      wallet: provider,
+      publicClient,
+      vault,
+      voucher: await voucherFor(vault, channelId, usdc("2")),
+    });
+
+    // The provider is holding this, unsettled, while batching.
+    const earned = await voucherFor(vault, channelId, usdc("95"));
+
+    const rug = await voucherFor(vault, channelId, usdc("2") + 1n);
+    await expectRevert(
+      claimAndClose({ wallet: payer, publicClient, vault, voucher: rug }),
+      "NotProvider",
+    );
+    await expectRevert(
+      claimAndClose({ wallet: stranger, publicClient, vault, voucher: rug }),
+      "NotProvider",
+    );
+
+    // The channel survived, so the earned voucher is still good.
+    const before = await balanceOf(PROVIDER);
+    await claim({ wallet: stranger, publicClient, vault, voucher: earned });
+    assert.equal((await balanceOf(PROVIDER)) - before, usdc("93"));
   });
 
   test("a closing channel cannot be topped up", async () => {

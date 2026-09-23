@@ -43,6 +43,13 @@ contract RatchetVault {
     ///      vouchers before a payer can walk away with the balance.
     uint64 public constant MIN_CHALLENGE_BLOCKS = 7_500;
 
+    /// @dev Roughly a year at 0.5s blocks. Without a ceiling, a payer could open
+    ///      a channel whose `block.number + challengeBlocks` overflows uint64,
+    ///      which makes `initiateClose` revert forever and strands their own
+    ///      remainder. Checked arithmetic turns that into a permanent brick
+    ///      rather than a wrap, so it is refused at the door.
+    uint64 public constant MAX_CHALLENGE_BLOCKS = 63_072_000;
+
     /// @dev Gas forwarded to a payout recipient. Anything needing more than this gets
     ///      credited to `withdrawable` instead, so one awkward recipient can never
     ///      block the counterparty's settlement.
@@ -100,6 +107,8 @@ contract RatchetVault {
     error ProviderIsPayer();
     error EmptyDeposit();
     error ChallengeTooShort();
+    error ChallengeTooLong();
+    error NotProvider();
     error AlreadyClosing();
     error NotClosing();
     error ChallengeNotElapsed();
@@ -136,6 +145,7 @@ contract RatchetVault {
         if (provider == msg.sender) revert ProviderIsPayer();
         if (msg.value == 0) revert EmptyDeposit();
         if (challengeBlocks < MIN_CHALLENGE_BLOCKS) revert ChallengeTooShort();
+        if (challengeBlocks > MAX_CHALLENGE_BLOCKS) revert ChallengeTooLong();
 
         unchecked {
             channelId = keccak256(abi.encode(++_channelSalt, msg.sender, provider, block.chainid));
@@ -184,12 +194,26 @@ contract RatchetVault {
      * @notice Redeem a final voucher and close the channel immediately.
      * @dev The cooperative exit: settles what is owed and returns the remainder to
      *      the payer in the same transaction, with no challenge wait.
+     *
+     *      Provider-only, and that restriction is load-bearing. Closing skips
+     *      the challenge window and deletes the channel, which makes every
+     *      voucher the provider is still holding unredeemable. Only the party
+     *      giving up that protection may waive it.
+     *
+     *      Leaving this open to any caller was a real hole. The payer is the
+     *      sole signer of vouchers, so they could mint a minimal ascending one,
+     *      close the channel themselves, and destroy an unsettled voucher for
+     *      work already delivered — paying a single wei for it. Relaying on the
+     *      provider's behalf would need a separate provider-signed
+     *      authorisation, not an open door on msg.sender.
      */
     function claimAndClose(bytes32 channelId, uint256 cumulativeAmount, bytes calldata signature)
         external
         nonReentrant
     {
         Channel storage ch = _channels[channelId];
+        if (msg.sender != ch.provider) revert NotProvider();
+
         uint256 owed = _applyVoucher(ch, channelId, cumulativeAmount, signature);
 
         address provider = ch.provider;

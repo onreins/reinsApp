@@ -42,6 +42,18 @@ export const ACCEPT_HEADER = "x-ratchet-accept";
 const VOUCHER_RING = 64;
 
 /**
+ * How long a cached view of a channel stays trusted.
+ *
+ * `closeAtBlock` is read when a channel is first loaded. If a payer calls
+ * `initiateClose()` afterwards, nothing tells this process — so without a
+ * re-check the provider keeps serving metered work against a channel that is
+ * counting down to a unilateral sweep, and may not settle before it fires.
+ * Re-reading on every request would defeat the point of a payment channel, so
+ * the exposure is bounded by time instead.
+ */
+const CHANNEL_TTL_MS = 30_000;
+
+/**
  * In-memory ledger of what each channel owes us.
  *
  * Production deployments should swap this for something durable — losing it
@@ -131,6 +143,7 @@ export function meter(opts) {
       vouchers: [], // recent vouchers, ascending
       settleable: null, // newest voucher with cumulative <= owed
       calls: 0,
+      checkedAt: Date.now(), // when closeAtBlock was last read from chain
     });
   }
 
@@ -155,6 +168,7 @@ export function meter(opts) {
     assertServable(onChain);
     state.deposit = onChain.deposit;
     state.settled = onChain.claimed;
+    state.checkedAt = Date.now();
     return state;
   }
 
@@ -225,6 +239,11 @@ export function meter(opts) {
     try {
       await withChannelLock(voucher.channelId, async () => {
         state = ledger.get(voucher.channelId) ?? (await loadChannel(voucher.channelId));
+
+        // A payer can start closing at any time without telling us. Re-read
+        // periodically so we stop metering against a channel whose challenge
+        // window is already running down.
+        if (Date.now() - state.checkedAt > CHANNEL_TTL_MS) await refresh(state);
 
         const signer = await recoverVoucherSigner({ voucher, vault, chainId });
         if (signer.toLowerCase() !== state.payer.toLowerCase()) {
