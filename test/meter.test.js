@@ -1,5 +1,6 @@
 /**
- * Metering middleware: the places a caller could get work without paying for it.
+ * Metering middleware: the places a caller could get work without paying for
+ * it, and the places a provider could charge for work it did not do.
  */
 import { test, before, after, describe } from "node:test";
 import assert from "node:assert/strict";
@@ -13,9 +14,9 @@ import {
   waitForNode,
   localChain,
 } from "./helpers.js";
-import { meter, MemoryLedger, VOUCHER_HEADER } from "../src/server.js";
+import { meter, MemoryLedger, settleAll, VOUCHER_HEADER } from "../src/server.js";
 import { signVoucher, encodeVoucher } from "../src/voucher.js";
-import { openChannel } from "../src/vault.js";
+import { openChannel, getChannel } from "../src/vault.js";
 import { usdc } from "../src/usdc.js";
 import { RatchetClient } from "../src/client.js";
 
@@ -62,7 +63,7 @@ before(async () => {
       settleAt: usdc("1000"),
     }),
   );
-  app.post("/v1/work", (req, res) => res.json({ ok: true, charged: req.ratchet.charged.toString() }));
+  app.post("/v1/work", (req, res) => res.json({ ok: true, ceiling: req.ratchet.ceiling.toString() }));
 
   server = await new Promise((resolve) => {
     const s = app.listen(0, () => resolve(s));
@@ -81,8 +82,8 @@ const voucher = (amount, opts = {}) =>
     cumulativeAmount: amount,
   });
 
-const call = (v) =>
-  fetch(`${baseUrl}/v1/work`, {
+const call = (v, url = `${baseUrl}/v1/work`) =>
+  fetch(url, {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -90,6 +91,38 @@ const call = (v) =>
     },
     body: JSON.stringify({ text: "hello" }),
   });
+
+/** Stand up an isolated metered service with its own channel and ledger. */
+async function isolated({ price = PRICE, handler, deposit = usdc("1"), settleAt = usdc("1000"), wallet } = {}) {
+  const { channelId: id } = await openChannel({
+    wallet: payer,
+    publicClient,
+    vault,
+    provider: PROVIDER,
+    deposit,
+    challengeBlocks: DAY_BLOCKS,
+  });
+
+  const own = new MemoryLedger();
+  const app = express();
+  app.use(express.json());
+  app.use(
+    "/v1",
+    meter({ price, provider: PROVIDER, vault, chain: localChain, publicClient, ledger: own, settleAt, wallet }),
+  );
+  app.post("/v1/work", handler ?? ((_req, res) => res.json({ ok: true })));
+
+  const srv = await new Promise((r) => {
+    const s = app.listen(0, () => r(s));
+  });
+
+  return {
+    channelId: id,
+    ledger: own,
+    url: `http://127.0.0.1:${srv.address().port}/v1/work`,
+    close: () => srv.close(),
+  };
+}
 
 describe("unpaid requests", () => {
   test("answers 402 with machine-readable terms", async () => {
@@ -103,7 +136,6 @@ describe("unpaid requests", () => {
     assert.equal(body.ratchet.price, PRICE.toString());
     assert.equal(body.ratchet.chainId, localChain.id);
 
-    // The same terms are on the header, so a client need not parse the body.
     const header = res.headers.get("x-ratchet-accept");
     assert.ok(header);
     assert.deepEqual(JSON.parse(Buffer.from(header, "base64").toString("utf8")), body.ratchet);
@@ -125,14 +157,11 @@ describe("paid requests", () => {
     const res = await call(await voucher(PRICE));
     assert.equal(res.status, 200);
 
-    const body = await res.json();
-    assert.equal(body.ok, true);
-    assert.equal(body.charged, PRICE.toString());
+    assert.equal((await res.json()).ok, true);
     assert.equal(res.headers.get("x-ratchet-cumulative"), PRICE.toString());
   });
 
   test("requires each call to ratchet the cumulative forward", async () => {
-    // Replaying the voucher that already paid for the previous call.
     const res = await call(await voucher(PRICE));
     assert.equal(res.status, 402);
 
@@ -153,10 +182,173 @@ describe("paid requests", () => {
     assert.equal(res.headers.get("x-ratchet-cumulative"), (PRICE * 2n).toString());
   });
 
-  test("accepts an overpayment and books all of it", async () => {
+  test("authorising extra headroom does not increase what is charged", async () => {
+    // The caller signs for far more than one call; only one call's worth is booked.
+    const before = BigInt(ledger.get(channelId).owed);
     const res = await call(await voucher(usdc("0.5")));
     assert.equal(res.status, 200);
-    assert.equal(res.headers.get("x-ratchet-cumulative"), usdc("0.5").toString());
+
+    const after = BigInt(ledger.get(channelId).owed);
+    assert.equal(after - before, PRICE, "a generous voucher must still cost one call");
+    assert.equal(res.headers.get("x-ratchet-cumulative"), after.toString());
+  });
+});
+
+describe("variable-cost work", () => {
+  test("charges what the handler reports, not the ceiling", async () => {
+    const svc = await isolated({
+      price: usdc("0.01"), // generous ceiling
+      handler: (req, res) => {
+        req.ratchet.charge(usdc("0.0004")); // actual cost
+        res.json({ ok: true });
+      },
+    });
+
+    try {
+      const v = await signVoucher({
+        wallet: payer,
+        vault,
+        chainId: localChain.id,
+        channelId: svc.channelId,
+        cumulativeAmount: usdc("0.01"),
+      });
+      const res = await call(v, svc.url);
+
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get("x-ratchet-charged"), usdc("0.0004").toString());
+      assert.equal(svc.ledger.get(svc.channelId).owed, usdc("0.0004"));
+    } finally {
+      svc.close();
+    }
+  });
+
+  test("a handler cannot charge more than the ceiling it was authorised", async () => {
+    const svc = await isolated({
+      price: usdc("0.001"),
+      handler: (req, res) => {
+        req.ratchet.charge(usdc("999")); // greedy
+        res.json({ ok: true });
+      },
+    });
+
+    try {
+      const v = await signVoucher({
+        wallet: payer,
+        vault,
+        chainId: localChain.id,
+        channelId: svc.channelId,
+        cumulativeAmount: usdc("0.001"),
+      });
+      const res = await call(v, svc.url);
+
+      assert.equal(res.status, 200);
+      assert.equal(svc.ledger.get(svc.channelId).owed, usdc("0.001"), "clamped to the ceiling");
+    } finally {
+      svc.close();
+    }
+  });
+
+  test("a handler that reports nothing is charged the full ceiling", async () => {
+    const svc = await isolated({
+      price: usdc("0.002"),
+      handler: (_req, res) => res.json({ ok: true }), // forgot to charge
+    });
+
+    try {
+      const v = await signVoucher({
+        wallet: payer,
+        vault,
+        chainId: localChain.id,
+        channelId: svc.channelId,
+        cumulativeAmount: usdc("0.002"),
+      });
+      assert.equal((await call(v, svc.url)).status, 200);
+
+      // Fail closed: we did the work, so we bill for it.
+      await new Promise((r) => setTimeout(r, 50));
+      assert.equal(svc.ledger.get(svc.channelId).owed, usdc("0.002"));
+    } finally {
+      svc.close();
+    }
+  });
+
+  test("never settles a voucher worth more than was actually used", async () => {
+    // The whole point: the caller authorises ceilings, we redeem only usage.
+    const svc = await isolated({
+      price: usdc("0.01"),
+      wallet: providerWallet,
+      settleAt: usdc("0.02"),
+      handler: (req, res) => {
+        req.ratchet.charge(usdc("0.003")); // always well under the ceiling
+        res.json({ ok: true });
+      },
+    });
+
+    try {
+      for (let i = 1; i <= 12; i++) {
+        const state = svc.ledger.get(svc.channelId);
+        const booked = state ? state.owed : 0n;
+        const v = await signVoucher({
+          wallet: payer,
+          vault,
+          chainId: localChain.id,
+          channelId: svc.channelId,
+          cumulativeAmount: booked + usdc("0.01"),
+        });
+        assert.equal((await call(v, svc.url)).status, 200);
+      }
+
+      await new Promise((r) => setTimeout(r, 1500)); // let settlement land
+
+      const state = svc.ledger.get(svc.channelId);
+      const onChain = await getChannel({ publicClient, vault, channelId: svc.channelId });
+
+      assert.equal(state.owed, usdc("0.036"), "12 calls at 0.003");
+      assert.ok(
+        onChain.claimed <= state.owed,
+        `settled ${onChain.claimed} must never exceed used ${state.owed}`,
+      );
+      assert.ok(onChain.claimed > 0n, "something should have settled");
+
+      // And the settleable voucher we are holding is likewise never excessive.
+      if (state.settleable) {
+        assert.ok(state.settleable.cumulativeAmount <= state.owed);
+      }
+    } finally {
+      svc.close();
+    }
+  });
+
+  test("settleAll drains the remaining balance without overcharging", async () => {
+    const svc = await isolated({
+      price: usdc("0.01"),
+      handler: (req, res) => {
+        req.ratchet.charge(usdc("0.002"));
+        res.json({ ok: true });
+      },
+    });
+
+    try {
+      for (let i = 1; i <= 5; i++) {
+        const booked = svc.ledger.get(svc.channelId)?.owed ?? 0n;
+        const v = await signVoucher({
+          wallet: payer,
+          vault,
+          chainId: localChain.id,
+          channelId: svc.channelId,
+          cumulativeAmount: booked + usdc("0.01"),
+        });
+        await call(v, svc.url);
+      }
+
+      await settleAll({ ledger: svc.ledger, wallet: providerWallet, publicClient, vault });
+
+      const state = svc.ledger.get(svc.channelId);
+      const onChain = await getChannel({ publicClient, vault, channelId: svc.channelId });
+      assert.ok(onChain.claimed <= state.owed);
+    } finally {
+      svc.close();
+    }
   });
 });
 
@@ -242,71 +434,41 @@ describe("forgery and abuse", () => {
 });
 
 describe("concurrency", () => {
-  test("parallel calls on one channel each pay exactly once", async () => {
-    // A fresh server + channel so the ledger starts clean.
-    const { channelId: fresh } = await openChannel({
-      wallet: payer,
-      publicClient,
-      vault,
-      provider: PROVIDER,
-      deposit: usdc("1"),
-      challengeBlocks: DAY_BLOCKS,
-    });
-
-    const freshLedger = new MemoryLedger();
-    const app = express();
-    app.use(
-      "/v1",
-      meter({
-        price: PRICE,
-        provider: PROVIDER,
-        vault,
-        chain: localChain,
-        publicClient,
-        ledger: freshLedger,
-        settleAt: usdc("1000"),
-      }),
-    );
-    app.post("/v1/work", (_req, res) => res.json({ ok: true }));
-    const s = await new Promise((r) => {
-      const srv = app.listen(0, () => r(srv));
-    });
+  test("parallel calls never book more than was authorised", async () => {
+    const svc = await isolated({ price: PRICE });
 
     try {
-      const url = `http://127.0.0.1:${s.address().port}/v1/work`;
       const N = 25;
-
-      // Pre-sign a correctly ascending ladder, then fire them all at once out of order.
       const ladder = [];
       for (let i = 1; i <= N; i++) {
-        ladder.push(await signVoucher({
-          wallet: payer,
-          vault,
-          chainId: localChain.id,
-          channelId: fresh,
-          cumulativeAmount: PRICE * BigInt(i),
-        }));
+        ladder.push(
+          await signVoucher({
+            wallet: payer,
+            vault,
+            chainId: localChain.id,
+            channelId: svc.channelId,
+            cumulativeAmount: PRICE * BigInt(i),
+          }),
+        );
       }
       const shuffled = [...ladder].sort(() => Math.random() - 0.5);
 
-      const results = await Promise.all(
-        shuffled.map((v) =>
-          fetch(url, { method: "POST", headers: { [VOUCHER_HEADER]: encodeVoucher(v) } }),
-        ),
-      );
+      const results = await Promise.all(shuffled.map((v) => call(v, svc.url)));
+      await new Promise((r) => setTimeout(r, 100)); // let finish handlers book
 
-      const ok = results.filter((r) => r.status === 200).length;
-      const state = freshLedger.get(fresh);
+      const served = results.filter((r) => r.status === 200).length;
+      const state = svc.ledger.get(svc.channelId);
+      const highest = PRICE * BigInt(N);
 
-      // Out-of-order vouchers may be refused, but the ledger must never book
-      // more revenue than the highest voucher actually authorises, and never
-      // serve more calls than were paid for.
-      assert.equal(state.owed, PRICE * BigInt(N));
-      assert.ok(ok <= N, `served ${ok} calls for ${N} vouchers`);
-      assert.equal(state.calls, ok);
-      assert.equal(state.owed / PRICE >= BigInt(ok), true);
+      // Reserving before serving means out-of-order vouchers get refused rather
+      // than double-spent. What must hold: we bill exactly once per served call,
+      // and never beyond what the caller actually signed for.
+      assert.equal(state.owed, PRICE * BigInt(served), "one charge per served call");
+      assert.ok(state.owed <= highest, "never books beyond the highest authorisation");
+      assert.equal(state.reserved, 0n, "every reservation resolved");
+      assert.ok(served > 0, "at least some calls should succeed");
     } finally {
-      s.close();
+      svc.close();
     }
   });
 });
@@ -324,16 +486,51 @@ describe("client", () => {
     const first = await agent.fetch(`${baseUrl}/v1/work`, { method: "POST" });
     assert.equal(first.status, 200);
     assert.equal(agent.stats.channelsOpened, 1);
+    assert.equal(agent.stats.negotiations, 1);
 
     // Subsequent calls reuse the channel and skip the 402 entirely.
-    const retriesAfterFirst = agent.stats.retries;
     for (let i = 0; i < 5; i++) {
-      const res = await agent.fetch(`${baseUrl}/v1/work`, { method: "POST" });
-      assert.equal(res.status, 200);
+      assert.equal((await agent.fetch(`${baseUrl}/v1/work`, { method: "POST" })).status, 200);
     }
-    assert.equal(agent.stats.retries, retriesAfterFirst, "should not re-negotiate after the first call");
-    assert.equal(agent.stats.paid, PRICE * 6n);
+
+    assert.equal(agent.stats.negotiations, 1, "should not re-negotiate after the first call");
     assert.equal(agent.stats.channelsOpened, 1);
+    assert.equal(agent.summary().spent, PRICE * 6n);
+  });
+
+  test("tracks actual spend, not authorised ceilings", async () => {
+    const svc = await isolated({
+      price: usdc("0.01"),
+      handler: (req, res) => {
+        req.ratchet.charge(usdc("0.001"));
+        res.json({ ok: true });
+      },
+    });
+
+    try {
+      const agent = new RatchetClient({
+        wallet: walletFor(7),
+        publicClient,
+        chain: localChain,
+        budget: "0.20",
+        deposit: "0.20",
+      });
+
+      for (let i = 0; i < 5; i++) {
+        assert.equal((await agent.fetch(svc.url, { method: "POST" })).status, 200);
+      }
+
+      const summary = agent.summary();
+      // Five calls at a tenth of the ceiling: spend must reflect usage.
+      assert.equal(summary.spent, usdc("0.005"));
+      assert.ok(
+        summary.authorised > summary.spent,
+        "authorisation runs ahead of spend, as designed",
+      );
+      assert.equal(summary.averagePerCall, usdc("0.001"));
+    } finally {
+      svc.close();
+    }
   });
 
   test("refuses to exceed its budget", async () => {

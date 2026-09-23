@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "scripts": {
     "build": "node scripts/compile.js",
-    "test": "node --test \"test/*.test.js\"",
+    "test": "node --test --test-concurrency=1 \"test/*.test.js\"",
     "chain": "hardhat node --port 8545",
     "demo": "node demo/run.js",
     "deploy": "node scripts/deploy.js",
-    "keygen": "node scripts/keygen.js"
+    "keygen": "node scripts/keygen.js",
+    "demo:service": "node demo/service.js",
+    "serve": "node service/server.js"
   },
   "license": "MIT",
-  "description": "Pay-per-call API metering on Arc, settled with USDC payment channels.",
+  "description": "A code sandbox AI agents can pay for per millisecond in USDC, on Arc.",
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",
     "express": "^4.22.3",
@@ -25,10 +27,12 @@
     "./client": "./src/client.js",
     "./voucher": "./src/voucher.js",
     "./vault": "./src/vault.js",
-    "./usdc": "./src/usdc.js"
+    "./usdc": "./src/usdc.js",
+    "./sandbox": "./src/sandbox.js"
   },
   "files": [
     "src",
+    "service",
     "contracts",
     "build",
     "README.md"
