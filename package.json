@@ -10,12 +10,16 @@
     "keygen": "node scripts/keygen.js",
     "demo:service": "node demo/service.js",
     "serve": "node service/server.js",
-    "demo:verdict": "node demo/verdict.js"
+    "demo:verdict": "node demo/verdict.js",
+    "serve:x402": "node service/x402-server.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",
   "dependencies": {
+    "@circle-fin/x402-batching": "^3.5.0",
     "@openzeppelin/contracts": "^5.6.1",
+    "@x402/core": "^2.27.0",
+    "@x402/evm": "^2.27.0",
     "express": "^4.22.3",
     "hardhat": "^2.29.1",
     "solc": "^0.8.28",
@@ -30,7 +34,8 @@
     "./vault": "./src/vault.js",
     "./usdc": "./src/usdc.js",
     "./sandbox": "./src/sandbox.js",
-    "./evaluator": "./evaluator/index.js"
+    "./evaluator": "./evaluator/index.js",
+    "./x402": "./service/x402.js"
   },
   "files": [
     "src",
