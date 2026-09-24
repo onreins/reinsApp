@@ -38,6 +38,20 @@ That seat needs an occupant with nothing to gain from the answer. This is one.
 
 *`npm run demo:verdict` reproduces this.*
 
+## Live on Arc testnet
+
+| contract | address |
+|---|---|
+| `AgenticCommerce` — ERC-8183 job escrow | [`0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`](https://explorer.testnet.arc.io/address/0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d) |
+| `RatchetVault` — USDC payment channels | [`0x2dcf3df463b194844bb7496ea7d32174339fc936`](https://explorer.testnet.arc.io/address/0x2dcf3df463b194844bb7496ea7d32174339fc936) |
+
+Settles in Arc's USDC (`0x3600…0000`, verified live on both testnet and mainnet). Neither
+contract has an owner, an admin function or an upgrade path. Deploying the pair cost **$0.097**
+in gas.
+
+Both were adversarially audited before deployment, and the fixes are checkable on-chain:
+`EVALUATION_WINDOW` and `MAX_CHALLENGE_BLOCKS` are readable from the live contracts.
+
 ---
 
 ## How it decides
