@@ -90,9 +90,11 @@ async function main() {
     // --- pay for work ---------------------------------------------------------
     console.log(`\n  paying for ${TASKS.length} runs:\n`);
     let spent = 0n;
+    const transfers = [];
     for (const task of TASKS) {
       const res = await agent.pay(url, { method: "POST", body: task });
       spent += res.amount;
+      if (res.transaction) transfers.push(res.transaction);
       const out = String(res.data?.stdout ?? "").trim().split("\n")[0];
       console.log(
         `    ${task.language.padEnd(10)} -> ${out.padEnd(22)}  paid $${res.formattedAmount}  ` +
@@ -111,6 +113,15 @@ async function main() {
       `  seller gateway total   $${sellerBefore.gateway.formattedTotal} -> $${sellerAfter.gateway.formattedTotal}` +
         "  (credited once Circle settles the batch)",
     );
+    // Settlement is Circle's batch cycle, not ours; ask Circle where each payment is.
+    for (const id of transfers) {
+      try {
+        const t = await agent.getTransferById(id);
+        console.log(`  transfer ${String(id).slice(0, 18)}…  status ${t.status}`);
+      } catch (err) {
+        console.log(`  transfer ${String(id).slice(0, 18)}…  status lookup failed: ${err.message}`);
+      }
+    }
     console.log(bar());
     console.log("  No account, no API key, no card. A wallet and a budget.\n");
   } finally {

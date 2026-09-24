@@ -23,7 +23,7 @@ abstains rather than guessing when it cannot verify.
 | Evaluator service | `npm run evaluator` — watches Arc, judges jobs naming its key, resumes safely after restarts; smoke-tested against the live contract |
 | Tests | 142 passing (`npm test`, needs `npm run chain` in another terminal) |
 | Audits | Two adversarial passes. Found and fixed: 1 critical, 1 high, 3 medium, 2 low |
-| Payments | An agent bought 3 sandbox runs over x402 through Circle Gateway on Arc testnet (`npm run pay:x402`). Payments verified and the buyer debited ($1.0000 → $0.9959). **The seller's Gateway credit had not appeared ~30 min later** — Circle settles in batches on its own cycle. Recheck; if it never lands, investigate the settle path |
+| Payments | An agent bought 3 sandbox runs over x402 through Circle Gateway on Arc testnet (`npm run pay:x402`). Payments verified and the buyer debited ($1.0000 → $0.9959). Circle reports each payment as `received`, the first stage of its pipeline (received, batched, confirmed, completed); the seller is credited when Circle's batch cycle advances them. Recheck with `npm run pay:x402`, which now prints each transfer's status |
 
 ## Decisions and why
 
@@ -71,9 +71,9 @@ mainnet use.
 
 ## Next engineering steps, in order
 
-1. **Confirm Gateway seller settlement.** Record Circle's transfer ids from `pay()`
-   and track them with `GatewayClient.getTransferById` to see each payment move from
-   received to completed. Until then, "seller paid" is unproven.
+1. **Watch Gateway settlement complete.** Payments are confirmed `received` by Circle;
+   check later that they reach `completed` and the seller balance rises. Until then,
+   "seller paid" is unproven even though "buyer paid" is.
 2. **Host the evaluator service** somewhere always-on, with a public status page
    listing verdicts — grant milestone 1.
 3. **Staking and challenge windows** for evaluator accountability — the problem the
