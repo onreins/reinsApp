@@ -4,7 +4,8 @@ cache/
 artifacts/
 .env
 *.log
-deployments/
+deployments/*
+!deployments/testnet.json
 .verdict-state*.json
 .verdict-state*.json.tmp
 verdicts/

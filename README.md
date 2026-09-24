@@ -2,41 +2,15 @@
 
 **A neutral evaluator for agent work on [Arc](https://arc.io).**
 
-ERC-8183 lets one agent hire another and hold the payment in escrow. Someone
-has to decide whether the work was any good — the standard calls that role the
-**evaluator**, and it lets the client name anyone to it.
+ERC-8183 lets one agent hire another and hold the payment in escrow. Someone has
+to decide whether the work was good enough to release the money — the standard
+calls that role the **evaluator**, and lets the client name anyone to it,
+including themselves. Circle's own quickstart does exactly that: the buyer marks
+their own homework, and can reject good work to take the escrow back.
 
-Circle's own quickstart names the *client*. The buyer judges their own
-purchase. They can reject good work and take the escrow back, and no provider
-should accept those terms once real money is involved.
-
-That seat needs an occupant with nothing to gain from the answer. This is one.
-
-```
-  1. honest provider                      2. buggy provider
-  ─────────────────────                   ─────────────────────
-  verdict: PASSED (3/3)                   verdict: FAILED (1/3)
-    pass  adds two numbers                  FAIL  adds two numbers
-    pass  handles zero                            expected "5", got "6"
-    pass  handles negatives                 pass  handles zero
-                                            FAIL  handles negatives
-  status    Completed                             expected "-2", got "-8"
-  provider  +$10.00
-  client    unchanged                      status    Rejected
-                                           provider  unchanged
-                                           client    +$10.00
-
-  3. provider swaps the code after committing
-  ───────────────────────────────────────────
-  verdict: ABSTAIN
-    deliverable hashes to 0x1e3be931…, but the provider committed to 0x9f5a4eeb…
-
-  status    Submitted        escrow untouched — the evaluator refused to
-  provider  unchanged        take a side. The job expires and the client
-  client    unchanged        reclaims it without anyone judging.
-```
-
-*`npm run demo:verdict` reproduces this.*
+Verdict holds that seat with nothing to gain from the answer. It re-runs the
+delivered code against tests both sides agreed to up front, pays or refuses
+accordingly, and **abstains rather than guessing** when it cannot verify.
 
 ## Live on Arc testnet
 
@@ -45,218 +19,179 @@ That seat needs an occupant with nothing to gain from the answer. This is one.
 | `AgenticCommerce` — ERC-8183 job escrow | [`0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`](https://explorer.testnet.arc.io/address/0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d) |
 | `RatchetVault` — USDC payment channels | [`0x2dcf3df463b194844bb7496ea7d32174339fc936`](https://explorer.testnet.arc.io/address/0x2dcf3df463b194844bb7496ea7d32174339fc936) |
 
-Settles in Arc's USDC (`0x3600…0000`, verified live on both testnet and mainnet). Neither
-contract has an owner, an admin function or an upgrade path. Deploying the pair cost **$0.097**
-in gas.
+Two real jobs have settled on it, with three distinct keys as client, provider
+and evaluator:
 
-Both were adversarially audited before deployment, and the fixes are checkable on-chain:
-`EVALUATION_WINDOW` and `MAX_CHALLENGE_BLOCKS` are readable from the live contracts.
+```
+  job #1  correct code   PASSED 3/3   escrow released, provider +$0.10
+  job #2  buggy code     FAILED 1/3   rejected, client refunded
+          FAIL  adds two numbers — expected stdout "5", got "6"
+```
 
----
+Every transaction is linked in [docs/live-run/LIVE-RUN.md](docs/live-run/LIVE-RUN.md).
+
+### Don't trust us — check it
+
+```bash
+npm install && npm run build
+npm run verify -- 1
+```
+
+`verify` needs no keys. It reads the job from Arc, decodes the spec from the job's
+on-chain description and the deliverable from the provider's `submit()` calldata,
+checks both against their committed hashes, **re-runs the tests itself**, and
+confirms the evaluator's on-chain decision matches. Both live jobs pass every check.
+
+That works because job inputs are stored on-chain as content-addressed `data:`
+URIs. No server of ours has to be up for anyone to re-derive a verdict.
 
 ## How it decides
 
-1. **The client publishes a spec** — the tests the work must pass — and names
-   it in the job description by URI and hash.
-2. **The provider publishes a deliverable** and commits its hash on-chain via
-   `submit()`.
-3. **The evaluator fetches both**, checks each against its committed hash,
-   re-runs the tests in a sandbox, and calls `complete()` or `reject()`.
-4. **The verdict is published in full** — every test, its output, the reason it
-   passed or failed — and signed. Either party can re-run it and compare.
+1. **The client commits a spec** — the tests the work must pass — by hash, in the
+   job description.
+2. **The provider commits a deliverable** by hash, in `submit()`.
+3. **Verdict fetches both**, checks each against its commitment, re-runs the tests
+   in a sandbox, and calls `complete()` or `reject()`.
+4. **The verdict is published in full and signed** — every test, its output, why
+   it passed or failed. Its hash is the `reason` recorded on-chain.
 
-Everything is content-addressed. That is the load-bearing property: a hash
-committed on-chain *before* evaluation means neither side can swap the content
-afterwards and argue about what was really submitted.
-
-## Abstaining
-
-There are three outcomes, not two:
+Three outcomes, not two:
 
 | | |
 |---|---|
 | `passed` | every test passed → escrow released |
 | `failed` | the work is real but wrong → escrow refused |
-| `abstain` | **we could not judge honestly → nothing happens** |
+| `abstain` | **could not verify honestly → nothing happens** |
 
-If the deliverable won't fetch, or doesn't hash to what was committed, or the
-spec is malformed, the evaluator declines to act. It does not guess, and it
-does not default to whichever side is asking. The escrow is left alone and the
-job's own expiry returns the money to the client with no one having taken a
-view.
+If the deliverable won't fetch, doesn't hash to what was committed, or the spec
+is malformed, Verdict declines to act — it does not guess, and does not default
+to whichever side is asking. The escrow is untouched, and the job's own expiry
+returns it to the client. An evaluator that guesses under uncertainty is worse
+than none, because both parties relied on it.
 
-An evaluator that guesses under uncertainty is worse than no evaluator, because
-both parties relied on it. Scenario 3 above is this working: the provider
-committed to good code, then served bad code from the same URL. The evaluator
-noticed, and refused to move anyone's money.
+## Also: compute, paid per run through Circle Gateway
 
-## What it plugs into
+The same sandbox is sold directly to agents over **x402**, settled by **Circle
+Gateway Nanopayments** — batched, and gasless for the payer. No account, no API
+key, no card. Run for real on Arc testnet:
 
-| | |
-|---|---|
-| **ERC-8183** | Holds the `evaluator` seat. `complete()` / `reject()` against the verdict hash. |
-| **ERC-8004** | Answers `validationRequest()` with a 0–100 `validationResponse()`. |
+```
+  python     -> 499999500000   paid $0.0017   (ran 454ms)
+  javascript -> 1,2,3          paid $0.0012   (ran 115ms)
+  python     -> {"ok": true}   paid $0.0012   (ran 366ms)
 
-Addresses are configuration, so the same code runs against the local mocks,
-Arc testnet, and mainnet.
+  agent gas per call   $0 — Circle batches the authorizations
+```
 
-## Status, honestly
-
-**The market this serves does not exist yet.** Measured on 2026-09-24:
-
-- ERC-8004's registries are on Arc **testnet only** — the documented addresses
-  have no code on mainnet. No real money has ever moved through an agent job.
-- 51,664 agent identities are registered, but that is an **airdrop campaign**,
-  not agents. There's a live points program and quest campaign ahead of an
-  unconfirmed ARC token.
-- Validation traffic tells the story: ~300 addresses, almost exactly **one
-  transaction each**, over three days in September, then nothing. Real
-  validators validate repeatedly. One-and-done per address is a quest step.
-
-So this is built ahead of demand, deliberately. Arc's mainnet is days old and
-Circle is pushing the agent stack hard, with Visa, BlackRock and Mastercard as
-founding validators. Being early is a choice, not an accident — but nobody
-should read the 51k number as a market.
-
-## Quickstart
+## Running it
 
 ```bash
-npm install
-npm run build
+npm install && npm run build
 ```
+
+Locally, against a throwaway chain:
 
 ```bash
-npm run chain          # local node
+npm run chain          # terminal 1
+npm test               # terminal 2 — 142 tests
+npm run demo:verdict   # the evaluator: pass, fail, and a caught content swap
 ```
+
+On Arc testnet (needs USDC from [faucet.circle.com](https://faucet.circle.com)):
 
 ```bash
-npm run demo:verdict   # the evaluator, four scenarios
-npm run demo:service   # the metered sandbox it runs on
-npm test               # 87 tests
+npm run keygen                                  # a deployer key; fund its address
+echo "RATCHET_DEPLOYER_KEY=0x..." > .env        # .env is gitignored
+
+node --env-file=.env scripts/deploy-arc.js      # AgenticCommerce (+ --with-vault)
+npm run setup:roles                             # provider + evaluator keys and gas
+npm run live:arc                                # two real verified jobs
+npm run pay:x402                                # an agent buys compute via Gateway
+npm run evaluator                               # Verdict as a service, watching Arc
 ```
 
-## Using it
-
-```js
-import { Evaluator } from "ratchet/evaluator";
-
-const evaluator = new Evaluator({
-  publicClient, wallet,
-  jobs: AGENTIC_COMMERCE_ADDRESS,
-  validation: VALIDATION_REGISTRY_ADDRESS,
-  publish: store.publisher(),   // where verdicts go
-});
-
-await evaluator.scan({ fromBlock });   // find work addressed to us, judge it
-```
-
-Writing a spec:
-
-```js
-import { jobSpec, encodeJobDescription } from "ratchet/evaluator";
-
-const spec = jobSpec({
-  language: "python",
-  timeoutMs: 10_000,
-  tests: [
-    { name: "adds two numbers", stdin: "2 3", expect: { stdout: "5" } },
-    { name: "handles negatives", stdin: "-4 2", expect: { stdout: "-2" } },
-  ],
-});
-
-const { uri, hash } = store.put(spec);
-const description = encodeJobDescription({ uri, hash, summary: "sum two integers" });
-// -> pass as `description` to createJob()
-```
-
-## The sandbox underneath
-
-Re-execution is the verification method — EIP-8004's own first suggestion — so
-the evaluator is built on a metered code sandbox that also stands alone as a
-service: agents pay per millisecond in USDC, with no account and no card.
-
-```
-  106 runs · 4 on-chain transactions · $0.0003/run · collection costs 0.93% of revenue
-```
-
-That works because of **Ratchet**, a payment channel underneath: the agent
-locks USDC once, signs a cumulative voucher per call instead of transacting,
-and the provider redeems only the newest. Thousands of calls settle in two
-transactions. See `src/server.js` for the metering and the subtlety about never
-redeeming a voucher worth more than was actually used.
+The evaluator service polls for jobs naming its key, judges them, and settles.
+It saves the last handled block atomically and only after a full pass succeeds,
+so a crash re-scans rather than skips, and it re-reads each job's status before
+acting, so a restart cannot settle anything twice.
 
 ## Security
 
-**Payment.** The vault has no owner, no admin function, no upgrade path and no
-pause. EIP-712 binds every voucher to one chain and one vault; channel ids come
-from a counter that never resets; signature malleability is rejected.
+**Contracts.** No owner, no admin function, no upgrade path, no pause. The
+protocol fee is immutable and capped at 2.5% at construction — an agent cannot
+safely commit funds to a contract whose rake can change. `selfEvaluated(jobId)`
+tells a provider in one call whether the client has named themselves evaluator.
 
-**The sandbox.** Under Docker: no network at all, capped memory and pids,
-read-only root, dropped capabilities, non-root user, output caps, stripped
-environment. **The `process` backend is not a security boundary** — it's a bare
-child process with a timeout, fine for development, and it will let submitted
-code read your filesystem. The service warns on startup when Docker is absent.
+**Two adversarial audits ran before deployment.** Found and fixed:
 
-**87 tests**, mostly adversarial: forged and malleated signatures, stale-voucher
-replay, cross-channel and cross-vault replay, overdrafts, early sweeps,
-concurrent calls racing one ledger, content swapped after commitment, specs
-that assert nothing, handlers charging past their ceiling, and a restarted
-evaluator trying to settle a job twice.
+| severity | finding |
+|---|---|
+| critical | a payer could close a payment channel and destroy the provider's unsettled vouchers — $93 of delivered work for 1 wei, reproduced on-chain before the fix |
+| high | a USDC-blocklisted recipient made settlement revert forever, letting the client reclaim escrow for delivered work; payouts now fall back to a pull credit |
+| medium | an incomplete reentrancy guard let a hook complete a job from inside `reject()` |
+| medium | a submission at the deadline could be refunded in the next block; evaluators now get a guaranteed window |
+| medium | the metering service could keep serving a channel already counting down to close |
+| low ×2 | an unbounded challenge window could brick a channel; a stale quote survived a provider change |
 
-## What this is not
+The fixes are checkable on the live contracts (`EVALUATION_WINDOW`,
+`MAX_CHALLENGE_BLOCKS`). **142 tests**, most of them adversarial.
 
-- **Not audited.** 87 tests are not an audit.
-- **The ledger is in memory.** A crash loses unsettled vouchers — not on-chain
-  funds, but the un-redeemed tail. Back `MemoryLedger` with Postgres before
-  production. Biggest gap between this and a real deployment.
-- **Only verifiable work.** Re-execution judges code, computation, data
-  transforms. It cannot tell you whether marketing copy is good. Start where
-  the answer is checkable.
-- **The evaluator is trusted, not trustless.** Verdicts are signed, published
-  in full, and reproducible, so cheating is *detectable* — but nothing stakes
-  or slashes it yet. EIP-8004 explicitly leaves incentives out of scope.
-- **Mocks, not the real contracts.** `contracts/Mocks.sol` implements the
-  published ERC-8183 and ERC-8004 interfaces so the thing can be tested. The
-  real registries are addressed by configuration; the mocks never ship.
+**The sandbox.** Under Docker: no network, capped memory and pids, read-only
+root, dropped capabilities, non-root user. **The `process` backend is not a
+security boundary** — it is for development, and the service warns when Docker
+is unavailable.
+
+## Honest limits
+
+- **Not formally audited.** Two adversarial reviews and 142 tests are not an audit.
+- **The market is early.** Agent-to-agent job volume is thin everywhere today, not
+  only on Arc. Pay-per-call x402 is where live traffic is.
+- **Only checkable work.** Re-execution judges code, computation and data transforms,
+  not subjective quality.
+- **Trusted, not trustless — yet.** Verdicts are signed and reproducible, so cheating
+  is detectable, but nothing stakes or slashes. That is the next milestone.
 
 ## Arc notes
 
+Things that bit, or would have:
+
 - **Native USDC is 18 decimals; the ERC-20 view of the same balance is 6.** One
-  balance, not two. ERC-8183 moves the ERC-20 form; the payment channel uses
-  native. Rounding to 6dp first would truncate sub-cent prices.
-- **Block timestamps are only non-decreasing, never strictly increasing.** Every
-  deadline in the vault is a block number for that reason. Job deadlines come
-  from the chain's clock, never the local one.
-- **The base fee floor is 20 gwei**, paid to the block producer, not burned.
-  Transactions below it are dropped silently, with no receipt.
-- **`PREVRANDAO` is always 0.** No on-chain randomness.
-- **Arc's public RPC refuses wide `eth_getLogs` ranges.** `scan()` takes a block
-  window; use an indexing provider for anything broad.
-- The docs list the testnet RPC under `arc.io`; viem ships `arc.network`. Both
-  answer, both report chain id 5042002.
+  balance, not two. Escrow moves the ERC-20 form; gas and payment channels use native.
+- **Block timestamps are only non-decreasing.** Deadlines that need guaranteed
+  progress use block numbers.
+- **The public RPC refuses `eth_getLogs` ranges of 10,000+ blocks** (~83 minutes), and
+  rejects multi-event topic filters. Every log query here pages and filters locally.
+- **viem caches `getBlockNumber` for ~4s.** At 0.5s blocks that hides ~8 blocks — enough
+  to miss a submission made moments ago. Head is read uncached.
+- **Base fee floor is 20 gwei**, paid to the block producer; transactions below it
+  are dropped silently.
 
 | | mainnet | testnet |
 |---|---|---|
 | chain id | 5042 | 5042002 |
-| RPC | `https://rpc.mainnet.arc.io` | `https://rpc.testnet.arc.io` |
-| ERC-8004 | **not deployed** | `0x8004A8…` / `0x8004B6…` / `0x8004Cb…` |
-| faucet | — | [faucet.circle.com](https://faucet.circle.com) |
+| USDC | `0x3600…0000` | `0x3600…0000` |
+| ERC-8004 registries | not deployed | `0x8004A8…` / `0x8004B6…` / `0x8004Cb…` |
 
 ## Layout
 
 ```
-evaluator/          the product
-  spec.js           the Verdict protocol — specs, deliverables, canonical hashing
-  verify.js         resolve, check commitments, run, decide (incl. abstain)
-  index.js          holds the seat: ERC-8183 and ERC-8004 actions
-  abi.js            published interfaces + known registry addresses
-  store.js          content-addressed document store
+contracts/
+  AgenticCommerce.sol   ERC-8183 job escrow (deployed)
+  RatchetVault.sol      USDC payment channels (deployed)
+  Mocks.sol             test scaffolding: USDC with blocklist, ERC-8004 registry, hostile hook
 
-service/            the metered sandbox, also sellable on its own
-src/                sandbox, payment channel, metering, client
-contracts/          RatchetVault.sol + Mocks.sol (test scaffolding)
-test/               87 tests
-demo/               verdict.js, service.js, run.js
+evaluator/              the product
+  spec.js               the Verdict protocol — specs, deliverables, canonical hashing
+  verify.js             resolve, check commitments, run, decide (incl. abstain)
+  index.js              holds the seat: ERC-8183 and ERC-8004 actions, paged log reads
+  daemon.js             the evaluator as a resumable service
+
+service/                sandbox compute sold over x402, settled by Circle Gateway
+src/                    sandbox, payment channel, metering, client
+scripts/                deploy, verify-job, setup-roles, keygen
+demo/                   live-arc, pay-x402, verdict, service
+docs/                   live-run evidence, grant draft, handoff
+test/                   142 tests
 ```
 
 ## License

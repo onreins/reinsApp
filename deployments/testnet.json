@@ -1,0 +1,14 @@
+{
+  "network": "testnet",
+  "chainId": 5042002,
+  "rpc": "https://rpc.testnet.arc.network",
+  "usdc": "0x3600000000000000000000000000000000000000",
+  "deployer": "0x817Bbc1726a81ef360f8971186Df8AaE0682BE38",
+  "feeBps": 0,
+  "feeRecipient": null,
+  "contracts": {
+    "agenticCommerce": "0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d",
+    "ratchetVault": "0x2dcf3df463b194844bb7496ea7d32174339fc936"
+  },
+  "deployedAt": "2026-09-24T08:30:52.442Z"
+}
