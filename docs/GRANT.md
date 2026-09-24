@@ -85,7 +85,7 @@ We have no paying users yet, and say so plainly. What exists today:
   before moving funds. Every transaction is linked in `docs/live-run/`.
 - **Circle Gateway settlement proven both ways:** an agent paid for sandbox runs over
   x402 and the seller's Gateway balance rose by exactly what the buyer was debited.
-- **190 automated tests**, most of them adversarial.
+- **192 automated tests**, most of them adversarial.
 - **Adversarial security reviews before each deployment.** Three passes so far found
   and fixed two critical, three high, four medium and two low-severity issues. They
   include a payer being able to destroy $93 of a provider's earned funds for 1 wei

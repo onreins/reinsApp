@@ -23,7 +23,7 @@ abstains rather than guessing when it cannot verify.
 | Evaluator service | `npm run evaluator` — watches Arc, judges jobs naming its key, resumes safely after restarts; smoke-tested against the live contract |
 | Arbiter API | `npm run arbiter` — any escrow sends terms + delivery, gets a signed ruling and an EIP-712 attestation bound to its contract. Optional $0.01/ruling over x402. SSRF-guarded fetching. Smoke-tested with the live evaluator key; not hosted yet |
 | On-chain verifier | `VerdictRuling` library + `ArbitratedEscrow` reference escrow, live on Arc testnet at `0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794`. Two live cases settled through the arbiter API (one paid, one refunded): [live-run/ARBITER-RUN.md](live-run/ARBITER-RUN.md) |
-| Tests | 190 passing (`npm test`, needs `npm run chain` in another terminal) |
+| Tests | 192 passing (`npm test`, needs `npm run chain` in another terminal) |
 | Audits | Two adversarial passes on the original contracts (fixed: 1 critical, 1 high, 3 medium, 2 low). A third pass on the arbiter and escrow (fixed: 1 critical SSRF bypass via IPv6 notation, 2 high resource-exhaustion issues, 1 medium paid-then-500; 1 medium reclaim/settle ordering race documented as inherent) |
 | Payments | Settled end to end. Across two runs an agent bought 6 sandbox runs over x402 through Circle Gateway on Arc testnet; the buyer's Gateway balance went $1.0000 → $0.9918 and the seller's rose to exactly $0.0082 once Circle's batch cycle completed (checked 2026-09-25) |
 | Website | `site/index.html`, published as a private claude.ai artifact. Aino-style hero, Tempo-style body, every number real. Missing: contact email, repo link |
@@ -80,12 +80,10 @@ mainnet use.
 1. **Host the arbiter and the evaluator service** somewhere always-on, with Docker
    isolation and a public page listing rulings — grant milestone 1. Needs a host
    account, which is a human decision.
-2. **Pin DNS in safe-fetch** (custom undici dispatcher) to close the rebinding gap
-   documented in `arbiter/safe-fetch.js`, before the API faces the open internet.
-3. **Staking and challenge windows** for evaluator accountability — the problem the
+2. **Staking and challenge windows** for evaluator accountability — the problem the
    ecosystem's own write-ups call unsolved; grant milestone 3.
-4. Docker isolation on by default; warm sandbox pool to cut Python cold start (~500ms).
-5. Durable ledger (Postgres) for the Ratchet path — a crash loses unsettled vouchers.
+3. Docker isolation on by default; warm sandbox pool to cut Python cold start (~500ms).
+4. Durable ledger (Postgres) for the Ratchet path — a crash loses unsettled vouchers.
    Lower priority now that Circle Gateway is the headline payment path.
 
 ## Arc facts measured the hard way
@@ -106,7 +104,9 @@ mainnet use.
   more issues, all fixed with regression tests. Deployed `ArbitratedEscrow` to Arc
   testnet and settled two live cases through the arbiter API. Confirmed Circle
   Gateway settled the x402 payments to the seller. Rewrote the grant draft around the
-  arbiter ([$35k], smaller first milestone). Testnet spend today: ~$0.12.
+  arbiter ([$35k], smaller first milestone). Closed the DNS-rebinding gap: the
+  arbiter's fetches re-check the address inside the socket's own lookup. Testnet
+  spend today: ~$0.12.
 - **2026-09-24** — deployed to Arc testnet; ran two verified jobs; built the
   chain-only verifier; built the evaluator daemon; bought compute through Circle
   Gateway; drafted the grant. Two real bugs found and fixed along the way (RPC log

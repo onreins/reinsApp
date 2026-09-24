@@ -12,12 +12,14 @@
  *   - follows at most a few redirects, re-checking every hop
  *   - streams the body and aborts past a byte ceiling, instead of reading an
  *     unbounded response into memory first
- *
- * Known limit: the address check and the connection are separate DNS lookups,
- * so a hostile resolver could rebind between them. Closing that needs a pinned
- * connection (a custom undici dispatcher), which is the next step before this
- * faces the open internet at scale.
+ *   - checks the address again inside the socket's own DNS lookup, so the
+ *     address that was checked is the address that is connected to. A hostile
+ *     resolver answering "public" to the check and "private" to the connect
+ *     (DNS rebinding) is refused at connect time.
  */
+import http from "node:http";
+import https from "node:https";
+import { lookup as dnsLookupCb } from "node:dns";
 import { lookup as dnsLookup } from "node:dns/promises";
 import { isIP } from "node:net";
 
@@ -146,29 +148,101 @@ async function readCapped(res, maxBytes) {
 }
 
 /**
+ * A dns.lookup for sockets that refuses non-public answers.
+ *
+ * Node calls this while opening the connection, so the address checked here is
+ * the one the socket then connects to: there is no second lookup to rebind.
+ */
+export function guardedLookup({ allowPrivate = false, resolver = dnsLookupCb } = {}) {
+  return (hostname, options, callback) => {
+    resolver(hostname, { ...options, all: true }, (err, addresses) => {
+      if (err) return callback(err);
+      const list = Array.isArray(addresses) ? addresses : [{ address: addresses, family: options?.family ?? 4 }];
+      if (list.length === 0) return callback(new UnsafeUrlError("host did not resolve"));
+      if (!allowPrivate && list.some((a) => isBlockedAddress(a.address))) {
+        return callback(new UnsafeUrlError("host resolves to a non-public address"));
+      }
+      if (options?.all) return callback(null, list);
+      return callback(null, list[0].address, list[0].family);
+    });
+  };
+}
+
+/** One GET over a socket whose address is checked at connect time. */
+function pinnedRequest({ maxBytes, lookup }) {
+  return (target, { signal } = {}) =>
+    new Promise((resolveReq, rejectReq) => {
+      const url = new URL(target);
+      const lib = url.protocol === "https:" ? https : http;
+      const req = lib.request(
+        url,
+        { method: "GET", lookup, signal, headers: { accept: "application/json", "user-agent": "verdict-arbiter/1" } },
+        (res) => {
+          const status = res.statusCode ?? 0;
+          const location = res.headers.location ?? null;
+          if (status < 200 || status >= 300) {
+            res.resume();
+            return resolveReq({ status, location, body: "" });
+          }
+          const chunks = [];
+          let total = 0;
+          res.on("data", (chunk) => {
+            total += chunk.length;
+            if (total > maxBytes) {
+              res.destroy();
+              rejectReq(new Error(`document exceeds ${maxBytes} bytes`));
+              return;
+            }
+            chunks.push(chunk);
+          });
+          res.on("end", () => resolveReq({ status, location, body: Buffer.concat(chunks).toString("utf8") }));
+          res.on("error", rejectReq);
+        },
+      );
+      req.on("error", rejectReq);
+      req.end();
+    });
+}
+
+/** The same shape over an injected fetch, for tests that stub the network. */
+function viaFetch(fetchImpl, maxBytes) {
+  return async (target, init = {}) => {
+    const res = await fetchImpl(target, { ...init, redirect: "manual" });
+    const body = res.ok ? await readCapped(res, maxBytes) : "";
+    return { status: res.status, location: res.headers.get("location"), body };
+  };
+}
+
+/**
  * A fetch-compatible function for `resolve()`.
  *
  * Returns a minimal Response-like object ({ ok, status, text }) so it drops
- * into the evaluator's resolve() unchanged.
+ * into the evaluator's resolve() unchanged. By default requests go over pinned
+ * sockets (see guardedLookup); pass `fetchImpl` to stub the network in tests.
  */
 export function createSafeFetch({
   maxBytes = 1024 * 1024,
   allowPrivate = false,
   lookup = dnsLookup,
-  fetchImpl = globalThis.fetch,
+  resolver,
+  fetchImpl,
 } = {}) {
+  const request = fetchImpl
+    ? viaFetch(fetchImpl, maxBytes)
+    : pinnedRequest({ maxBytes, lookup: guardedLookup({ allowPrivate, resolver }) });
+
   return async function safeFetch(target, init = {}) {
     let current = target;
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      // Fails fast with a clear reason, and covers IP literals, which never reach a DNS lookup.
       if (!allowPrivate) await assertPublicUrl(current, { lookup });
-      const res = await fetchImpl(current, { ...init, redirect: "manual" });
-      const location = res.headers.get("location");
-      if (res.status >= 300 && res.status < 400 && location) {
-        current = new URL(location, current).toString();
+      const res = await request(current, { signal: init.signal });
+      if (res.status >= 300 && res.status < 400 && res.location) {
+        current = new URL(res.location, current).toString();
         continue;
       }
-      const text = res.ok ? await readCapped(res, maxBytes) : "";
-      return { ok: res.ok, status: res.status, text: async () => text };
+      const ok = res.status >= 200 && res.status < 300;
+      return { ok, status: res.status, text: async () => res.body };
     }
     throw new UnsafeUrlError(`more than ${MAX_REDIRECTS} redirects`);
   };

@@ -113,7 +113,8 @@ is in [docs/live-run/ARBITER-RUN.md](docs/live-run/ARBITER-RUN.md)
 Set `VERDICT_PAID=1` to charge **$0.01 per ruling over x402** through Circle
 Gateway. The price is the same for every outcome, and malformed requests are
 rejected before any charge. URLs are fetched through an SSRF guard: public
-addresses only, every redirect re-checked, and bodies capped while streaming.
+addresses only, checked again at connect time so DNS rebinding fails, every
+redirect re-checked, and bodies capped while streaming.
 
 ## Also: compute, paid per run through Circle Gateway
 
@@ -139,7 +140,7 @@ Locally, against a throwaway chain:
 
 ```bash
 npm run chain          # terminal 1
-npm test               # terminal 2 — 190 tests
+npm test               # terminal 2 — 192 tests
 npm run demo:verdict   # the evaluator: pass, fail, and a caught content swap
 ```
 
@@ -184,7 +185,7 @@ tells a provider in one call whether the client has named themselves evaluator.
 | low ×2 | an unbounded challenge window could brick a channel; a stale quote survived a provider change |
 
 The fixes are checkable on the live contracts (`EVALUATION_WINDOW`,
-`MAX_CHALLENGE_BLOCKS`). **190 tests**, most of them adversarial.
+`MAX_CHALLENGE_BLOCKS`). **192 tests**, most of them adversarial.
 
 **The sandbox.** Under Docker: no network, capped memory and pids, read-only
 root, dropped capabilities, non-root user. **The `process` backend is not a
@@ -193,7 +194,7 @@ is unavailable.
 
 ## Honest limits
 
-- **Not formally audited.** Two adversarial reviews and 190 tests are not an audit.
+- **Not formally audited.** Two adversarial reviews and 192 tests are not an audit.
 - **The market is early.** Agent-to-agent job volume is thin everywhere today, not
   only on Arc. Pay-per-call x402 is where live traffic is.
 - **Only checkable work.** Re-execution judges code, computation and data transforms,
@@ -243,7 +244,7 @@ src/                    sandbox, payment channel, metering, client
 scripts/                deploy, verify-job, setup-roles, keygen
 demo/                   live-arc, pay-x402, verdict, service
 docs/                   live-run evidence, grant draft, handoff
-test/                   190 tests
+test/                   192 tests
 ```
 
 ## License

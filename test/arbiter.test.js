@@ -411,6 +411,26 @@ describe("safe fetch", () => {
     }
   });
 
+  test("refuses DNS rebinding: the address is re-checked when the socket connects", async () => {
+    // The pre-check hears a public address; the socket's own lookup hears loopback.
+    const lookup = async () => [{ address: "93.184.216.34", family: 4 }];
+    const resolver = (_host, _opts, cb) => cb(null, [{ address: "127.0.0.1", family: 4 }]);
+    const safeFetch = createSafeFetch({ lookup, resolver });
+    await assert.rejects(safeFetch("http://rebind.example/terms.json"), /non-public/);
+  });
+
+  test("caps the body on the real socket path too", async () => {
+    const big = await serve(
+      (await import("express")).default().get("/big", (_req, res) => res.send("x".repeat(4096))),
+    );
+    try {
+      const safeFetch = createSafeFetch({ allowPrivate: true, maxBytes: 1024 });
+      await assert.rejects(safeFetch(`${big.base}/big`), /exceeds 1024 bytes/);
+    } finally {
+      big.server.close();
+    }
+  });
+
   test("the open arbiter abstains rather than fetch a private URL", async () => {
     const terms = store.put(TERMS);
     const res = await post(open.base, "/v1/rulings", {
