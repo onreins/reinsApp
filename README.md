@@ -69,6 +69,45 @@ to whichever side is asking. The escrow is untouched, and the job's own expiry
 returns it to the client. An evaluator that guesses under uncertainty is worse
 than none, because both parties relied on it.
 
+## For any escrow: the arbiter API
+
+The evaluator above serves jobs on our own ERC-8183 escrow. Escrow protocols that
+already hold funds can ask for a ruling directly:
+
+```bash
+npm run arbiter          # POST /v1/rulings on :4080, signed by RATCHET_EVALUATOR_KEY
+```
+
+```jsonc
+// POST /v1/rulings
+{
+  "terms":    { "uri": "https://…/terms.json", "hash": "0x3e22…" },  // or { "document": {…} }
+  "delivery": { "uri": "ipfs://…",             "hash": "0xadda…" },
+  "attest":   { "chainId": 5042002, "escrow": "0xYourEscrow", "caseId": "0x…" }
+}
+```
+
+The response carries the full ruling, a signature over its hash, and, when `attest`
+is given, an **EIP-712 attestation** bound to that escrow, that case and those exact
+commitments:
+
+```
+Ruling(bytes32 caseId, uint8 outcome, uint8 score,
+       bytes32 rulingHash, bytes32 termsHash, bytes32 deliveryHash)
+```
+
+Your contract verifies it with the `VerdictRuling` library in
+`contracts/ArbitratedEscrow.sol`: check the signer is the arbiter you named, check the
+hashes equal what the parties committed, then pay (`1`) or refund (`2`). An abstain
+(`3`) must move nothing. `ArbitratedEscrow` is a complete reference escrow built that
+way, and its tests show it refusing forged signers, attestations made for a different
+escrow, rulings about a different delivery, malleable signatures, and abstains.
+
+Set `VERDICT_PAID=1` to charge **$0.01 per ruling over x402** through Circle
+Gateway. The price is the same for every outcome, and malformed requests are
+rejected before any charge. URLs are fetched through an SSRF guard: public
+addresses only, every redirect re-checked, and bodies capped while streaming.
+
 ## Also: compute, paid per run through Circle Gateway
 
 The same sandbox is sold directly to agents over **x402**, settled by **Circle
@@ -93,7 +132,7 @@ Locally, against a throwaway chain:
 
 ```bash
 npm run chain          # terminal 1
-npm test               # terminal 2 — 142 tests
+npm test               # terminal 2 — 190 tests
 npm run demo:verdict   # the evaluator: pass, fail, and a caught content swap
 ```
 
@@ -134,7 +173,7 @@ tells a provider in one call whether the client has named themselves evaluator.
 | low ×2 | an unbounded challenge window could brick a channel; a stale quote survived a provider change |
 
 The fixes are checkable on the live contracts (`EVALUATION_WINDOW`,
-`MAX_CHALLENGE_BLOCKS`). **142 tests**, most of them adversarial.
+`MAX_CHALLENGE_BLOCKS`). **190 tests**, most of them adversarial.
 
 **The sandbox.** Under Docker: no network, capped memory and pids, read-only
 root, dropped capabilities, non-root user. **The `process` backend is not a
@@ -143,7 +182,7 @@ is unavailable.
 
 ## Honest limits
 
-- **Not formally audited.** Two adversarial reviews and 142 tests are not an audit.
+- **Not formally audited.** Two adversarial reviews and 190 tests are not an audit.
 - **The market is early.** Agent-to-agent job volume is thin everywhere today, not
   only on Arc. Pay-per-call x402 is where live traffic is.
 - **Only checkable work.** Re-execution judges code, computation and data transforms,
@@ -177,9 +216,11 @@ Things that bit, or would have:
 ```
 contracts/
   AgenticCommerce.sol   ERC-8183 job escrow (deployed)
+  ArbitratedEscrow.sol  VerdictRuling verifier library + a reference escrow that settles on it
   RatchetVault.sol      USDC payment channels (deployed)
   Mocks.sol             test scaffolding: USDC with blocklist, ERC-8004 registry, hostile hook
 
+arbiter/                the arbiter API: rulings for any escrow, EIP-712 attestations, SSRF-safe fetch
 evaluator/              the product
   spec.js               the Verdict protocol — specs, deliverables, canonical hashing
   verify.js             resolve, check commitments, run, decide (incl. abstain)
@@ -191,7 +232,7 @@ src/                    sandbox, payment channel, metering, client
 scripts/                deploy, verify-job, setup-roles, keygen
 demo/                   live-arc, pay-x402, verdict, service
 docs/                   live-run evidence, grant draft, handoff
-test/                   142 tests
+test/                   190 tests
 ```
 
 ## License

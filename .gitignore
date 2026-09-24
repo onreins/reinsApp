@@ -9,3 +9,4 @@ deployments/*
 .verdict-state*.json
 .verdict-state*.json.tmp
 verdicts/
+rulings/

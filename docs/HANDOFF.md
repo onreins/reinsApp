@@ -21,9 +21,12 @@ abstains rather than guessing when it cannot verify.
 | Live verified jobs | 2 — one passed and paid, one failed and refunded. See [live-run/LIVE-RUN.md](live-run/LIVE-RUN.md) |
 | Independent verification | `npm run verify -- 1` re-derives a verdict from chain data alone; both jobs pass every check — confirmed from a fresh clone with no `.env` |
 | Evaluator service | `npm run evaluator` — watches Arc, judges jobs naming its key, resumes safely after restarts; smoke-tested against the live contract |
-| Tests | 142 passing (`npm test`, needs `npm run chain` in another terminal) |
-| Audits | Two adversarial passes. Found and fixed: 1 critical, 1 high, 3 medium, 2 low |
-| Payments | An agent bought 3 sandbox runs over x402 through Circle Gateway on Arc testnet (`npm run pay:x402`). Payments verified and the buyer debited ($1.0000 → $0.9959). Circle reports each payment as `received`, the first stage of its pipeline (received, batched, confirmed, completed); the seller is credited when Circle's batch cycle advances them. Recheck with `npm run pay:x402`, which now prints each transfer's status |
+| Arbiter API | `npm run arbiter` — any escrow sends terms + delivery, gets a signed ruling and an EIP-712 attestation bound to its contract. Optional $0.01/ruling over x402. SSRF-guarded fetching. Smoke-tested with the live evaluator key; not hosted yet |
+| On-chain verifier | `VerdictRuling` library + `ArbitratedEscrow` reference escrow (`contracts/ArbitratedEscrow.sol`), tested end to end against the API. Not deployed to Arc yet |
+| Tests | 190 passing (`npm test`, needs `npm run chain` in another terminal) |
+| Audits | Two adversarial passes on the original contracts. Found and fixed: 1 critical, 1 high, 3 medium, 2 low. A third pass covers the arbiter and escrow (see session log) |
+| Payments | Settled end to end. Across two runs an agent bought 6 sandbox runs over x402 through Circle Gateway on Arc testnet; the buyer's Gateway balance went $1.0000 → $0.9918 and the seller's rose to exactly $0.0082 once Circle's batch cycle completed (checked 2026-09-25) |
+| Website | `site/index.html`, published as a private claude.ai artifact. Aino-style hero, Tempo-style body, every number real. Missing: contact email, repo link |
 
 ## Decisions and why
 
@@ -61,6 +64,9 @@ abstains rather than guessing when it cannot verify.
 2. **Grant application** — drafted in [GRANT.md](GRANT.md), not submitted. Submitting
    is the founder's call.
 3. **Talk to one real user.** Nothing outside this repo has seen the product yet.
+   Best first targets: escrow protocols with a pluggable arbiter slot.
+4. **Website contact details.** It has no contact email and no repo link on purpose;
+   both need the founder's say.
 
 ## Secrets
 
@@ -71,11 +77,13 @@ mainnet use.
 
 ## Next engineering steps, in order
 
-1. **Watch Gateway settlement complete.** Payments are confirmed `received` by Circle;
-   check later that they reach `completed` and the seller balance rises. Until then,
-   "seller paid" is unproven even though "buyer paid" is.
-2. **Host the evaluator service** somewhere always-on, with a public status page
-   listing verdicts — grant milestone 1.
+1. **Host the arbiter and the evaluator service** somewhere always-on, with Docker
+   isolation and a public page listing rulings — grant milestone 1. Needs a host
+   account, which is a human decision.
+2. **Deploy `ArbitratedEscrow` to Arc testnet** and run one real case through the
+   arbiter API, so the on-chain verification is proven live and not only locally.
+3. **Pin DNS in safe-fetch** (custom undici dispatcher) to close the rebinding gap
+   documented in `arbiter/safe-fetch.js`, before the API faces the open internet.
 3. **Staking and challenge windows** for evaluator accountability — the problem the
    ecosystem's own write-ups call unsolved; grant milestone 2.
 4. Docker isolation on by default; warm sandbox pool to cut Python cold start (~500ms).
@@ -92,6 +100,12 @@ mainnet use.
 
 ## Session log
 
+- **2026-09-25** — built the product website (published privately; several design
+  rounds, final: Aino-inspired hero, Tempo-style body, real data only). Built the
+  arbiter API for any escrow, EIP-712 attestations, the `VerdictRuling` on-chain
+  verifier and `ArbitratedEscrow` reference escrow, and an SSRF-guarded fetcher; 42
+  new tests (184 total). Confirmed Circle Gateway settled the x402 payments to the
+  seller. Rewrote the grant draft around the arbiter ([$35k], smaller first milestone).
 - **2026-09-24** — deployed to Arc testnet; ran two verified jobs; built the
   chain-only verifier; built the evaluator daemon; bought compute through Circle
   Gateway; drafted the grant. Two real bugs found and fixed along the way (RPC log
