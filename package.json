@@ -12,7 +12,10 @@
     "serve": "node service/server.js",
     "demo:verdict": "node demo/verdict.js",
     "serve:x402": "node service/x402-server.js",
-    "deploy:arc": "node scripts/deploy-arc.js"
+    "deploy:arc": "node scripts/deploy-arc.js",
+    "verify": "node scripts/verify-job.js",
+    "live:arc": "node --env-file=.env demo/live-arc.js",
+    "setup:roles": "node --env-file=.env scripts/setup-roles.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",

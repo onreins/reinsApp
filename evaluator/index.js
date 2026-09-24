@@ -28,6 +28,24 @@ import { parseJobDescription, decodeDeliverableUri, hashDocument } from "./spec.
 
 export { OUTCOME };
 
+/**
+ * Arc's public RPC refuses `eth_getLogs` ranges of 10,000 blocks or more
+ * ("requested range too large"). At ~0.5s blocks that is about 83 minutes of
+ * chain, so any watcher looking further back than that must page.
+ */
+export const LOG_WINDOW = 9_999n;
+
+/** Split [from, to] into inclusive windows no wider than `size` blocks apart. */
+export function logWindows(from, to, size = LOG_WINDOW) {
+  if (to < from) return [];
+  const out = [];
+  for (let lo = from; lo <= to; lo += size + 1n) {
+    const hi = lo + size > to ? to : lo + size;
+    out.push([lo, hi]);
+  }
+  return out;
+}
+
 export class Evaluator {
   /**
    * @param {object} opts
@@ -64,6 +82,24 @@ export class Evaluator {
     this.log = [];
   }
 
+  /**
+   * `getLogs`, paged into windows the RPC will accept. Same parameters and
+   * result shape, but a wide range becomes several narrow queries instead of
+   * an error.
+   */
+  async #logs({ fromBlock = 0n, toBlock = "latest", ...rest }) {
+    // cacheTime: 0 matters. viem caches getBlockNumber for ~4s by default, and
+    // at Arc's 0.5s blocks a cached head is ~8 blocks stale — enough to page
+    // right past a submission made moments ago and report it missing.
+    const to =
+      toBlock === "latest" ? await this.publicClient.getBlockNumber({ cacheTime: 0 }) : toBlock;
+    const out = [];
+    for (const [lo, hi] of logWindows(fromBlock, to)) {
+      out.push(...(await this.publicClient.getLogs({ ...rest, fromBlock: lo, toBlock: hi })));
+    }
+    return out;
+  }
+
   #record(entry) {
     this.log.push({ at: new Date().toISOString(), ...entry });
     return entry;
@@ -82,7 +118,7 @@ export class Evaluator {
    * contract change.
    */
   async deliverableUriForJob(jobId, { fromBlock = 0n } = {}) {
-    const logs = await this.publicClient.getLogs({
+    const logs = await this.#logs({
       address: this.jobs,
       event: AGENTIC_COMMERCE_ABI.find((e) => e.type === "event" && e.name === "JobSubmitted"),
       args: { jobId },
@@ -310,7 +346,7 @@ export class Evaluator {
   }
 
   async #requestUriFromLogs(requestHash, fromBlock = 0n) {
-    const logs = await this.publicClient.getLogs({
+    const logs = await this.#logs({
       address: this.validation,
       event: VALIDATION_REGISTRY_ABI.find((e) => e.type === "event" && e.name === "ValidationRequest"),
       args: { requestHash },
@@ -335,7 +371,7 @@ export class Evaluator {
     const results = [];
 
     if (this.jobs) {
-      const submitted = await this.publicClient.getLogs({
+      const submitted = await this.#logs({
         address: this.jobs,
         event: AGENTIC_COMMERCE_ABI.find((e) => e.type === "event" && e.name === "JobSubmitted"),
         fromBlock,
@@ -347,7 +383,7 @@ export class Evaluator {
     }
 
     if (this.validation) {
-      const requests = await this.publicClient.getLogs({
+      const requests = await this.#logs({
         address: this.validation,
         event: VALIDATION_REGISTRY_ABI.find((e) => e.type === "event" && e.name === "ValidationRequest"),
         args: { validatorAddress: this.address },
