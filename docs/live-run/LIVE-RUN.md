@@ -44,3 +44,22 @@ Sealed verdict: [`docs/live-run/verdict-0xbaa1c2b424c33e404033296aaef003879eb86b
 
 Sealed verdict: [`docs/live-run/verdict-0xe5493323564739b37e625fec42405ac7f2b30792f12daad8c62e3204ced913f4.json`](../../docs/live-run/verdict-0xe5493323564739b37e625fec42405ac7f2b30792f12daad8c62e3204ced913f4.json)
 
+
+## Compute sold through Circle Gateway (x402)
+
+An agent holding the client key bought three sandbox runs from the service, paying
+per run over x402 through Circle's Gateway facilitator on Arc testnet. No account,
+no API key: the agent deposited USDC into Gateway once and signed an offchain
+authorization per call, so it paid no gas per call.
+
+| step | detail |
+|---|---|
+| Gateway deposit | $1.00 — [`0x54b02f440598340d…`](https://explorer.testnet.arc.io/tx/0x54b02f440598340df5c6eb5676524ab5837f36835d0b9dedafd510f15e644ca8) |
+| run 1 (python, 3s timeout) | paid $0.0017, HTTP 200 |
+| run 2 (javascript, 2s timeout) | paid $0.0012, HTTP 200 |
+| run 3 (python, 2s timeout) | paid $0.0012, HTTP 200 |
+| agent Gateway balance | $1.0000 -> $0.9959 |
+
+Each charge equals the service's quote for the requested timeout. The seller
+(`0xEAcD19BE7BDe6a8826B9A8252D5Bc3ea51c1416f`) is credited when Circle settles
+the batch, which is asynchronous. Reproduce with `node --env-file=.env demo/pay-x402.js`.
