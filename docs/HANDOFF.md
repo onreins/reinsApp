@@ -17,7 +17,7 @@ abstains rather than guessing when it cannot verify.
 
 | | |
 |---|---|
-| Contracts on Arc testnet | `AgenticCommerce` `0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`, `RatchetVault` `0x2dcf3df463b194844bb7496ea7d32174339fc936` |
+| Contracts on Arc testnet | `AgenticCommerce` `0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`, `ArbitratedEscrow` `0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794`, `RatchetVault` `0x2dcf3df463b194844bb7496ea7d32174339fc936` |
 | Live verified jobs | 2 — one passed and paid, one failed and refunded. See [live-run/LIVE-RUN.md](live-run/LIVE-RUN.md) |
 | Independent verification | `npm run verify -- 1` re-derives a verdict from chain data alone; both jobs pass every check — confirmed from a fresh clone with no `.env` |
 | Evaluator service | `npm run evaluator` — watches Arc, judges jobs naming its key, resumes safely after restarts; smoke-tested against the live contract |
@@ -99,8 +99,8 @@ mainnet use.
 - **2026-09-25** — built the product website (published privately; several design
   rounds, final: Aino-inspired hero, Tempo-style body, real data only). Built the
   arbiter API for any escrow, EIP-712 attestations, the `VerdictRuling` on-chain
-  verifier and `ArbitratedEscrow` reference escrow, and an SSRF-guarded fetcher; 48
-  new tests (190 total). An adversarial review found a critical SSRF bypass and three
+  verifier and `ArbitratedEscrow` reference escrow, and an SSRF-guarded fetcher; 50
+  new tests (192 total). An adversarial review found a critical SSRF bypass and three
   more issues, all fixed with regression tests. Deployed `ArbitratedEscrow` to Arc
   testnet and settled two live cases through the arbiter API. Confirmed Circle
   Gateway settled the x402 payments to the seller. Rewrote the grant draft around the

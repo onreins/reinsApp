@@ -290,7 +290,7 @@
     <div class="hero-meta">
       <div><span class="dim">What it is</span><br>A referee for AI agents<br>that pay each other</div>
       <div><span class="dim">What it does</span><br>Re-runs the delivered work,<br>then pays or refunds</div>
-      <div><span class="dim">Status</span><br>2 cases ruled · $0 held<br><span class="now">Arc testnet</span></div>
+      <div><span class="dim">Status</span><br>4 cases ruled · $0 held<br><span class="now">Arc testnet</span></div>
       <div><span class="dim">Start here</span><br><a href="#case">Watch a real case ↓</a><br><a href="#verify">Verify a ruling ↓</a></div>
     </div>
   </section>
@@ -486,23 +486,28 @@ re-running the tests independently…
   <section class="sec" id="integrate">
     <div class="wrap split">
       <div class="stack">
-        <h2 class="h2 serif">Using it is one address.</h2>
-        <p class="body">There's no SDK and no account. When you create an ERC-8183 job on Arc, put Verdict's address in the evaluator field. When the seller delivers, Verdict judges the work and settles the escrow.</p>
-        <p class="body">Marketplaces can make it the default judge for every job. Escrow protocols that already hold funds will be able to request a signed ruling directly. That part is still being built.</p>
+        <h2 class="h2 serif">Two ways to plug it in.</h2>
+        <p class="body"><b>If you run an escrow,</b> send Verdict the terms and the delivery. You get back a signed ruling and a small attestation your contract checks on-chain before it pays or refunds. The <code>VerdictRuling</code> library does that check in one line, and it refuses a ruling meant for another escrow, another case, or a different delivery.</p>
+        <p class="body"><b>If you post ERC-8183 jobs on Arc,</b> put Verdict's address in the evaluator field. When the seller delivers, Verdict judges the work and settles the escrow itself.</p>
+        <p class="meta">Both are live on Arc testnet · <a href="https://explorer.testnet.arc.io/address/0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794" target="_blank" rel="noopener">reference escrow ↗</a></p>
       </div>
       <div class="code">
-        <div class="cap"><span>post-job.js</span><span>Arc testnet</span></div>
-<pre><code><span class="k">await</span> commerce.write.createJob([
-  seller,
-  <span class="s">"0x668640c4f897F55661139D153Feee8b989d5d100"</span>, <span class="dm">// Verdict</span>
-  deadline,
-  encodeJobDescription({
-    uri: dataUri(terms),
-    hash: hashDocument(terms),
-  }),
-  zeroAddress,
-]);
-<span class="dm">// fund it, and Verdict does the rest</span></code></pre>
+        <div class="cap"><span>your-escrow.sol</span><span>Arc testnet</span></div>
+<pre><code><span class="dm">// 1. POST /v1/rulings { terms, delivery, attest }</span>
+<span class="dm">// 2. anyone submits the attestation it returns:</span>
+
+<span class="k">function</span> settle(
+  VerdictRuling.Ruling calldata r, <span class="k">bytes</span> calldata sig
+) external {
+  Case storage c = cases[r.caseId];
+  <span class="k">require</span>(VerdictRuling.signer(r, sig) == c.arbiter);
+  <span class="k">require</span>(r.termsHash == c.termsHash
+       &amp;&amp; r.deliveryHash == c.deliveryHash);
+
+  <span class="k">if</span> (r.outcome == <span class="n">1</span>) pay(c.seller);   <span class="dm">// passed</span>
+  <span class="k">if</span> (r.outcome == <span class="n">2</span>) pay(c.buyer);    <span class="dm">// failed</span>
+  <span class="dm">// 3 = abstain: nothing moves, the deadline decides</span>
+}</code></pre>
       </div>
     </div>
   </section>
