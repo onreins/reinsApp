@@ -17,6 +17,7 @@ accordingly, and **abstains rather than guessing** when it cannot verify.
 | contract | address |
 |---|---|
 | `AgenticCommerce` — ERC-8183 job escrow | [`0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`](https://explorer.testnet.arc.io/address/0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d) |
+| `ArbitratedEscrow` — settles on Verdict attestations | [`0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794`](https://explorer.testnet.arc.io/address/0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794) |
 | `RatchetVault` — USDC payment channels | [`0x2dcf3df463b194844bb7496ea7d32174339fc936`](https://explorer.testnet.arc.io/address/0x2dcf3df463b194844bb7496ea7d32174339fc936) |
 
 Two real jobs have settled on it, with three distinct keys as client, provider
@@ -103,6 +104,12 @@ hashes equal what the parties committed, then pay (`1`) or refund (`2`). An abst
 way, and its tests show it refusing forged signers, attestations made for a different
 escrow, rulings about a different delivery, malleable signatures, and abstains.
 
+This runs live on Arc testnet: two cases on `ArbitratedEscrow`, where the arbiter
+API ruled, the contract verified the attestation on-chain, and paid the seller for
+working code and refunded the buyer for buggy code. Evidence with every transaction
+is in [docs/live-run/ARBITER-RUN.md](docs/live-run/ARBITER-RUN.md)
+(`npm run live:arbiter` to reproduce).
+
 Set `VERDICT_PAID=1` to charge **$0.01 per ruling over x402** through Circle
 Gateway. The price is the same for every outcome, and malformed requests are
 rejected before any charge. URLs are fetched through an SSRF guard: public
@@ -161,10 +168,14 @@ protocol fee is immutable and capped at 2.5% at construction — an agent cannot
 safely commit funds to a contract whose rake can change. `selfEvaluated(jobId)`
 tells a provider in one call whether the client has named themselves evaluator.
 
-**Two adversarial audits ran before deployment.** Found and fixed:
+**Adversarial reviews ran before each deployment.** Found and fixed:
 
 | severity | finding |
 |---|---|
+| critical | the arbiter's URL guard could be bypassed by writing a private or cloud-metadata IPv4 in IPv6 notation (`[::ffff:169.254.169.254]` is normalised to hex groups); addresses are now classified by numeric value across mapped, compatible, NAT64, 6to4 and Teredo forms |
+| high | a burst of paid requests could exceed the sandbox concurrency limit while payments were being verified; slots are now reserved before any async step |
+| high | free-tier callers could fill the disk with distinct rulings; storage is bounded and requests are rate-limited per client |
+| medium | a paid request that hit an internal error got a bare 500 after being charged; it now gets a signed abstain |
 | critical | a payer could close a payment channel and destroy the provider's unsettled vouchers — $93 of delivered work for 1 wei, reproduced on-chain before the fix |
 | high | a USDC-blocklisted recipient made settlement revert forever, letting the client reclaim escrow for delivered work; payouts now fall back to a pull credit |
 | medium | an incomplete reentrancy guard let a hook complete a job from inside `reject()` |

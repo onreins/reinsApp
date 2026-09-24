@@ -77,15 +77,20 @@ contribution is the part Circle's agent stack leaves open: deciding who gets pai
 We have no paying users yet, and say so plainly. What exists today:
 
 - **Live on Arc testnet:** `AgenticCommerce` at `0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`,
-  evaluator `0x668640c4f897F55661139D153Feee8b989d5d100`.
-- **Two real cases settled end to end** with three distinct keys: one passed and
-  paid, one failed and refunded. Every transaction is linked in
-  `docs/live-run/LIVE-RUN.md`, and both pass independent re-verification.
+  `ArbitratedEscrow` at `0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794`, evaluator
+  `0x668640c4f897F55661139D153Feee8b989d5d100`.
+- **Four real cases settled end to end** with three distinct keys, two on each
+  escrow. In each pair one passed and paid, and one failed and refunded. On
+  `ArbitratedEscrow` the contract verified Verdict's EIP-712 attestation on-chain
+  before moving funds. Every transaction is linked in `docs/live-run/`.
+- **Circle Gateway settlement proven both ways:** an agent paid for sandbox runs over
+  x402 and the seller's Gateway balance rose by exactly what the buyer was debited.
 - **190 automated tests**, most of them adversarial.
-- **Adversarial security reviews before each deployment.** The first two found and
-  fixed one critical, one high, three medium and two low-severity issues, including
-  a payer being able to destroy $93 of a provider's earned funds for 1 wei,
-  reproduced on a real chain before the fix.
+- **Adversarial security reviews before each deployment.** Three passes so far found
+  and fixed two critical, three high, four medium and two low-severity issues. They
+  include a payer being able to destroy $93 of a provider's earned funds for 1 wei
+  (reproduced on a real chain before the fix), and a way to make the arbiter fetch
+  cloud-metadata addresses by writing them in IPv6 notation.
 - Product site: [site URL]. Source: [repository URL].
 
 ## Milestones

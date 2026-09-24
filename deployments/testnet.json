@@ -8,7 +8,8 @@
   "feeRecipient": null,
   "contracts": {
     "agenticCommerce": "0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d",
-    "ratchetVault": "0x2dcf3df463b194844bb7496ea7d32174339fc936"
+    "ratchetVault": "0x2dcf3df463b194844bb7496ea7d32174339fc936",
+    "arbitratedEscrow": "0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794"
   },
   "deployedAt": "2026-09-24T08:30:52.442Z"
 }

@@ -1,0 +1,77 @@
+{
+  "hash": "0x66df780c1e85bbab08762248fedc4a366ae6bdecd2d9d89ae5ba7d68fa7e526a",
+  "signature": "0xd50657289572746c9ba57f9f61e1bcce4ff3bc22e7e5ebc2e7d0578ee406ec3a458f9da1d7d142b5447264b5e4c44a4a68b846e333833122f36247ab8d9831791c",
+  "verdict": {
+    "spec": "verdict-result/1",
+    "jobId": "arbitrated-escrow:0xa60b623db86887af0779b1143abcff98f3b7779a2227b6c3db2f859a4d0d740b",
+    "agentId": null,
+    "specHash": "0x9a1b4348950ca6c9132acf55cf30d775254a0ac36d0f0223b6e2b2c61b97e315",
+    "deliverableHash": "0x2000e03fcc4b6de6f173670870393988fcc5c0ec2918679adabe14e663ff732a",
+    "evaluator": "0x668640c4f897F55661139D153Feee8b989d5d100",
+    "evaluatedAt": "2026-09-24T23:29:33.995Z",
+    "outcome": "failed",
+    "score": 0,
+    "reason": "0/3 tests passed",
+    "tests": [
+      {
+        "name": "reverses a word",
+        "passed": false,
+        "reasons": [
+          "expected stdout \"tcidrev\", got \"TCIDREV\""
+        ],
+        "durationMs": 431.66,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "TCIDREV\r\n",
+        "stderr": ""
+      },
+      {
+        "name": "handles one letter",
+        "passed": false,
+        "reasons": [
+          "expected stdout \"a\", got \"A\""
+        ],
+        "durationMs": 382.54,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "A\r\n",
+        "stderr": ""
+      },
+      {
+        "name": "keeps spaces",
+        "passed": false,
+        "reasons": [
+          "expected stdout \"ten cra\", got \"TEN CRA\""
+        ],
+        "durationMs": 378.71,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "TEN CRA\r\n",
+        "stderr": ""
+      }
+    ],
+    "language": "python"
+  },
+  "attestation": {
+    "domain": {
+      "name": "Verdict",
+      "version": "1",
+      "chainId": 5042002,
+      "verifyingContract": "0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794"
+    },
+    "message": {
+      "caseId": "0xa60b623db86887af0779b1143abcff98f3b7779a2227b6c3db2f859a4d0d740b",
+      "outcome": 2,
+      "score": 0,
+      "rulingHash": "0x66df780c1e85bbab08762248fedc4a366ae6bdecd2d9d89ae5ba7d68fa7e526a",
+      "termsHash": "0x9a1b4348950ca6c9132acf55cf30d775254a0ac36d0f0223b6e2b2c61b97e315",
+      "deliveryHash": "0x2000e03fcc4b6de6f173670870393988fcc5c0ec2918679adabe14e663ff732a"
+    },
+    "signature": "0xf1bba7c3dad3eb6eafd6458fea5269d12c5ada1d443aecda32e56ffaa38b89b92527d2c6d3e30bef10cd8f292cd26c63bc7d31f31cc7a25898d33b94b00cd26d1b"
+  },
+  "evaluator": "0x668640c4f897F55661139D153Feee8b989d5d100",
+  "links": {
+    "self": "/v1/rulings/0x66df780c1e85bbab08762248fedc4a366ae6bdecd2d9d89ae5ba7d68fa7e526a"
+  },
+  "payment": null
+}

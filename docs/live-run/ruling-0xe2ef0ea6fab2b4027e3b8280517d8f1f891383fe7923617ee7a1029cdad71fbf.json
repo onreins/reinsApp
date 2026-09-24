@@ -1,0 +1,71 @@
+{
+  "hash": "0xe2ef0ea6fab2b4027e3b8280517d8f1f891383fe7923617ee7a1029cdad71fbf",
+  "signature": "0x11be18e2ba78baecb9b02c92ba7cbe397d175dfc19b82a6bd0fb30394346d0b9325be9a587b95afaa25ce0cd3d8bd8683fa178a5c96fb435032006814e35258c1b",
+  "verdict": {
+    "spec": "verdict-result/1",
+    "jobId": "arbitrated-escrow:0x2a765b7062c75613958767a12b69c846d4553290c5813ebb96410f071d15511d",
+    "agentId": null,
+    "specHash": "0x9a1b4348950ca6c9132acf55cf30d775254a0ac36d0f0223b6e2b2c61b97e315",
+    "deliverableHash": "0xa12ad4a59bcd9d51e8eb3e4d3a33206a649c07c6cfc4f3353040a7e68d16f8f1",
+    "evaluator": "0x668640c4f897F55661139D153Feee8b989d5d100",
+    "evaluatedAt": "2026-09-24T23:29:15.584Z",
+    "outcome": "passed",
+    "score": 100,
+    "reason": "3/3 tests passed",
+    "tests": [
+      {
+        "name": "reverses a word",
+        "passed": true,
+        "reasons": [],
+        "durationMs": 442.3,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "tcidrev\r\n",
+        "stderr": ""
+      },
+      {
+        "name": "handles one letter",
+        "passed": true,
+        "reasons": [],
+        "durationMs": 373.94,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "a\r\n",
+        "stderr": ""
+      },
+      {
+        "name": "keeps spaces",
+        "passed": true,
+        "reasons": [],
+        "durationMs": 366.83,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "ten cra\r\n",
+        "stderr": ""
+      }
+    ],
+    "language": "python"
+  },
+  "attestation": {
+    "domain": {
+      "name": "Verdict",
+      "version": "1",
+      "chainId": 5042002,
+      "verifyingContract": "0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794"
+    },
+    "message": {
+      "caseId": "0x2a765b7062c75613958767a12b69c846d4553290c5813ebb96410f071d15511d",
+      "outcome": 1,
+      "score": 100,
+      "rulingHash": "0xe2ef0ea6fab2b4027e3b8280517d8f1f891383fe7923617ee7a1029cdad71fbf",
+      "termsHash": "0x9a1b4348950ca6c9132acf55cf30d775254a0ac36d0f0223b6e2b2c61b97e315",
+      "deliveryHash": "0xa12ad4a59bcd9d51e8eb3e4d3a33206a649c07c6cfc4f3353040a7e68d16f8f1"
+    },
+    "signature": "0x0b45d4f7d262354658e217849d522aa29c0fce061234979ac7125e0e2e7597be5d3cedddcee4d78010899892e126d7af0950a4ae3be45cfd73ff4261ff3c9cf41b"
+  },
+  "evaluator": "0x668640c4f897F55661139D153Feee8b989d5d100",
+  "links": {
+    "self": "/v1/rulings/0xe2ef0ea6fab2b4027e3b8280517d8f1f891383fe7923617ee7a1029cdad71fbf"
+  },
+  "payment": null
+}
