@@ -64,7 +64,8 @@ abstains rather than guessing when it cannot verify.
 2. **Grant application** — drafted in [GRANT.md](GRANT.md), not submitted. Submitting
    is the founder's call.
 3. **Talk to one real user.** Nothing outside this repo has seen the product yet.
-   Best first targets: escrow protocols with a pluggable arbiter slot.
+   Four drafted messages, unsent, are in [OUTREACH.md](OUTREACH.md). Best first
+   targets: escrow protocols with a pluggable arbiter slot.
 4. **Website contact details.** It has no contact email and no repo link on purpose;
    both need the founder's say.
 
