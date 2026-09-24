@@ -101,6 +101,15 @@ contract AgenticCommerce {
     ///      to burn the caller's whole gas budget or block settlement.
     uint256 private constant HOOK_GAS = 150_000;
 
+    /// @notice Minimum time an evaluator gets to judge work, measured from
+    ///         submission rather than from the job deadline.
+    /// @dev Without this, a provider who submits legitimately at the last legal
+    ///      moment (`block.timestamp == expiredAt`) can be expire-refunded in
+    ///      the very next block, before the evaluator can act, leaving the
+    ///      client holding both the money and the delivered work. Expiry of a
+    ///      submitted job is therefore the later of `expiredAt` and this window.
+    uint256 public constant EVALUATION_WINDOW = 1 days;
+
     // ---------------------------------------------------------------------
     // Storage
     // ---------------------------------------------------------------------
@@ -115,6 +124,17 @@ contract AgenticCommerce {
     /// @notice Escrow actually held per job, so accounting never relies on
     ///         this contract's total balance (which anyone can inflate).
     mapping(uint256 => uint256) public escrowOf;
+
+    /// @notice When a deliverable was submitted, for the evaluation window.
+    mapping(uint256 => uint256) public submittedAt;
+
+    /// @notice Funds owed to someone whose transfer could not be delivered.
+    /// @dev USDC can blocklist an address, and a blocklisted transfer reverts.
+    ///      Without a fallback that would make `complete()` permanently unable
+    ///      to pay a blocklisted provider, and expiry would then hand the
+    ///      escrow to the client, who keeps both the money and the delivered
+    ///      work. Credited here instead, to be pulled once the block lifts.
+    mapping(address => uint256) public withdrawable;
 
     uint256 private _locked = 1;
 
@@ -141,6 +161,8 @@ contract AgenticCommerce {
     event ProviderSet(uint256 indexed jobId, address indexed provider);
     event BudgetSet(uint256 indexed jobId, uint256 amount);
     event HookFailed(uint256 indexed jobId, bytes4 selector, bool isBefore);
+    event PayoutDeferred(address indexed to, uint256 amount);
+    event Withdrawn(address indexed account, uint256 amount);
 
     // ---------------------------------------------------------------------
     // Errors
@@ -157,6 +179,7 @@ contract AgenticCommerce {
     error DeadlineInPast();
     error FeeTooHigh();
     error TransferFailed();
+    error NothingToWithdraw();
     error Reentrancy();
 
     modifier nonReentrant() {
@@ -213,18 +236,23 @@ contract AgenticCommerce {
     }
 
     /// @notice Name or change the provider, before funding.
-    function setProvider(uint256 jobId, address provider) external {
+    function setProvider(uint256 jobId, address provider) external nonReentrant {
         Job storage job = _jobs[jobId];
         if (msg.sender != job.client) revert NotClient();
         if (job.status != JobStatus.Open) revert BadStatus();
         if (provider == address(0)) revert ZeroAddress();
 
         job.provider = provider;
+        // A quote given by the previous provider does not bind the new one.
+        job.budget = 0;
         emit ProviderSet(jobId, provider);
     }
 
     /// @notice The provider quotes the job.
-    function setBudget(uint256 jobId, uint256 amount, bytes calldata optParams) external {
+    function setBudget(uint256 jobId, uint256 amount, bytes calldata optParams)
+        external
+        nonReentrant
+    {
         Job storage job = _jobs[jobId];
         if (msg.sender != job.provider) revert NotProvider();
         if (job.status != JobStatus.Open) revert BadStatus();
@@ -270,7 +298,10 @@ contract AgenticCommerce {
      *      to this, or it is not what was submitted. That is what lets a
      *      neutral evaluator verify the work without trusting either party.
      */
-    function submit(uint256 jobId, bytes32 deliverable, bytes calldata optParams) external {
+    function submit(uint256 jobId, bytes32 deliverable, bytes calldata optParams)
+        external
+        nonReentrant
+    {
         Job storage job = _jobs[jobId];
         if (msg.sender != job.provider) revert NotProvider();
         if (job.status != JobStatus.Funded) revert BadStatus();
@@ -279,6 +310,7 @@ contract AgenticCommerce {
         _hook(job.hook, jobId, this.submit.selector, optParams, true);
 
         deliverableOf[jobId] = deliverable;
+        submittedAt[jobId] = block.timestamp;
         job.status = JobStatus.Submitted;
 
         emit JobSubmitted(jobId, msg.sender, deliverable);
@@ -325,7 +357,7 @@ contract AgenticCommerce {
      *      evaluator's transaction would let a hostile client contract revert
      *      and strand the decision.
      */
-    function reject(uint256 jobId, bytes32 reason, bytes calldata optParams) external {
+    function reject(uint256 jobId, bytes32 reason, bytes calldata optParams) external nonReentrant {
         Job storage job = _jobs[jobId];
         if (msg.sender != job.evaluator) revert NotEvaluator();
         if (job.status != JobStatus.Submitted) revert BadStatus();
@@ -352,7 +384,17 @@ contract AgenticCommerce {
         if (job.status == JobStatus.Funded || job.status == JobStatus.Submitted) {
             // An evaluator who never shows up must not be able to hold the
             // money hostage: expiry releases it back to the client.
-            if (block.timestamp <= job.expiredAt) revert NotYetExpired();
+            //
+            // But work already delivered must not be snatched back either. A
+            // submitted job cannot expire until the evaluator has had a real
+            // window, otherwise a last-second-but-legal submission could be
+            // refunded in the very next block.
+            uint256 deadline = job.expiredAt;
+            if (job.status == JobStatus.Submitted) {
+                uint256 graceEnd = submittedAt[jobId] + EVALUATION_WINDOW;
+                if (graceEnd > deadline) deadline = graceEnd;
+            }
+            if (block.timestamp <= deadline) revert NotYetExpired();
             job.status = JobStatus.Expired;
             emit JobExpired(jobId);
         } else if (job.status != JobStatus.Rejected) {
@@ -386,6 +428,19 @@ contract AgenticCommerce {
     function selfEvaluated(uint256 jobId) external view returns (bool) {
         Job storage job = _jobs[jobId];
         return job.client != address(0) && job.client == job.evaluator;
+    }
+
+    /// @notice Collect funds from a payout that could not be delivered.
+    function withdraw() external nonReentrant {
+        uint256 amount = withdrawable[msg.sender];
+        if (amount == 0) revert NothingToWithdraw();
+
+        withdrawable[msg.sender] = 0;
+        if (!token.transfer(msg.sender, amount)) {
+            withdrawable[msg.sender] = amount;
+            revert TransferFailed();
+        }
+        emit Withdrawn(msg.sender, amount);
     }
 
     /// @notice What the provider would actually receive, net of protocol fee.
@@ -423,9 +478,28 @@ contract AgenticCommerce {
         if (!ok) emit HookFailed(jobId, selector, isBefore);
     }
 
-    /// @dev Arc reverts on transfers to the zero address, so check before sending.
+    /**
+     * @dev Pay `to`, or credit them when the transfer will not go through.
+     *
+     * USDC can blocklist an address, and a blocklisted transfer reverts. If that
+     * bubbled, `complete()` could never pay a blocklisted provider, and once
+     * the job expired the client could reclaim the escrow and keep the
+     * delivered work for nothing. Crediting keeps settlement always succeeding
+     * and leaves the money owed to the party that earned it.
+     *
+     * This mirrors `RatchetVault._payout`, which had the fallback from the
+     * start. Its absence here was an inconsistency, not a design choice.
+     */
     function _send(address to, uint256 amount) private {
         if (to == address(0)) revert ZeroAddress();
-        if (!token.transfer(to, amount)) revert TransferFailed();
+
+        try token.transfer(to, amount) returns (bool ok) {
+            if (ok) return;
+        } catch {
+            // fall through to the credit below
+        }
+
+        withdrawable[to] += amount;
+        emit PayoutDeferred(to, amount);
     }
 }

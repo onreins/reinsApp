@@ -25,12 +25,22 @@ contract MockUSDC {
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
 
+    /// @dev Real USDC can blocklist an address, after which transfers to it
+    ///      revert. An escrow contract has to survive that happening mid-job.
+    mapping(address => bool) public blocked;
+
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    error Blocked();
 
     function mint(address to, uint256 amount) external {
         balanceOf[to] += amount;
         emit Transfer(address(0), to, amount);
+    }
+
+    function setBlocked(address who, bool isBlocked) external {
+        blocked[who] = isBlocked;
     }
 
     function approve(address spender, uint256 amount) external returns (bool) {
@@ -53,6 +63,7 @@ contract MockUSDC {
     }
 
     function _move(address from, address to, uint256 amount) private {
+        if (blocked[from] || blocked[to]) revert Blocked();
         require(balanceOf[from] >= amount, "balance");
         unchecked {
             balanceOf[from] -= amount;
@@ -322,5 +333,63 @@ contract MockValidationRegistry {
 
     function getValidatorRequests(address validatorAddress) external view returns (bytes32[] memory) {
         return _validatorRequests[validatorAddress];
+    }
+}
+
+// ---------------------------------------------------------------------------
+// A hostile ERC-8183 hook
+// ---------------------------------------------------------------------------
+
+interface ICommerce {
+    function complete(uint256 jobId, bytes32 reason, bytes calldata optParams) external;
+}
+
+/**
+ * @notice A hook that tries to re-enter the escrow from inside another call.
+ *
+ * An audit pointed out that a reentrancy mutex only blocks re-entering a lock
+ * that is already engaged. If a state-changing function is left unguarded, the
+ * hook it fires can call a guarded function for the first time in the stack and
+ * sail straight through — paying out, and then having the outer call overwrite
+ * the status afterwards.
+ *
+ * This reproduces that: it is installed as the hook on a job whose evaluator is
+ * this same contract, and when `reject` fires its before-hook it calls
+ * `complete` on the way past.
+ */
+contract ReenteringHook {
+    ICommerce public immutable commerce;
+    uint256 public jobId;
+    bool public armed;
+    bool public fired;
+
+    constructor(ICommerce commerce_) {
+        commerce = commerce_;
+    }
+
+    function arm(uint256 jobId_) external {
+        jobId = jobId_;
+        armed = true;
+        fired = false;
+    }
+
+    function beforeAction(uint256, bytes4, bytes calldata) external {
+        if (!armed || fired) return;
+        fired = true;
+        commerce.complete(jobId, bytes32(uint256(0xdead)), "");
+    }
+
+    function afterAction(uint256, bytes4, bytes calldata) external {}
+
+    /// @dev Lets this contract act as evaluator and call reject itself.
+    function rejectVia(address target, uint256 jobId_, bytes32 reason) external {
+        (bool ok, bytes memory data) = target.call(
+            abi.encodeWithSignature("reject(uint256,bytes32,bytes)", jobId_, reason, "")
+        );
+        if (!ok) {
+            assembly {
+                revert(add(data, 32), mload(data))
+            }
+        }
     }
 }

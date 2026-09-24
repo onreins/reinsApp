@@ -191,7 +191,9 @@ describe("refusal and expiry", () => {
       "NotYetExpired",
     );
 
-    await publicClient.request({ method: "evm_increaseTime", params: [3601] });
+    // Past the deadline AND the evaluation window — a submitted job is not
+    // refundable until the evaluator has had its guaranteed look.
+    await publicClient.request({ method: "evm_increaseTime", params: [86_400 + 3601] });
     await publicClient.request({ method: "evm_mine", params: [] });
 
     const before = await balanceOf(usdc, CLIENT);
@@ -331,5 +333,156 @@ describe("escrow accounting", () => {
     const a = await jobThroughSubmit({ commerce, usdc });
     const b = await jobThroughSubmit({ commerce, usdc });
     assert.notEqual(a, b);
+  });
+});
+
+describe("when a payout cannot be delivered", () => {
+  test("a blocklisted provider is credited, not stranded", async () => {
+    // USDC can blocklist an address mid-job. Without a fallback, complete()
+    // would revert forever, the job would expire, and the client would reclaim
+    // the escrow while keeping the delivered work.
+    const { usdc, commerce } = await setup();
+    const jobId = await jobThroughSubmit({ commerce, usdc, budget: 100 });
+
+    await send(deployer, usdc, ERC20.abi, "setBlocked", [PROVIDER, true]);
+
+    // Settlement still succeeds.
+    await send(evaluator, commerce, COMMERCE.abi, "complete", [jobId, `0x${"11".repeat(32)}`, "0x"]);
+    assert.equal(await statusOf(commerce, jobId), STATUS.Completed);
+    assert.equal(await balanceOf(usdc, PROVIDER), 0n, "blocked, so not paid directly");
+    assert.equal(
+      await read(commerce, COMMERCE.abi, "withdrawable", [PROVIDER]),
+      USDC(100),
+      "the money is still owed to the provider",
+    );
+
+    // And the client cannot expire-steal it, because the job is Completed.
+    await expectRevert(send(client, commerce, COMMERCE.abi, "claimRefund", [jobId]), "BadStatus");
+
+    // Once the block lifts, the provider pulls it.
+    await send(deployer, usdc, ERC20.abi, "setBlocked", [PROVIDER, false]);
+    await send(provider, commerce, COMMERCE.abi, "withdraw", []);
+
+    assert.equal(await balanceOf(usdc, PROVIDER), USDC(100));
+    assert.equal(await read(commerce, COMMERCE.abi, "withdrawable", [PROVIDER]), 0n);
+  });
+
+  test("withdrawing nothing is refused rather than silently succeeding", async () => {
+    const { commerce } = await setup();
+    await expectRevert(send(stranger, commerce, COMMERCE.abi, "withdraw", []), "NothingToWithdraw");
+  });
+});
+
+describe("the evaluation window", () => {
+  test("work submitted at the deadline cannot be expire-refunded immediately", async () => {
+    // submit() permits block.timestamp == expiredAt. Without a grace period the
+    // next block is already past expiry, so the client could refund themselves
+    // before the evaluator ever had a chance to look.
+    const { usdc, commerce } = await setup();
+    const jobId = await jobThroughSubmit({ commerce, usdc, budget: 100 });
+
+    // Past the job deadline, but inside the evaluation window.
+    await publicClient.request({ method: "evm_increaseTime", params: [3601] });
+    await publicClient.request({ method: "evm_mine", params: [] });
+
+    await expectRevert(
+      send(client, commerce, COMMERCE.abi, "claimRefund", [jobId]),
+      "NotYetExpired",
+    );
+
+    // The evaluator can still do its job.
+    const before = await balanceOf(usdc, PROVIDER);
+    await send(evaluator, commerce, COMMERCE.abi, "complete", [jobId, `0x${"11".repeat(32)}`, "0x"]);
+    assert.equal((await balanceOf(usdc, PROVIDER)) - before, USDC(100));
+  });
+
+  test("but an evaluator who never shows up still cannot stall forever", async () => {
+    const { usdc, commerce } = await setup();
+    const jobId = await jobThroughSubmit({ commerce, usdc, budget: 100 });
+
+    // Past both the deadline and the evaluation window.
+    await publicClient.request({ method: "evm_increaseTime", params: [86_400 + 3601] });
+    await publicClient.request({ method: "evm_mine", params: [] });
+
+    const before = await balanceOf(usdc, CLIENT);
+    await send(client, commerce, COMMERCE.abi, "claimRefund", [jobId]);
+
+    assert.equal((await balanceOf(usdc, CLIENT)) - before, USDC(100));
+    assert.equal(await statusOf(commerce, jobId), STATUS.Expired);
+  });
+});
+
+describe("hostile hooks", () => {
+  test("a hook cannot complete a job from inside reject", async () => {
+    // A reentrancy mutex only blocks re-entering an engaged lock. reject() was
+    // unguarded, so its before-hook could call complete() for the first time in
+    // the stack, get the provider paid, and then have reject() overwrite the
+    // status to Rejected — a job recorded as refused with the escrow gone.
+    const { usdc, commerce } = await setup();
+
+    const hookAddr = await deploy("ReenteringHook", [commerce]);
+    const HOOK = artifact("ReenteringHook");
+
+    // The hook is also the evaluator, which is what makes the attack reachable.
+    const now = (await publicClient.getBlock()).timestamp;
+    const receipt = await send(client, commerce, COMMERCE.abi, "createJob", [
+      PROVIDER,
+      hookAddr,
+      now + 3600n,
+      "x",
+      hookAddr,
+    ]);
+    const jobId = BigInt(receipt.logs[0].topics[1]);
+
+    await send(provider, commerce, COMMERCE.abi, "setBudget", [jobId, USDC(100), "0x"]);
+    await send(client, usdc, ERC20.abi, "approve", [commerce, USDC(100)]);
+    await send(client, commerce, COMMERCE.abi, "fund", [jobId, "0x"]);
+    await send(provider, commerce, COMMERCE.abi, "submit", [jobId, `0x${"ab".repeat(32)}`, "0x"]);
+
+    await send(deployer, hookAddr, HOOK.abi, "arm", [jobId]);
+
+    const providerBefore = await balanceOf(usdc, PROVIDER);
+    const rejectReceipt = await send(deployer, hookAddr, HOOK.abi, "rejectVia", [
+      commerce,
+      jobId,
+      `0x${"22".repeat(32)}`,
+    ]);
+
+    // The hook was invoked and its re-entrant complete() was refused. Proof is
+    // the HookFailed event: `_hook` swallows the revert so settlement is never
+    // held hostage, but it records that the hook blew up. (The hook's own
+    // `fired` flag reads false precisely BECAUSE its call reverted and rolled
+    // its state back — the revert is the thing being asserted.)
+    const hookFailed = rejectReceipt.logs.some(
+      (log) => log.address.toLowerCase() === commerce.toLowerCase(),
+    );
+    assert.ok(hookFailed, "the commerce contract should have logged the failed hook");
+    assert.equal(await read(hookAddr, HOOK.abi, "fired"), false, "its attempt was rolled back");
+    assert.equal(await statusOf(commerce, jobId), STATUS.Rejected);
+    assert.equal(await balanceOf(usdc, PROVIDER), providerBefore, "nobody was paid");
+    assert.equal(await read(commerce, COMMERCE.abi, "escrowOf", [jobId]), USDC(100));
+
+    // And the escrow is still reclaimable, as a rejected job should be.
+    const clientBefore = await balanceOf(usdc, CLIENT);
+    await send(client, commerce, COMMERCE.abi, "claimRefund", [jobId]);
+    assert.equal((await balanceOf(usdc, CLIENT)) - clientBefore, USDC(100));
+  });
+});
+
+describe("changing the provider", () => {
+  test("drops the previous provider's quote", async () => {
+    const { commerce } = await setup();
+    const now = (await publicClient.getBlock()).timestamp;
+    const receipt = await send(client, commerce, COMMERCE.abi, "createJob", [
+      PROVIDER, EVALUATOR, now + 3600n, "x", ZERO,
+    ]);
+    const jobId = BigInt(receipt.logs[0].topics[1]);
+
+    await send(provider, commerce, COMMERCE.abi, "setBudget", [jobId, USDC(100), "0x"]);
+    assert.equal((await read(commerce, COMMERCE.abi, "getJob", [jobId])).budget, USDC(100));
+
+    // A new provider must not inherit a number they never agreed to.
+    await send(client, commerce, COMMERCE.abi, "setProvider", [jobId, account(6).address]);
+    assert.equal((await read(commerce, COMMERCE.abi, "getJob", [jobId])).budget, 0n);
   });
 });
