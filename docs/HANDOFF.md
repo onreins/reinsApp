@@ -19,10 +19,11 @@ abstains rather than guessing when it cannot verify.
 |---|---|
 | Contracts on Arc testnet | `AgenticCommerce` `0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`, `RatchetVault` `0x2dcf3df463b194844bb7496ea7d32174339fc936` |
 | Live verified jobs | 2 — one passed and paid, one failed and refunded. See [live-run/LIVE-RUN.md](live-run/LIVE-RUN.md) |
-| Independent verification | `npm run verify -- 1` re-derives a verdict from chain data alone; both jobs pass every check |
-| Tests | 136 passing (`npm test`, needs `npm run chain` in another terminal) |
+| Independent verification | `npm run verify -- 1` re-derives a verdict from chain data alone; both jobs pass every check — confirmed from a fresh clone with no `.env` |
+| Evaluator service | `npm run evaluator` — watches Arc, judges jobs naming its key, resumes safely after restarts; smoke-tested against the live contract |
+| Tests | 142 passing (`npm test`, needs `npm run chain` in another terminal) |
 | Audits | Two adversarial passes. Found and fixed: 1 critical, 1 high, 3 medium, 2 low |
-| Payments | Sandbox service settles through Circle Gateway Nanopayments (x402), verified against Circle's live testnet facilitator |
+| Payments | An agent bought 3 sandbox runs over x402 through Circle Gateway on Arc testnet (`npm run pay:x402`). Payments verified and the buyer debited ($1.0000 → $0.9959). **The seller's Gateway credit had not appeared ~30 min later** — Circle settles in batches on its own cycle. Recheck; if it never lands, investigate the settle path |
 
 ## Decisions and why
 
@@ -70,9 +71,29 @@ mainnet use.
 
 ## Next engineering steps, in order
 
-1. Paying agent for the x402 service (Gateway deposit + signed payment) so the
-   compute side is demonstrable end to end.
-2. Durable ledger (Postgres) for the Ratchet path — a crash loses unsettled vouchers.
-3. Staking and challenge windows for evaluator accountability — the problem the
-   ecosystem's own write-ups call unsolved.
+1. **Confirm Gateway seller settlement.** Record Circle's transfer ids from `pay()`
+   and track them with `GatewayClient.getTransferById` to see each payment move from
+   received to completed. Until then, "seller paid" is unproven.
+2. **Host the evaluator service** somewhere always-on, with a public status page
+   listing verdicts — grant milestone 1.
+3. **Staking and challenge windows** for evaluator accountability — the problem the
+   ecosystem's own write-ups call unsolved; grant milestone 2.
 4. Docker isolation on by default; warm sandbox pool to cut Python cold start (~500ms).
+5. Durable ledger (Postgres) for the Ratchet path — a crash loses unsettled vouchers.
+   Lower priority now that Circle Gateway is the headline payment path.
+
+## Arc facts measured the hard way
+
+- Public RPC refuses `eth_getLogs` over 9,999 blocks, and rejects OR-of-event topic
+  filters. All log reads page and filter locally.
+- viem caches `getBlockNumber` ~4s; at 0.5s blocks that hides ~8 blocks. Read head
+  with `cacheTime: 0`.
+- USDC ERC-20 is `0x3600000000000000000000000000000000000000` on testnet and mainnet.
+
+## Session log
+
+- **2026-09-24** — deployed to Arc testnet; ran two verified jobs; built the
+  chain-only verifier; built the evaluator daemon; bought compute through Circle
+  Gateway; drafted the grant. Two real bugs found and fixed along the way (RPC log
+  range limit, stale cached head). Testnet spend so far: ~$1.25 of the $20 faucet
+  grant, $1 of it sitting in Gateway.
