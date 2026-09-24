@@ -1,0 +1,49 @@
+{
+  "hash": "0xbaa1c2b424c33e404033296aaef003879eb86b66910ffb305fe538a588bc3c95",
+  "signature": "0x4d6246fd7e30f2f95aef593cf4662212f6dd655be739b292c97a6e84da5268e907fc2a9d918dff42ceed37a8caefdcb1ab67f61463aab2ea7ca1241ea5f1c7821c",
+  "verdict": {
+    "spec": "verdict-result/1",
+    "jobId": "1",
+    "agentId": null,
+    "specHash": "0x3e2254c9aa0435f23c0e7116a59e216e2125e08881b4c6d981c2a74f1a29ecd8",
+    "deliverableHash": "0x9f5a4eeb833a13ee4c7a60fecc24c5223f102a76de4279cff935da0379076d63",
+    "evaluator": "0x668640c4f897F55661139D153Feee8b989d5d100",
+    "evaluatedAt": "2026-09-24T08:36:35.254Z",
+    "outcome": "passed",
+    "score": 100,
+    "reason": "3/3 tests passed",
+    "tests": [
+      {
+        "name": "adds two numbers",
+        "passed": true,
+        "reasons": [],
+        "durationMs": 428.84,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "5\r\n",
+        "stderr": ""
+      },
+      {
+        "name": "handles zero",
+        "passed": true,
+        "reasons": [],
+        "durationMs": 427.17,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "0\r\n",
+        "stderr": ""
+      },
+      {
+        "name": "handles negatives",
+        "passed": true,
+        "reasons": [],
+        "durationMs": 373.88,
+        "exitCode": 0,
+        "timedOut": false,
+        "stdout": "-2\r\n",
+        "stderr": ""
+      }
+    ],
+    "language": "python"
+  }
+}
