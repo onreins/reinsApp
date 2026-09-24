@@ -1,0 +1,701 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdict</title>
+<meta name="description" content="Verdict is the neutral arbiter for agent payments: it re-runs the work, issues a signed ruling anyone can re-check, and never holds funds.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --paper: #f1f3f2; --paper-2: #e5e9e7; --card: #fbfcfb;
+    --ink: #121a1e; --ink-2: #3c494e; --muted: #66757a;
+    --rule: #c6cfcc; --rule-soft: #d9dfdd;
+    --accent: #2231c8; --accent-ink: #ffffff; --accent-soft: #e2e5fa;
+    --pass: #1d774b; --pass-soft: #dcefe4;
+    --fail: #b1261d; --fail-soft: #f6e0dd;
+    --abstain: #9a5e08; --abstain-soft: #f5e9d4;
+    --code-bg: #121a1e; --code-ink: #dfe6e4; --code-dim: #8a979b;
+    --serif: "Gloock", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+    --step-0: 1rem; --step-1: 1.125rem; --step-2: 1.5rem; --step-3: 2.25rem;
+    --step-4: clamp(2.5rem, 5.2vw, 4.25rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #0d1215; --paper-2: #151c20; --card: #11181b;
+      --ink: #e6ebe9; --ink-2: #b4bfbd; --muted: #84918e;
+      --rule: #2b353a; --rule-soft: #1f282c;
+      --accent: #9ea9ff; --accent-ink: #0d1215; --accent-soft: #1c2250;
+      --pass: #5ec48f; --pass-soft: #12291d;
+      --fail: #f08a80; --fail-soft: #2e1512;
+      --abstain: #e6b45e; --abstain-soft: #2b2110;
+      --code-bg: #080c0e; --code-ink: #dfe6e4; --code-dim: #7c898d;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #0d1215; --paper-2: #151c20; --card: #11181b;
+    --ink: #e6ebe9; --ink-2: #b4bfbd; --muted: #84918e;
+    --rule: #2b353a; --rule-soft: #1f282c;
+    --accent: #9ea9ff; --accent-ink: #0d1215; --accent-soft: #1c2250;
+    --pass: #5ec48f; --pass-soft: #12291d;
+    --fail: #f08a80; --fail-soft: #2e1512;
+    --abstain: #e6b45e; --abstain-soft: #2b2110;
+    --code-bg: #080c0e; --code-ink: #dfe6e4; --code-dim: #7c898d;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 400 var(--step-0)/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding-inline: 20px; }
+  .eyebrow { font: 500 0.75rem/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 400; text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: var(--step-3); line-height: 1.1; }
+  h3 { font-size: var(--step-2); line-height: 1.2; }
+  p { margin: 0; }
+  .lede { color: var(--ink-2); font-size: var(--step-1); max-width: 60ch; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.05rem;
+    font: 500 0.8125rem/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase;
+    text-decoration: none; border-radius: 999px; border: 1px solid var(--ink);
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-solid { background: var(--ink); color: var(--paper); }
+  .btn-solid:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn-ghost { background: transparent; color: var(--ink); }
+  .btn-ghost:hover { background: var(--paper-2); }
+
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule-soft);
+  }
+  .nav-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 0.85rem; }
+  .brand { display: inline-flex; align-items: center; gap: 0.55rem; text-decoration: none; }
+  .brand-name { font-family: var(--serif); font-size: 1.45rem; line-height: 1; }
+  .seal { width: 26px; height: 26px; color: var(--accent); flex: none; }
+  .nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; color: var(--ink-2); }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--ink); }
+  @media (max-width: 860px) { .nav-links { display: none; } }
+  @media (max-width: 400px) { .nav .btn { padding: 0.6rem 0.8rem; font-size: 0.75rem; } }
+
+  .hero { padding-block: clamp(3rem, 7vw, 5.5rem) clamp(3rem, 6vw, 5rem); }
+  .hero-grid { display: grid; grid-template-columns: 1.02fr 1fr; gap: clamp(2rem, 5vw, 4.5rem); align-items: start; }
+  @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-copy { display: grid; gap: 1.5rem; padding-top: 0.75rem; }
+  .hero h1 { font-size: var(--step-4); line-height: 1.02; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+  .hero-note { font-size: 0.875rem; color: var(--muted); display: flex; gap: 0.5rem; align-items: center; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--pass); box-shadow: 0 0 0 3px var(--pass-soft); flex: none; }
+
+  .ruling {
+    position: relative; background: var(--card); border: 1px solid var(--rule);
+    box-shadow: 0 1px 0 var(--rule-soft), 0 24px 48px -32px rgba(10, 20, 30, 0.35);
+    padding: 1.5rem 1.5rem 1.25rem; font-size: 0.875rem; min-width: 0;
+  }
+  .ruling::before { content: ""; position: absolute; inset: 6px; border: 1px solid var(--rule-soft); pointer-events: none; }
+  .ruling-head { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; border-bottom: 3px double var(--rule); padding-bottom: 0.75rem; }
+  .ruling-title { font-family: var(--serif); font-size: 1.5rem; line-height: 1; }
+  .ruling-no { font: 500 0.75rem var(--mono); color: var(--muted); text-align: right; }
+  .matter { padding-block: 0.9rem; border-bottom: 1px solid var(--rule-soft); display: grid; gap: 0.35rem; padding-right: 7.5rem; }
+  .matter .v { font-family: var(--serif); font-size: 1.05rem; color: var(--ink-2); }
+  .party { display: flex; gap: 1rem; flex-wrap: wrap; align-items: baseline; }
+  .party .role { color: var(--muted); font-size: 0.8125rem; width: 4.5rem; }
+  .addr { font: 400 0.8125rem var(--mono); color: var(--ink); }
+  .record { display: grid; gap: 0.2rem; padding-block: 0.9rem; border-bottom: 1px solid var(--rule-soft); margin: 0; }
+  .rec-row { display: grid; grid-template-columns: 6.5rem 1fr; gap: 0.75rem; align-items: baseline; }
+  .rec-row dt { font: 500 0.6875rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .rec-row dd { margin: 0; font: 400 0.8125rem var(--mono); overflow-wrap: anywhere; }
+  .findings { padding-block: 0.9rem 0.25rem; }
+  .findings-label { margin-bottom: 0.5rem; }
+  .finding { display: grid; grid-template-columns: 3.1rem 1fr auto; gap: 0.6rem; align-items: baseline; padding-block: 0.4rem; border-top: 1px dashed var(--rule-soft); }
+  .finding:first-of-type { border-top: 0; }
+  .tag { font: 600 0.6875rem var(--mono); letter-spacing: 0.06em; padding: 0.15rem 0.35rem; border-radius: 3px; text-align: center; display: inline-block; }
+  .tag-pass { color: var(--pass); background: var(--pass-soft); }
+  .tag-fail { color: var(--fail); background: var(--fail-soft); }
+  .finding .why { display: block; font: 400 0.75rem var(--mono); color: var(--muted); }
+  .finding .ms { font: 400 0.75rem var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ruling-foot { margin-top: 0.9rem; padding-top: 0.9rem; border-top: 3px double var(--rule); display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; flex-wrap: wrap; }
+  .signed { display: grid; gap: 0.15rem; }
+  .signature { font-family: var(--serif); font-size: 1.35rem; color: var(--accent); transform: rotate(-2deg); transform-origin: left; line-height: 1.1; }
+  .signed .addr { font-size: 0.75rem; color: var(--muted); }
+  .ruling-links { display: grid; gap: 0.2rem; text-align: right; font: 400 0.75rem var(--mono); color: var(--muted); }
+  .ruling-links a { color: var(--accent); text-decoration: none; }
+  .ruling-links a:hover { text-decoration: underline; }
+  .stamp {
+    position: absolute; right: 1.5rem; top: 6.1rem;
+    border: 2px solid var(--fail); color: var(--fail);
+    padding: 0.35rem 0.6rem 0.3rem; border-radius: 4px;
+    font: 600 0.6875rem/1.2 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; text-align: center;
+    transform: rotate(-7deg);
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+    animation: stamp 0.55s cubic-bezier(.2,.9,.3,1.2) 0.35s both;
+  }
+  .stamp strong { display: block; font-size: 1.25rem; letter-spacing: 0.14em; }
+  @keyframes stamp { from { transform: rotate(-16deg) scale(1.35); opacity: 0; } to { transform: rotate(-7deg) scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .stamp { animation: none; } }
+  @media (max-width: 520px) {
+    .ruling { padding: 1.25rem 1.1rem 1rem; }
+    .matter { padding-right: 0; }
+    .stamp { position: static; display: inline-block; margin: 0.9rem 0 0.1rem; }
+    .rec-row { grid-template-columns: 1fr; gap: 0; }
+    .ruling-links { text-align: left; }
+  }
+
+  section { padding-block: clamp(3.5rem, 7vw, 6rem); }
+  .section-head { display: grid; gap: 1rem; margin-bottom: clamp(2rem, 4vw, 3rem); max-width: 46rem; }
+  .band { background: var(--paper-2); border-block: 1px solid var(--rule-soft); }
+
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--ink); }
+  .fact { padding: 1.5rem 1.5rem 0 0; display: grid; gap: 0.6rem; align-content: start; }
+  .fact + .fact { padding-left: 1.5rem; border-left: 1px solid var(--rule); }
+  .fact h3 { font-size: 1.35rem; }
+  .fact p { color: var(--ink-2); }
+  .fact .src { font: 400 0.75rem var(--mono); color: var(--muted); }
+  @media (max-width: 820px) {
+    .facts { grid-template-columns: 1fr; }
+    .fact { padding: 1.5rem 0; }
+    .fact + .fact { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+  }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; list-style: none; margin: 0; padding: 0; }
+  @media (max-width: 960px) { .steps { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .steps { grid-template-columns: 1fr; } }
+  .step { background: var(--card); border: 1px solid var(--rule); padding: 1.35rem; display: grid; gap: 0.75rem; align-content: start; }
+  .step-n { font: 500 0.875rem var(--mono); color: var(--accent); }
+  .step h3 { font-size: 1.3rem; }
+  .step p { color: var(--ink-2); font-size: 0.9375rem; }
+  .step .onchain { font: 400 0.75rem var(--mono); color: var(--muted); border-top: 1px dashed var(--rule); padding-top: 0.6rem; }
+
+  .outcomes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  @media (max-width: 860px) { .outcomes { grid-template-columns: 1fr; } }
+  .outcome { border: 1px solid var(--rule); background: var(--card); padding: 1.5rem; display: grid; gap: 0.75rem; align-content: start; }
+  .outcome-label { font: 600 0.8125rem var(--mono); letter-spacing: 0.12em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.5rem; }
+  .outcome-label::before { content: ""; width: 10px; height: 10px; border-radius: 2px; background: currentColor; }
+  .o-pass .outcome-label { color: var(--pass); }
+  .o-fail .outcome-label { color: var(--fail); }
+  .o-abstain { border-color: var(--abstain); box-shadow: inset 0 0 0 1px var(--abstain); }
+  .o-abstain .outcome-label { color: var(--abstain); }
+  .outcome h3 { font-size: 1.35rem; }
+  .outcome p { color: var(--ink-2); }
+  .codes { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .code-chip { font: 400 0.75rem var(--mono); padding: 0.2rem 0.45rem; background: var(--abstain-soft); color: var(--abstain); border-radius: 3px; }
+
+  .principles { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--ink); }
+  .principle { padding: 1.5rem 0; display: grid; grid-template-columns: 2.25rem 1fr; gap: 0.75rem; border-bottom: 1px solid var(--rule); }
+  .principle:nth-child(odd) { padding-right: 2rem; }
+  .principle:nth-child(even) { padding-left: 2rem; border-left: 1px solid var(--rule); }
+  @media (max-width: 720px) {
+    .principles { grid-template-columns: 1fr; }
+    .principle:nth-child(odd), .principle:nth-child(even) { padding-inline: 0; border-left: 0; }
+  }
+  .principle svg { width: 22px; height: 22px; color: var(--accent); margin-top: 0.2rem; }
+  .principle h3 { font-size: 1.2rem; margin-bottom: 0.35rem; }
+  .principle p { color: var(--ink-2); font-size: 0.9375rem; }
+
+  .integrate { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+  @media (max-width: 920px) { .integrate { grid-template-columns: 1fr; } }
+  .integrate > * { min-width: 0; }
+  .surfaces { display: grid; border-top: 1px solid var(--rule); }
+  .surface { display: grid; gap: 0.35rem; padding-block: 1.1rem; border-bottom: 1px solid var(--rule); }
+  .surface-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .surface h3 { font-family: var(--sans); font-weight: 600; font-size: 1rem; letter-spacing: 0; }
+  .surface p { color: var(--ink-2); font-size: 0.9375rem; }
+  .status { font: 500 0.6875rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 0.2rem 0.5rem; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .s-live { color: var(--pass); }
+  .s-built { color: var(--accent); }
+  .s-progress { color: var(--abstain); }
+
+  .code { background: var(--code-bg); color: var(--code-ink); border-radius: 6px; overflow: hidden; border: 1px solid var(--rule); min-width: 0; }
+  .code-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.6rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.08); font: 400 0.75rem var(--mono); color: var(--code-dim); }
+  .code pre { margin: 0; padding: 1rem 1.1rem 1.2rem; overflow-x: auto; font: 400 0.8125rem/1.7 var(--mono); }
+  .c-dim { color: var(--code-dim); }
+  .c-key { color: #9ea9ff; }
+  .c-str { color: #9fd8b5; }
+  .c-num { color: #e6b45e; }
+  .c-pass { color: #5ec48f; }
+  .c-fail { color: #f08a80; }
+  .copy {
+    font: 500 0.6875rem var(--mono); letter-spacing: 0.06em; text-transform: uppercase;
+    background: transparent; color: var(--code-ink); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px; padding: 0.3rem 0.65rem; cursor: pointer;
+  }
+  .copy:hover { border-color: rgba(255,255,255,0.5); }
+
+  .verify-grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: clamp(2rem, 4vw, 3.5rem); align-items: start; }
+  @media (max-width: 920px) { .verify-grid { grid-template-columns: 1fr; } }
+  .verify-grid > * { min-width: 0; }
+  .verify-copy { display: grid; gap: 1rem; }
+  .checklist { margin: 0.5rem 0 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; color: var(--ink-2); font-size: 0.9375rem; }
+  .checklist li { display: grid; grid-template-columns: 1.25rem 1fr; gap: 0.5rem; }
+  .checklist li::before { content: "✓"; color: var(--pass); font-family: var(--mono); }
+
+  .price-card { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); background: var(--card); }
+  @media (max-width: 820px) { .price-card { grid-template-columns: 1fr; } }
+  .price-main { padding: clamp(1.5rem, 3vw, 2.25rem); display: grid; gap: 1rem; align-content: start; }
+  .price-figure { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+  .price-figure .amt { font-family: var(--serif); font-size: clamp(3rem, 6vw, 4.25rem); line-height: 1; }
+  .price-figure .unit { font: 400 0.875rem var(--mono); color: var(--muted); }
+  .price-main ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.5rem; color: var(--ink-2); font-size: 0.9375rem; }
+  .price-main li { padding-left: 1.1rem; position: relative; }
+  .price-main li::before { content: ""; position: absolute; left: 0; top: 0.8em; width: 6px; height: 1px; background: var(--ink-2); }
+  .price-side { background: var(--ink); color: var(--paper); padding: clamp(1.5rem, 3vw, 2.25rem); display: grid; gap: 1rem; align-content: start; }
+  .price-side .eyebrow { color: inherit; opacity: 0.7; }
+  .price-side p { opacity: 0.8; }
+  .price-side .btn { border-color: var(--paper); color: var(--paper); justify-self: start; }
+  .price-side .btn:hover { background: var(--paper); color: var(--ink); }
+  .beta-note { margin-top: 1rem; font: 400 0.8125rem var(--mono); color: var(--muted); }
+
+  .ledger-wrap { overflow-x: auto; border-top: 1px solid var(--ink); }
+  .ledger { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+  .ledger th, .ledger td { text-align: left; padding: 0.85rem 1rem 0.85rem 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+  .ledger th { font: 500 0.6875rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .ledger td.mono { font: 400 0.8125rem var(--mono); white-space: nowrap; }
+  .ledger a { color: var(--accent); text-decoration: none; }
+  .ledger a:hover { text-decoration: underline; }
+  .figures { display: flex; flex-wrap: wrap; gap: 1rem 2.5rem; margin-top: 2rem; }
+  .figure { display: grid; gap: 0.1rem; }
+  .figure b { font-family: var(--serif); font-weight: 400; font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .figure span { font-size: 0.875rem; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--rule); padding-block: 2.5rem 3rem; }
+  .foot-row { display: flex; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; align-items: flex-start; }
+  .foot-claim { font-family: var(--serif); font-size: 1.35rem; max-width: 30ch; line-height: 1.25; }
+  .foot-meta { font: 400 0.8125rem var(--mono); color: var(--muted); display: grid; gap: 0.3rem; text-align: right; }
+  @media (max-width: 640px) { .foot-meta { text-align: left; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="seal" viewBox="0 0 32 32">
+      <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="16" cy="16" r="10.5" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="1.6 1.6"/>
+      <path d="M11 11.5 L16 21.5 L21 11.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="nav">
+  <div class="wrap nav-row">
+    <a class="brand" href="#top" aria-label="Verdict home">
+      <svg class="seal" aria-hidden="true"><use href="#seal"/></svg>
+      <span class="brand-name">Verdict</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#outcomes">Outcomes</a>
+      <a href="#integrate">Integrate</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#arc">Live on Arc</a>
+    </nav>
+    <a class="btn btn-solid" href="#verify">Verify a ruling</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Arbitration for agent payments · on Arc</span>
+        <h1>The judge for agent payments that <em>nobody controls</em>.</h1>
+        <p class="lede">
+          Escrow can hold the money. Someone still has to decide who gets it, and the buyer
+          can't be the judge of their own purchase. Verdict re-runs the work, issues a signed
+          ruling anyone can re-check, and never touches the funds.
+        </p>
+        <div class="cta-row">
+          <a class="btn btn-solid" href="#verify">Verify a live ruling</a>
+          <a class="btn btn-ghost" href="#how">How a ruling works</a>
+        </div>
+        <p class="hero-note"><span class="live-dot" aria-hidden="true"></span>Issuing rulings on Arc testnet today · chain 5042002</p>
+      </div>
+
+      <article class="ruling" aria-label="A real ruling issued on Arc testnet for job 2">
+        <div class="ruling-head">
+          <span class="ruling-title">Ruling</span>
+          <span class="ruling-no">JOB No. 2 · ARC TESTNET<br>2026-09-24 · 08:37 UTC</span>
+        </div>
+
+        <div class="matter">
+          <span class="eyebrow">In the matter of</span>
+          <div class="party"><span class="role">Client</span><span class="addr">0x817B…BE38</span></div>
+          <span class="v">v.</span>
+          <div class="party"><span class="role">Provider</span><span class="addr">0xEAcD…416f</span></div>
+        </div>
+
+        <dl class="record">
+          <div class="rec-row"><dt>Terms</dt><dd>sum two integers read from stdin</dd></div>
+          <div class="rec-row"><dt>Terms hash</dt><dd>0x3e2254c9…1a29ecd8</dd></div>
+          <div class="rec-row"><dt>Evidence</dt><dd>0xaddae2e0…e120bdc4</dd></div>
+          <div class="rec-row"><dt>Escrow</dt><dd>$0.10 USDC · held by the escrow contract</dd></div>
+        </dl>
+
+        <div class="findings">
+          <div class="eyebrow findings-label">Findings on re-execution</div>
+          <div class="finding">
+            <span class="tag tag-fail">FAIL</span>
+            <span>adds two numbers <span class="why">expected "5", got "6"</span></span>
+            <span class="ms">431 ms</span>
+          </div>
+          <div class="finding">
+            <span class="tag tag-pass">PASS</span>
+            <span>handles zero</span>
+            <span class="ms">363 ms</span>
+          </div>
+          <div class="finding">
+            <span class="tag tag-fail">FAIL</span>
+            <span>handles negatives <span class="why">expected "-2", got "-8"</span></span>
+            <span class="ms">421 ms</span>
+          </div>
+        </div>
+
+        <div class="stamp" role="img" aria-label="Outcome: failed, 1 of 3, escrow refused">
+          <strong>Failed</strong>1 of 3 · refused
+        </div>
+
+        <div class="ruling-foot">
+          <div class="signed">
+            <span class="signature">Verdict</span>
+            <span class="addr">signed by 0x6686…d100</span>
+          </div>
+          <div class="ruling-links">
+            <span>ruling hash 0xe549…13f4</span>
+            <a href="https://explorer.testnet.arc.io/tx/0x6cdc5d694d6df3bca1728bc76a7f94211a701e49d5c65cc797ed734a462cdd05" target="_blank" rel="noopener">reject() on Arc ↗</a>
+            <a href="https://explorer.testnet.arc.io/tx/0x0f385a068611d4aba3ec3a7b452bb7fc4b177626cbfc02b4fafdfeecd9e656e7" target="_blank" rel="noopener">client refund ↗</a>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="problem-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">The problem</span>
+        <h2 id="problem-title">Agents pay before they know if they got what they paid for.</h2>
+      </div>
+      <div class="facts">
+        <div class="fact">
+          <h3>Payments are final.</h3>
+          <p>An x402 payment settles before the response arrives. If the API fails or returns garbage, the protocol has no way back.</p>
+          <span class="src">x402 · pay first, receive second</span>
+        </div>
+        <div class="fact">
+          <h3>Escrow only moves the question.</h3>
+          <p>Holding the funds is solved. Deciding whether the work was actually done isn't. Agent escrow tends to end at "an arbiter reviews", without naming one.</p>
+          <span class="src">The missing piece is the judge</span>
+        </div>
+        <div class="fact">
+          <h3>The buyer can judge their own case.</h3>
+          <p>ERC-8183 lets the client appoint anyone as evaluator, themselves included. A buyer who judges their own purchase can reject good work and take the money back.</p>
+          <span class="src">ERC-8183 · createJob(provider, evaluator, …)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">How a ruling works</span>
+        <h2 id="how-title">Commit first. Judge second. Sign everything.</h2>
+        <p class="lede">Both sides lock in the terms before anyone knows the outcome. That's what makes the ruling hard to argue with.</p>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-n">[1]</span>
+          <h3>Terms are committed</h3>
+          <p>The buyer states what "done" means as checks a machine can run: tests, a response schema, an on-chain condition.</p>
+          <span class="onchain">hash recorded when the job is created</span>
+        </li>
+        <li class="step">
+          <span class="step-n">[2]</span>
+          <h3>Evidence is committed</h3>
+          <p>The seller delivers and commits a hash of exactly what they delivered, so the delivery can't be swapped mid-ruling.</p>
+          <span class="onchain">hash recorded at submit()</span>
+        </li>
+        <li class="step">
+          <span class="step-n">[3]</span>
+          <h3>Verdict re-runs it</h3>
+          <p>We fetch both, check each against its hash, and re-run the checks in an isolated sandbox. The result is pass or fail, not an opinion.</p>
+          <span class="onchain">deterministic, reproducible</span>
+        </li>
+        <li class="step">
+          <span class="step-n">[4]</span>
+          <h3>A signed ruling settles it</h3>
+          <p>The full ruling is published and signed. Its hash is recorded on-chain as the reason the escrow was released or refunded.</p>
+          <span class="onchain">complete() or reject()</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="outcomes" class="band" aria-labelledby="outcomes-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Three outcomes, not two</span>
+        <h2 id="outcomes-title">When we can't verify, we don't guess.</h2>
+        <p class="lede">Both sides rely on the arbiter, so one that guesses under uncertainty is worse than none. That's why abstaining is a ruling in its own right.</p>
+      </div>
+      <div class="outcomes">
+        <article class="outcome o-pass">
+          <span class="outcome-label">Passed</span>
+          <h3>Every check passed.</h3>
+          <p>The escrow is released to the seller. The ruling records each check, its output and how long it took.</p>
+        </article>
+        <article class="outcome o-fail">
+          <span class="outcome-label">Failed</span>
+          <h3>The work arrived, and it's wrong.</h3>
+          <p>The escrow is refused and the buyer can reclaim it. The ruling says exactly which checks failed and why.</p>
+        </article>
+        <article class="outcome o-abstain">
+          <span class="outcome-label">Abstain</span>
+          <h3>We couldn't verify it honestly.</h3>
+          <p>We take no side and move no money. The escrow's own deadline returns the funds, and no judgement is passed.</p>
+          <div class="codes" aria-label="Examples of abstain reasons">
+            <span class="code-chip">deliverable_hash_mismatch</span>
+            <span class="code-chip">deliverable_unavailable</span>
+            <span class="code-chip">spec_hash_mismatch</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="principles-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">What makes a judge worth trusting</span>
+        <h2 id="principles-title">Four rules we don't bend.</h2>
+      </div>
+      <div class="principles">
+        <div class="principle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <div><h3>We never hold the money.</h3><p>Funds stay in the escrow contract the parties chose. We issue rulings. We never hold, move or lend funds.</p></div>
+        </div>
+        <div class="principle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 0 0 6 0L5 7zm14 0l-3 7a3 3 0 0 0 6 0l-3-7z"/></svg>
+          <div><h3>Same fee, whatever the outcome.</h3><p>A ruling costs the same whether it passes, fails or abstains, so we have no reason to lean either way.</p></div>
+        </div>
+        <div class="principle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg>
+          <div><h3>Every ruling can be re-run.</h3><p>The terms and the evidence are both on-chain. Anyone can reproduce a ruling from chain data alone and check we got it right.</p></div>
+        </div>
+        <div class="principle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5"/><circle cx="12" cy="16" r="0.6" fill="currentColor"/></svg>
+          <div><h3>Abstain beats a guess.</h3><p>If something doesn't check out, like a swapped file or a missing document, we refuse to rule rather than pick a side.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="integrate" class="band" aria-labelledby="integrate-title">
+    <div class="wrap integrate">
+      <div>
+        <div class="section-head" style="margin-bottom:1.5rem">
+          <span class="eyebrow">Integrate</span>
+          <h2 id="integrate-title">Name Verdict as the judge. That's the whole integration.</h2>
+        </div>
+        <div class="surfaces">
+          <div class="surface">
+            <div class="surface-top"><h3>ERC-8183 evaluator</h3><span class="status s-live">Live · testnet</span></div>
+            <p>Put Verdict's address in the evaluator seat of any ERC-8183 job on Arc. We judge the submission and call complete() or reject().</p>
+          </div>
+          <div class="surface">
+            <div class="surface-top"><h3>ERC-8004 validation</h3><span class="status s-built">Built</span></div>
+            <p>Answers validation requests with a 0–100 score. It goes live on mainnet once the ERC-8004 registries are deployed there.</p>
+          </div>
+          <div class="surface">
+            <div class="surface-top"><h3>Arbiter for agent escrow</h3><span class="status s-progress">In progress</span></div>
+            <p>For escrow protocols that let buyers choose an arbiter: one API call returns a signed ruling your contract can enforce.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="code" role="region" aria-label="Example: create an ERC-8183 job judged by Verdict">
+        <div class="code-bar"><span>post-job.js</span><span>Arc testnet</span></div>
+<pre><code><span class="c-dim">// The buyer states what "done" means, as checks a machine can run.</span>
+<span class="c-key">const</span> terms = jobSpec({
+  language: <span class="c-str">"python"</span>,
+  tests: [
+    { name: <span class="c-str">"adds two numbers"</span>,  stdin: <span class="c-str">"2 3"</span>,  expect: { stdout: <span class="c-str">"5"</span> } },
+    { name: <span class="c-str">"handles negatives"</span>, stdin: <span class="c-str">"-4 2"</span>, expect: { stdout: <span class="c-str">"-2"</span> } },
+  ],
+});
+
+<span class="c-dim">// Put Verdict in the evaluator seat. Nobody else can release the escrow.</span>
+<span class="c-key">await</span> commerce.write.createJob([
+  provider,
+  <span class="c-str">"0x668640c4f897F55661139D153Feee8b989d5d100"</span>, <span class="c-dim">// Verdict</span>
+  deadline,
+  encodeJobDescription({
+    uri: dataUri(terms),        <span class="c-dim">// terms live on-chain</span>
+    hash: hashDocument(terms),  <span class="c-dim">// and are committed by hash</span>
+    summary: <span class="c-str">"sum two integers read from stdin"</span>,
+  }),
+  zeroAddress,
+]);</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="verify" aria-labelledby="verify-title">
+    <div class="wrap verify-grid">
+      <div class="verify-copy">
+        <span class="eyebrow">Don't trust us. Check it.</span>
+        <h2 id="verify-title">Re-run any ruling from the chain alone.</h2>
+        <p class="lede">No keys, no account, and no trust in our servers. The checker reads the job from Arc, rebuilds the terms and the evidence, re-runs the checks itself, and compares its answer with ours.</p>
+        <ul class="checklist">
+          <li>Terms and evidence match their on-chain hashes</li>
+          <li>An independent re-run reaches the same result</li>
+          <li>The ruling came from the named evaluator</li>
+          <li>The published ruling hashes to the on-chain reason</li>
+          <li>The signature recovers to Verdict's address</li>
+        </ul>
+      </div>
+
+      <div class="code" role="region" aria-label="Real verification output for job 2">
+        <div class="code-bar">
+          <span>npm run verify -- 2</span>
+          <button class="copy" type="button" id="copy-verify" data-copy="npm run verify -- 2">Copy</button>
+        </div>
+<pre><code><span class="c-dim">Verifying job #2 on Arc Testnet</span>
+
+<span class="c-pass">✓</span> evaluator is not the client (no self-evaluation)
+<span class="c-pass">✓</span> spec matches the hash committed in the job  <span class="c-dim">0x3e2254c9aa0435f2…</span>
+<span class="c-pass">✓</span> found the provider's submit() transaction
+<span class="c-pass">✓</span> deliverable matches the hash the provider committed  <span class="c-dim">0xaddae2e0b027df3f…</span>
+
+re-running the tests independently…
+  <span class="c-fail">FAIL</span>  adds two numbers — expected stdout <span class="c-str">"5"</span>, got <span class="c-str">"6"</span>
+  <span class="c-pass">pass</span>  handles zero
+  <span class="c-fail">FAIL</span>  handles negatives — expected stdout <span class="c-str">"-2"</span>, got <span class="c-str">"-8"</span>
+independent result: FAILED (<span class="c-num">1</span>/<span class="c-num">3</span> tests passed)
+
+<span class="c-pass">✓</span> the evaluator's on-chain decision matches the independent re-run  <span class="c-dim">expected Rejected, chain says Rejected</span>
+<span class="c-pass">✓</span> the decision was made by the named evaluator
+<span class="c-pass">✓</span> published verdict hashes to the on-chain reason  <span class="c-dim">0xe5493323564739b3…</span>
+<span class="c-pass">✓</span> verdict signature recovers to the evaluator
+
+<span class="c-pass">VERIFIED — every check passed.</span></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="pricing" class="band" aria-labelledby="pricing-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Pricing</span>
+        <h2 id="pricing-title">One price per ruling. It doesn't change with the answer.</h2>
+      </div>
+      <div class="price-card">
+        <div class="price-main">
+          <span class="eyebrow">Per ruling</span>
+          <div class="price-figure"><span class="amt">$0.01</span><span class="unit">USDC · paid per call over x402</span></div>
+          <ul>
+            <li>Same fee whether the ruling passes, fails or abstains</li>
+            <li>Settled through Circle Gateway, so there's no gas per ruling</li>
+            <li>No account and no API key: pay from any wallet</li>
+            <li>Every ruling is signed, published and re-checkable</li>
+          </ul>
+        </div>
+        <div class="price-side">
+          <span class="eyebrow">Protocols &amp; marketplaces</span>
+          <h3>Run escrow or a job market?</h3>
+          <p>Volume pricing, a dedicated evaluator key for your protocol, and a published uptime commitment your users can hold us to.</p>
+          <a class="btn" href="#integrate">See integrations</a>
+        </div>
+      </div>
+      <p class="beta-note">Rulings are free on Arc testnet during the beta. Per-ruling billing over x402 starts on mainnet.</p>
+    </div>
+  </section>
+
+  <section id="arc" aria-labelledby="arc-title">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Live on Arc testnet</span>
+        <h2 id="arc-title">Real jobs, real escrow, real rulings.</h2>
+        <p class="lede">Two jobs have run end to end with three separate parties. Every step is a transaction you can open.</p>
+      </div>
+      <div class="ledger-wrap">
+        <table class="ledger">
+          <thead>
+            <tr><th>Case</th><th>Ruling</th><th>Result</th><th>On-chain</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Job #1 · correct code</td>
+              <td><span class="tag tag-pass">PASSED</span></td>
+              <td>3 of 3 checks · seller paid $0.10</td>
+              <td class="mono"><a href="https://explorer.testnet.arc.io/tx/0x656ebf828d34f0d529545d25d72148bde5b14b1f8cbf9e325638102f304c2229" target="_blank" rel="noopener">complete() 0x656e…2229 ↗</a></td>
+            </tr>
+            <tr>
+              <td>Job #2 · buggy code</td>
+              <td><span class="tag tag-fail">FAILED</span></td>
+              <td>1 of 3 checks · buyer refunded</td>
+              <td class="mono"><a href="https://explorer.testnet.arc.io/tx/0x6cdc5d694d6df3bca1728bc76a7f94211a701e49d5c65cc797ed734a462cdd05" target="_blank" rel="noopener">reject() 0x6cdc…dd05 ↗</a></td>
+            </tr>
+            <tr>
+              <td>Escrow contract</td>
+              <td colspan="2">ERC-8183 · no owner, no admin key, fee fixed at deploy</td>
+              <td class="mono"><a href="https://explorer.testnet.arc.io/address/0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d" target="_blank" rel="noopener">0x9d8d…c76d ↗</a></td>
+            </tr>
+            <tr>
+              <td>Verdict evaluator</td>
+              <td colspan="2">The key that signs every ruling</td>
+              <td class="mono"><a href="https://explorer.testnet.arc.io/address/0x668640c4f897F55661139D153Feee8b989d5d100" target="_blank" rel="noopener">0x6686…d100 ↗</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="figures">
+        <div class="figure"><b>2</b><span>rulings issued on testnet</span></div>
+        <div class="figure"><b>142</b><span>automated tests, most of them adversarial</span></div>
+        <div class="figure"><b>2</b><span>security reviews before deployment</span></div>
+        <div class="figure"><b>$0</b><span>ever held by Verdict</span></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <p class="foot-claim">Verdict issues rulings. It never holds, moves or lends funds.</p>
+    <div class="foot-meta">
+      <span>Arc testnet · chain 5042002</span>
+      <span>Rulings settle in USDC</span>
+      <span>© 2026 Verdict</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById("copy-verify");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      var reset = function (label) {
+        btn.textContent = label;
+        setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+      };
+      try {
+        navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(
+          function () { reset("Copied"); },
+          function () { reset("Copy failed"); }
+        );
+      } catch (e) { reset("Copy failed"); }
+    });
+  })();
+</script>
