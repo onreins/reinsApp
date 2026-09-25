@@ -185,4 +185,4 @@ anyone can check it.
 - **Not deployed to mainnet.** Blocked on funding a fresh deployer key.
 - **No LLM agent yet.** The reference agent follows fixed rules. Wiring Claude
   to the MCP server needs an API key.
-- **Not formally audited.** One adversarial review and 216 tests is not an audit.
+- **Not formally audited.** One adversarial review and 239 tests is not an audit.
