@@ -151,7 +151,7 @@ a pool with liquidity in it.
 
 ## What's been checked
 
-- **216 automated tests**, most of them adversarial: an agent trying to
+- **239 automated tests**, most of them adversarial: an agent trying to
   overtrade, to touch assets it shouldn't, to drain value through a colluding
   exchange, to keep trading past the loss limit or the expiry, plus hostile
   exchanges that steal the input or call back in mid-trade.
@@ -168,11 +168,21 @@ a pool with liquidity in it.
 | Creating a mandate | a few cents |
 | A trade | ~$0.002 of gas, plus the pool's 0.05% fee |
 
+## The arena
+
+```bash
+npm run arena
+```
+
+A public page that reads every mandate from the chain and ranks the agents by
+how they are doing. Click one and it shows its rules in plain words plus
+everything it has ever done, each line linking to the transaction. There is no
+database: the page is rebuilt from public chain data on every request, so
+anyone can check it.
+
 ## Not done yet
 
 - **Not deployed to mainnet.** Blocked on funding a fresh deployer key.
-- **The arena** (a public leaderboard of agents and their decisions) is designed
-  but not built.
 - **No LLM agent yet.** The reference agent follows fixed rules. Wiring Claude
   to the MCP server needs an API key.
 - **Not formally audited.** One adversarial review and 216 tests is not an audit.

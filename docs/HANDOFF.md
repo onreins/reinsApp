@@ -13,6 +13,7 @@ for Builders item 12). Built so far, all on `master`:
 |---|---|
 | Contract | `contracts/Mandate.sol` + factory. 24 adversarial tests; reviewed, findings fixed |
 | Exchange | `contracts/UniswapV4Venue.sol`, per-pair routes set once. Proven on Arc mainnet state with `npm run sim:mainnet` (no spend) |
+| Arena | `npm run arena` — leaderboard + per-agent history, read from chain events only; 7 tests |
 | Agent surface | `mandate/sdk.js`, `mandate/mcp-server.js` (MCP tools), `agents/fx-reversion.js` |
 | Mainnet | Not deployed. `npm run deploy:mandate -- --dry-run` estimates ~$0.10 gas. Deployer is a fresh key `0x75Ff1C11FfFECF6EAF4fDc7f7d11df5b77674f41` (`MANDATE_MAINNET_KEY` in `.env`), unfunded |
 | Market reality | Only USDC/EURC has a liquid v4 pool on Arc mainnet (checked 2026-09-25); ETH/BTC have no pool yet, so v1 is an FX agent |
@@ -20,8 +21,8 @@ for Builders item 12). Built so far, all on `master`:
 **Blocked on the founder:** funding the mainnet deployer with real USDC (~$25:
 deploy + a small first mandate + agent gas).
 
-Next: deploy, run one live mandate with the reference agent, then the arena page
-(leaderboard from factory events) and an LLM agent over the MCP server.
+Next: deploy, run one live mandate with the reference agent, then point the
+arena at mainnet and wire an LLM agent through the MCP server.
 
 ## What Verdict was
 
