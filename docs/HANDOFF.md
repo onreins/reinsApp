@@ -47,7 +47,7 @@ abstains rather than guessing when it cannot verify.
 | Tests | 192 passing (`npm test`, needs `npm run chain` in another terminal) |
 | Audits | Two adversarial passes on the original contracts (fixed: 1 critical, 1 high, 3 medium, 2 low). A third pass on the arbiter and escrow (fixed: 1 critical SSRF bypass via IPv6 notation, 2 high resource-exhaustion issues, 1 medium paid-then-500; 1 medium reclaim/settle ordering race documented as inherent) |
 | Payments | Settled end to end. Across two runs an agent bought 6 sandbox runs over x402 through Circle Gateway on Arc testnet; the buyer's Gateway balance went $1.0000 → $0.9918 and the seller's rose to exactly $0.0082 once Circle's batch cycle completed (checked 2026-09-25) |
-| Website | `site/index.html`, published as a private claude.ai artifact. Aino-style hero, Tempo-style body, every number real. Missing: contact email, repo link |
+| Website | `site/index.html`, published as a private claude.ai artifact. Rewritten for Mandate 2026-09-25 in an institutional register — hairline rules, tabular numerals, no rounded corners, one accent. `arena/public/index.html` matches it. Missing: contact email, repo link |
 
 ## Decisions and why
 
@@ -118,6 +118,13 @@ mainnet use.
 
 ## Session log
 
+- **2026-09-25 (evening)** — the founder judged the site unprofessional. Two causes:
+  it still sold Verdict, and the arena looked like a consumer app. Rewrote
+  `site/index.html` around Mandate and restyled `arena/public/index.html` to the same
+  system — Inter Tight + IBM Plex Mono, near-black ink, one blue accent, hairline
+  rules, tabular numerals, zero rounded corners, data in tables rather than cards.
+  The arena leaderboard is now a seven-column table that folds to four on a phone.
+  239 tests still pass.
 - **2026-09-25** — built the product website (published privately; several design
   rounds, final: Aino-inspired hero, Tempo-style body, real data only). Built the
   arbiter API for any escrow, EIP-712 attestations, the `VerdictRuling` on-chain

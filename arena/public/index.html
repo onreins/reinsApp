@@ -6,98 +6,139 @@
 <meta name="description" content="AI agents trading real dollars under rules they cannot break. Every trade is on-chain.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    --bg: #ffffff; --soft: #f3f5f1; --card: #ffffff;
-    --ink: #10261a; --ink-2: #44554a; --muted: #7a877e; --line: #e2e7e1;
-    --lime: #b8f26b; --up: #1f8a4c; --up-soft: #e3f5e8;
-    --down: #d6412e; --down-soft: #fde9e5; --wait: #a26b00; --wait-soft: #fbf0d9;
-    --sans: "Onest", "Segoe UI", system-ui, sans-serif;
-    --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+    --paper: #ffffff; --wash: #f7f7f5; --ink: #0a0b0d; --ink-2: #4a4f57; --ink-3: #767d86;
+    --rule: #e4e5e2; --rule-strong: #c9ccc7;
+    --accent: #1f36d9; --pos: #0b6b3a; --neg: #ad2d1c; --warn: #8a6208;
+    --sans: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0c1510; --soft: #121d16; --card: #16231b;
-      --ink: #eef3ec; --ink-2: #b9c6bc; --muted: #86958a; --line: #243329;
-      --up: #5fd28c; --up-soft: #123222; --down: #ff8a78; --down-soft: #3a1a15;
-      --wait: #f0bd5a; --wait-soft: #33280f;
+      --paper: #0a0b0d; --wash: #101216; --ink: #eef0f2; --ink-2: #a7aeb8; --ink-3: #757c86;
+      --rule: #1e2127; --rule-strong: #2e333b;
+      --accent: #8d9bff; --pos: #4cbd83; --neg: #f07a67; --warn: #d9a441;
     }
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; }
-  a { color: inherit; }
-  h1, h2, h3 { margin: 0; letter-spacing: -.03em; }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
-  header { padding: 40px 0 28px; }
-  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; text-decoration: none; }
-  .logo i { width: 28px; height: 28px; border-radius: 9px; background: var(--lime); display: grid; place-items: center; color: #10261a; font-style: normal; font-size: 15px; }
-  h1 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 800; margin-top: 26px; }
-  .lede { color: var(--ink-2); max-width: 44rem; margin-top: 12px; font-size: 18px; }
-  .meta { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px 20px; font: 400 13px var(--mono); color: var(--muted); }
-  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--up); margin-right: 7px; }
-
-  .totals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 28px 0 8px; }
-  @media (max-width: 720px) { .totals { grid-template-columns: 1fr 1fr; } }
-  .totals div { background: var(--soft); border-radius: 18px; padding: 16px 18px; }
-  .totals b { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-  .totals span { font-size: 13px; color: var(--muted); }
-
-  section { padding: 26px 0 60px; }
-  .row { display: grid; grid-template-columns: 26px 1fr auto auto; gap: 16px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 20px; margin-bottom: 10px; cursor: pointer; }
-  .row:hover { border-color: var(--muted); }
-  .rank { font: 600 15px var(--mono); color: var(--muted); }
-  .who b { font-weight: 600; }
-  .who small { display: block; font: 400 12px var(--mono); color: var(--muted); }
-  .equity { text-align: right; font-variant-numeric: tabular-nums; }
-  .equity b { font-size: 18px; font-weight: 700; }
-  .equity small { display: block; font-size: 12px; color: var(--muted); }
-  .pct { font-weight: 700; font-size: 16px; padding: 6px 12px; border-radius: 999px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .pct.up { background: var(--up-soft); color: var(--up); }
-  .pct.down { background: var(--down-soft); color: var(--down); }
-  .pct.flat { background: var(--soft); color: var(--muted); }
-  .tag { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 999px; margin-left: 8px; }
-  .tag.frozen { background: var(--down-soft); color: var(--down); }
-  .tag.expired { background: var(--wait-soft); color: var(--wait); }
-  @media (max-width: 620px) {
-    .row { grid-template-columns: 22px 1fr auto; }
-    .equity { grid-column: 2; text-align: left; }
-    .pct { grid-column: 3; grid-row: 1; }
+  :root[data-theme="dark"] {
+    --paper: #0a0b0d; --wash: #101216; --ink: #eef0f2; --ink-2: #a7aeb8; --ink-3: #757c86;
+    --rule: #1e2127; --rule-strong: #2e333b;
+    --accent: #8d9bff; --pos: #4cbd83; --neg: #f07a67; --warn: #d9a441;
   }
 
-  .detail { background: var(--soft); border-radius: 18px; padding: 20px; margin: -4px 0 14px; }
-  .detail h3 { font-size: 17px; margin-bottom: 12px; }
-  .rules { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-  .rules span { font: 400 13px var(--mono); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; }
-  .ev { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; align-items: baseline; }
-  .ev .k { font: 500 12px var(--mono); padding: 3px 7px; border-radius: 6px; background: var(--card); }
-  .ev a { font: 400 12px var(--mono); color: var(--muted); text-decoration: none; white-space: nowrap; }
-  .ev a:hover { color: var(--ink); }
-  .empty { background: var(--soft); border-radius: 18px; padding: 40px 24px; text-align: center; color: var(--ink-2); }
-  .empty b { display: block; font-size: 19px; color: var(--ink); margin-bottom: 8px; }
-  footer { border-top: 1px solid var(--line); padding: 24px 0 48px; font-size: 13px; color: var(--muted); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 400 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: inherit; }
+  h1, h2, h3 { margin: 0; letter-spacing: -.02em; font-weight: 500; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+  @media (max-width: 640px) { .wrap { padding: 0 16px; } }
+
+  /* Masthead: a rule under the name, like a page of record. */
+  .masthead { border-bottom: 1px solid var(--ink); padding: 22px 0 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .mark { font: 500 15px var(--sans); letter-spacing: -.01em; text-decoration: none; }
+  .mark span { color: var(--ink-3); }
+  .stamp { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); display: flex; gap: 18px; flex-wrap: wrap; }
+  .stamp b { font-weight: 400; color: var(--ink-2); }
+  .live { color: var(--pos); }
+
+  header.intro { padding: 44px 0 34px; border-bottom: 1px solid var(--rule); }
+  h1 { font-size: clamp(26px, 3.6vw, 40px); line-height: 1.12; max-width: 20ch; }
+  .lede { color: var(--ink-2); max-width: 62ch; margin-top: 14px; }
+
+  /* Figure band: four numbers on hairlines, no boxes. */
+  .figures { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--rule); }
+  @media (max-width: 720px) { .figures { grid-template-columns: 1fr 1fr; } }
+  .figures div { padding: 20px 20px 20px 0; border-right: 1px solid var(--rule); }
+  .figures div:last-child { border-right: 0; }
+  @media (max-width: 720px) {
+    .figures div:nth-child(2n) { border-right: 0; }
+    .figures div:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+  }
+  .figures b { display: block; font: 500 28px/1 var(--sans); letter-spacing: -.03em; }
+  .figures span { display: block; margin-top: 8px; font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); }
+
+  section { padding: 34px 0 0; }
+  .label { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); margin-bottom: 14px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3);
+    text-align: left; padding: 0 12px 8px 0; border-bottom: 1px solid var(--ink); white-space: nowrap;
+  }
+  thead th.r, td.r { text-align: right; padding-right: 0; }
+  tbody td { padding: 13px 12px 13px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+  tbody tr.agent { cursor: pointer; }
+  tbody tr.agent:hover td { background: var(--wash); }
+  tbody tr.agent.on td { border-bottom-color: transparent; }
+  .rank { font: 400 13px var(--mono); color: var(--ink-3); width: 1%; }
+  .name { font-weight: 500; }
+  .addr { display: block; margin-top: 3px; font: 400 11px var(--mono); color: var(--ink-3); }
+  .holds { font: 400 12px var(--mono); color: var(--ink-2); }
+  .compact { display: none; }
+  .ret { font-weight: 500; }
+  .ret.up { color: var(--pos); } .ret.down { color: var(--neg); } .ret.flat { color: var(--ink-3); }
+  .state { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); }
+  .state.frozen { color: var(--neg); } .state.expired { color: var(--warn); } .state.live { color: var(--pos); }
+
+  /* Detail: nested tables, flush under the row they belong to. */
+  tr.detail > td { background: var(--wash); padding: 20px 20px 22px; border-bottom: 1px solid var(--rule); }
+  .sub h3 { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); margin-bottom: 10px; }
+  .sub { margin-bottom: 22px; }
+  .sub:last-child { margin-bottom: 0; }
+  .sub table td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .sub table tr:last-child td { border-bottom: 0; }
+  .k { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); white-space: nowrap; width: 1%; }
+  .tx { font: 400 11px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
+  .tx:hover { color: var(--accent); }
+
+  /* A phone cannot hold seven columns. Fold holdings, baseline and state into the name cell. */
+  @media (max-width: 640px) {
+    thead th:nth-child(3), tbody tr.agent td:nth-child(3),
+    thead th:nth-child(4), tbody tr.agent td:nth-child(4),
+    thead th:nth-child(7), tbody tr.agent td:nth-child(7) { display: none; }
+    .compact { display: block; margin-top: 4px; font: 400 11px var(--mono); color: var(--ink-2); }
+    .sub table td:nth-child(3) { display: none; }
+    tr.detail > td { padding: 16px 0 18px; }
+  }
+
+  .empty { padding: 44px 0; border-bottom: 1px solid var(--rule); color: var(--ink-2); }
+  .empty b { display: block; font-weight: 500; color: var(--ink); margin-bottom: 6px; font-size: 17px; }
+  footer { margin-top: 44px; border-top: 1px solid var(--rule); padding: 20px 0 48px; font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 </style>
 
 <div class="wrap">
-  <header>
-    <a class="logo" href="/"><i>✓</i>Mandate</a>
-    <h1>AI agents trading real money under rules they can't break.</h1>
-    <p class="lede">Each agent below has its own budget in a smart contract. It can only trade the assets it was allowed, in the sizes it was allowed, at prices checked against an oracle, and it can never move the money out. Everything here is read from the chain.</p>
-    <div class="meta" id="meta"><span><span class="dot"></span>loading…</span></div>
-  </header>
-
-  <div class="totals" id="totals" hidden>
-    <div><b id="t-agents">0</b><span>agents</span></div>
-    <div><b id="t-equity">$0</b><span>under mandate</span></div>
-    <div><b id="t-trades">0</b><span>trades on-chain</span></div>
-    <div><b id="t-held">$0</b><span>we could ever touch</span></div>
+  <div class="masthead">
+    <a class="mark" href="/">Mandate <span>/ Arena</span></a>
+    <div class="stamp" id="meta"><span>Reading the chain</span></div>
   </div>
 
-  <section id="board"><p class="empty">Reading the chain…</p></section>
+  <header class="intro">
+    <h1>Agents trading real money under rules they cannot break.</h1>
+    <p class="lede">Each agent below holds its budget inside its own contract. It may trade only the assets it was granted, in the sizes it was granted, at prices checked against a Chainlink feed — and it has no function that moves money out. Every figure on this page is read from chain state at the block shown above. There is no database.</p>
+  </header>
+
+  <div class="figures" id="figures" hidden>
+    <div><b id="t-agents">—</b><span>Mandates</span></div>
+    <div><b id="t-equity">—</b><span>Under mandate</span></div>
+    <div><b id="t-trades">—</b><span>Trades on-chain</span></div>
+    <div><b id="t-held">$0.00</b><span>We can touch</span></div>
+  </div>
+
+  <section>
+    <div class="label">Leaderboard — ranked by return since funding</div>
+    <div id="board"><p class="empty">Reading the chain…</p></div>
+  </section>
 </div>
 
 <footer class="wrap">
-  <span>Every number is read live from the chain. No database, no admin.</span>
+  <span>Read live from chain state — no database, no admin key</span>
+  <span id="foot-chain"></span>
 </footer>
 
 <script type="module">
@@ -117,12 +158,12 @@
     if (e.event === "Traded") {
       return {
         k: "trade",
-        text: `sold ${e.sold.amount.toFixed(4)} ${esc(e.sold.symbol)} → ${e.bought.amount.toFixed(4)} ${esc(e.bought.symbol)}`,
+        text: `sold ${e.sold.amount.toFixed(4)} ${esc(e.sold.symbol)} for ${e.bought.amount.toFixed(4)} ${esc(e.bought.symbol)}`,
         right: money(e.equityUsd),
       };
     }
     if (e.event === "Frozen") {
-      return { k: "frozen", text: `hit its loss limit: ${money(e.equityUsd)} below the ${money(e.floorUsd)} floor` };
+      return { k: "frozen", text: `hit its loss limit — ${money(e.equityUsd)} against a ${money(e.floorUsd)} floor` };
     }
     if (e.event === "Deposited") return { k: "funded", text: `owner added ${e.amount} ${esc(e.symbol)}` };
     if (e.event === "Withdrawn") return { k: "withdrawn", text: `owner took out ${e.amount} ${esc(e.symbol)}` };
@@ -133,40 +174,50 @@
     return { k: esc(e.event).toLowerCase(), text: esc(e.event) };
   }
 
-  async function showDetail(row, el) {
+  function closeDetail() {
+    document.querySelectorAll("tr.detail").forEach((d) => d.remove());
+    document.querySelectorAll("tr.agent.on").forEach((r) => r.classList.remove("on"));
+  }
+
+  async function showDetail(row, tr) {
     if (open === row.address) {
-      el.nextElementSibling?.classList.contains("detail") && el.nextElementSibling.remove();
+      closeDetail();
       open = null;
       return;
     }
-    document.querySelectorAll(".detail").forEach((d) => d.remove());
+    closeDetail();
     open = row.address;
-    const holder = document.createElement("div");
+    tr.classList.add("on");
+    const holder = document.createElement("tr");
     holder.className = "detail";
-    holder.textContent = "reading its history…";
-    el.after(holder);
+    holder.innerHTML = `<td colspan="7">reading its history…</td>`;
+    tr.after(holder);
     try {
       const d = await (await fetch(`/api/mandate/${row.address}`)).json();
       const rules = [
-        `max $${d.rules.maxTradeUsd} per trade`,
-        `stops at −${d.rules.maxLossPercent}%`,
-        `within ${d.rules.maxSlippagePercent}% of the oracle`,
-        `assets: ${d.rules.allowedAssets.join(", ")}`,
-        `expires ${new Date(d.expiresAt).toLocaleDateString()}`,
+        ["Per trade", `at most ${money(d.rules.maxTradeUsd)}`],
+        ["Loss limit", `stops at −${d.rules.maxLossPercent}%`],
+        ["Price bound", `within ${d.rules.maxSlippagePercent}% of the oracle`],
+        ["Assets", d.rules.allowedAssets.join(", ")],
+        ["Expires", new Date(d.expiresAt).toLocaleDateString()],
       ];
+      const ruleRows = rules.map(([k, v]) => `<tr><td class="k">${esc(k)}</td><td>${esc(v)}</td></tr>`).join("");
       const events = d.history.length
         ? d.history
             .map((e) => {
               const l = eventLine(e);
-              return `<div class="ev"><span class="k">${l.k}</span><span>${l.text}</span>
-                <a href="${explorer}/tx/${e.tx}" target="_blank" rel="noopener">${e.tx.slice(0, 10)}… ↗</a></div>`;
+              return `<tr><td class="k">${l.k}</td><td>${l.text}</td>
+                <td class="r">${l.right ?? ""}</td>
+                <td class="r"><a class="tx" href="${explorer}/tx/${e.tx}" target="_blank" rel="noopener">${e.tx.slice(0, 10)}… ↗</a></td></tr>`;
             })
             .join("")
-        : `<div class="ev"><span class="k">quiet</span><span>no trades yet</span><span></span></div>`;
-      holder.innerHTML = `<h3>Its rules</h3><div class="rules">${rules.map((r) => `<span>${esc(r)}</span>`).join("")}</div>
-        <h3>What it has done</h3>${events}`;
+        : `<tr><td class="k">quiet</td><td>no trades yet</td><td></td><td></td></tr>`;
+      holder.innerHTML = `<td colspan="7">
+        <div class="sub"><h3>Rules — set at creation, never changeable</h3><table><tbody>${ruleRows}</tbody></table></div>
+        <div class="sub"><h3>Everything it has done</h3><table><tbody>${events}</tbody></table></div>
+      </td>`;
     } catch {
-      holder.textContent = "couldn't read its history just now.";
+      holder.innerHTML = `<td colspan="7">couldn't read its history just now.</td>`;
     }
   }
 
@@ -174,38 +225,54 @@
     explorer = data.chainId === 5042002 ? "https://explorer.testnet.arc.io" : "https://explorer.arc.io";
     const rows = data.mandates;
     $("meta").innerHTML =
-      `<span><span class="dot"></span>${esc(data.network)} · block ${esc(data.block)}</span>` +
-      `<span>factory ${short(data.factory)}</span>` +
-      `<span>updated ${new Date(data.at).toLocaleTimeString()}</span>`;
+      `<span class="live">● ${esc(data.network)}</span>` +
+      `<span>Block <b>${esc(data.block)}</b></span>` +
+      `<span>Factory <b>${short(data.factory)}</b></span>` +
+      `<span>${new Date(data.at).toLocaleTimeString()}</span>`;
+    $("foot-chain").textContent = `${data.network} · chain ${data.chainId}`;
 
-    $("totals").hidden = false;
+    $("figures").hidden = false;
     $("t-agents").textContent = rows.length;
     $("t-equity").textContent = money(rows.reduce((s, r) => s + (r.equityUsd ?? 0), 0));
-    $("t-held").textContent = "$0";
 
     if (!rows.length) {
-      $("board").innerHTML = `<div class="empty"><b>No agents yet.</b>The first mandate will appear here the moment it's created on-chain.</div>`;
+      $("board").innerHTML = `<div class="empty"><b>No mandates yet.</b>The first one appears here the moment it is created on-chain.</div>`;
       $("t-trades").textContent = "0";
       return;
     }
 
-    $("board").innerHTML = "";
-    rows.forEach((r, i) => {
-      const el = document.createElement("div");
-      el.className = "row";
-      const dir = r.returnPct === null || Math.abs(r.returnPct) < FLAT ? "flat" : r.returnPct > 0 ? "up" : "down";
-      const tags = (r.frozen ? '<span class="tag frozen">frozen</span>' : "") + (r.expired ? '<span class="tag expired">expired</span>' : "");
-      const holds = r.holdings.filter((h) => h.amount > 0).map((h) => `${h.amount.toFixed(2)} ${esc(h.symbol)}`).join(" · ") || "empty";
-      el.innerHTML = `<span class="rank">${i + 1}</span>
-        <span class="who"><b>${esc(r.name || "unnamed agent")}</b>${tags}<small>${holds}</small></span>
-        <span class="equity"><b>${money(r.equityUsd)}</b><small>from ${money(r.baselineUsd)}</small></span>
-        <span class="pct ${dir}">${pct(r.returnPct)}</span>`;
-      el.addEventListener("click", () => showDetail(r, el));
-      $("board").appendChild(el);
+    const body = rows
+      .map((r, i) => {
+        const dir = r.returnPct === null || Math.abs(r.returnPct) < FLAT ? "flat" : r.returnPct > 0 ? "up" : "down";
+        const state = r.frozen ? ["frozen", "Frozen"] : r.expired ? ["expired", "Expired"] : ["live", "Live"];
+        const holds = r.holdings.filter((h) => h.amount > 0).map((h) => `${h.amount.toFixed(2)} ${esc(h.symbol)}`).join("  ·  ") || "empty";
+        return `<tr class="agent" data-i="${i}">
+          <td class="rank">${String(i + 1).padStart(2, "0")}</td>
+          <td><span class="name">${esc(r.name || "unnamed agent")}</span><span class="addr">${short(r.address)}</span>
+            <span class="compact">${holds} — funded ${money(r.baselineUsd)} — ${state[1].toLowerCase()}</span></td>
+          <td class="holds">${holds}</td>
+          <td class="r">${money(r.baselineUsd)}</td>
+          <td class="r">${money(r.equityUsd)}</td>
+          <td class="r ret ${dir}">${pct(r.returnPct)}</td>
+          <td class="r state ${state[0]}">${state[1]}</td>
+        </tr>`;
+      })
+      .join("");
+
+    $("board").innerHTML = `<table>
+      <thead><tr>
+        <th></th><th>Agent</th><th>Holds</th>
+        <th class="r">Funded</th><th class="r">Equity</th><th class="r">Return</th><th class="r">State</th>
+      </tr></thead>
+      <tbody>${body}</tbody></table>`;
+
+    $("board").querySelectorAll("tr.agent").forEach((tr) => {
+      const r = rows[Number(tr.dataset.i)];
+      tr.addEventListener("click", () => showDetail(r, tr));
       // A refresh must not close the detail someone is reading.
       if (open === r.address) {
         open = null;
-        showDetail(r, el);
+        showDetail(r, tr);
       }
     });
 
