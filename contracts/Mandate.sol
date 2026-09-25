@@ -98,6 +98,7 @@ contract Mandate {
     event Traded(address indexed tokenIn, address indexed tokenOut, uint256 amountIn, uint256 amountOut, uint256 equity);
     event Frozen(uint256 equity, uint256 floor);
     event Unfrozen(uint256 baseline);
+    event AssetRemoved(address indexed token, uint256 amount, uint256 baseline);
 
     error NotOwner();
     error NotAgent();
@@ -175,12 +176,37 @@ contract Mandate {
 
     /// Withdraw any token at any time. The drawdown baseline shrinks by the
     /// same fraction of equity, so taking money out never looks like a loss.
+    ///
+    /// Valued leniently: an asset whose feed is stale or broken counts as zero
+    /// on both sides of the ratio instead of reverting. The owner's exit must
+    /// never depend on an oracle being healthy.
     function withdraw(address token, uint256 amount) external onlyOwner nonReentrant {
-        uint256 before = equity();
+        uint256 before = _equity(false);
         if (!IMandateToken(token).transfer(owner, amount)) revert TransferFailed();
-        uint256 afterEq = equity();
+        uint256 afterEq = _equity(false);
         baseline = before == 0 ? 0 : (baseline * afterEq) / before;
         emit Withdrawn(token, amount, baseline);
+    }
+
+    /// Drop one asset from the mandate: its whole balance goes to the owner
+    /// and the agent can no longer trade it. The remedy for a feed that has
+    /// been deprecated or has gone permanently stale.
+    function removeAsset(address token) external onlyOwner nonReentrant {
+        if (!assets[token].allowed) revert AssetNotAllowed();
+        uint256 before = _equity(false);
+        uint256 bal = IMandateToken(token).balanceOf(address(this));
+        delete assets[token];
+        for (uint256 i; i < _assetList.length; ++i) {
+            if (_assetList[i] == token) {
+                _assetList[i] = _assetList[_assetList.length - 1];
+                _assetList.pop();
+                break;
+            }
+        }
+        if (bal != 0 && !IMandateToken(token).transfer(owner, bal)) revert TransferFailed();
+        uint256 afterEq = _equity(false);
+        baseline = before == 0 ? 0 : (baseline * afterEq) / before;
+        emit AssetRemoved(token, bal, baseline);
     }
 
     /// Everything back to the owner, and the agent removed, in one call.
@@ -200,7 +226,7 @@ contract Mandate {
     }
 
     /// Resume after a freeze, measuring future losses from today's equity.
-    function unfreeze() external onlyOwner {
+    function unfreeze() external onlyOwner nonReentrant {
         frozen = false;
         baseline = equity();
         emit Unfrozen(baseline);
@@ -224,11 +250,13 @@ contract Mandate {
         if (tokenIn == tokenOut) revert SameAsset();
         if (!_tradable(tokenIn) || !_tradable(tokenOut)) revert AssetNotAllowed();
 
-        uint256 valueIn = _valueOf(tokenIn, amountIn);
+        // Rounded up, so dust can't slip under the size limit.
+        uint256 valueIn = _valueOf(tokenIn, amountIn, true);
         if (valueIn > maxTradeValue) revert TradeTooLarge(valueIn, maxTradeValue);
 
         // The fair amount at the oracle price, less the tolerated slippage.
-        uint256 floorOut = (_amountFor(tokenOut, valueIn) * (BPS - maxSlippageBps)) / BPS;
+        // Rounded up: protective floors must never round in the agent's favour.
+        uint256 floorOut = _mulDiv(_amountFor(tokenOut, valueIn), BPS - maxSlippageBps, BPS, true);
         uint256 minEffective = minOut > floorOut ? minOut : floorOut;
 
         uint256 inBefore = IMandateToken(tokenIn).balanceOf(address(this));
@@ -254,7 +282,8 @@ contract Mandate {
 
     /// The public stop-loss. Anyone may freeze a mandate whose equity has
     /// fallen past its limit, so the owner doesn't have to be watching.
-    function checkpoint() external {
+    /// Guarded so it can't run mid-swap, when balances are momentarily low.
+    function checkpoint() external nonReentrant {
         if (frozen) revert IsFrozen();
         uint256 eq = equity();
         uint256 fl = _floor();
@@ -264,13 +293,10 @@ contract Mandate {
     }
 
     /// Everything the mandate holds, valued in base units at oracle prices.
-    function equity() public view returns (uint256 total) {
-        total = base.balanceOf(address(this));
-        for (uint256 i; i < _assetList.length; ++i) {
-            address t = _assetList[i];
-            uint256 bal = IMandateToken(t).balanceOf(address(this));
-            if (bal != 0) total += _valueOf(t, bal);
-        }
+    /// Reverts if any held asset's price is stale: trading and the stop-loss
+    /// must never act on a number that can't be trusted.
+    function equity() public view returns (uint256) {
+        return _equity(true);
     }
 
     function assetList() external view returns (address[] memory) {
@@ -291,6 +317,40 @@ contract Mandate {
         return token == address(base) || assets[token].allowed;
     }
 
+    /// Equity. `strict` reverts on any unusable price; lenient values such an
+    /// asset at zero (used only where the owner's exit must not depend on it).
+    function _equity(bool strict) private view returns (uint256 total) {
+        total = base.balanceOf(address(this));
+        for (uint256 i; i < _assetList.length; ++i) {
+            address t = _assetList[i];
+            uint256 bal = IMandateToken(t).balanceOf(address(this));
+            if (bal == 0) continue;
+            if (strict) {
+                total += _valueOf(t, bal, false);
+            } else {
+                (bool ok, uint256 p, uint8 fd) = _tryPrice(t);
+                if (ok) total += _mulDiv(bal * p, 10 ** _baseDecimals, 10 ** (uint256(assets[t].decimals) + fd), false);
+            }
+        }
+    }
+
+    /// Oracle price of one whole `token`, or ok=false if it's stale, invalid,
+    /// or the feed call itself fails.
+    function _tryPrice(address token) private view returns (bool ok, uint256 price, uint8 feedDecimals) {
+        Asset storage a = assets[token];
+        try a.feed.latestRoundData() returns (uint80, int256 answer, uint256, uint256 updatedAt, uint80) {
+            if (answer <= 0) return (false, 0, 0);
+            if (updatedAt > block.timestamp || block.timestamp - updatedAt > maxPriceAge) return (false, 0, 0);
+            try a.feed.decimals() returns (uint8 d) {
+                return (true, uint256(answer), d);
+            } catch {
+                return (false, 0, 0);
+            }
+        } catch {
+            return (false, 0, 0);
+        }
+    }
+
     /// Oracle price of one whole `token`, after staleness and sanity checks.
     function _price(address token) private view returns (uint256 price, uint8 feedDecimals) {
         Asset storage a = assets[token];
@@ -301,17 +361,22 @@ contract Mandate {
     }
 
     /// Value of `amount` of `token` in base units (base is treated as $1).
-    function _valueOf(address token, uint256 amount) private view returns (uint256) {
+    function _valueOf(address token, uint256 amount, bool roundUp) private view returns (uint256) {
         if (token == address(base)) return amount;
         (uint256 p, uint8 fd) = _price(token);
-        return (amount * p * (10 ** _baseDecimals)) / (10 ** (uint256(assets[token].decimals) + fd));
+        return _mulDiv(amount * p, 10 ** _baseDecimals, 10 ** (uint256(assets[token].decimals) + fd), roundUp);
     }
 
-    /// Amount of `token` worth `value` base units at the oracle price.
+    /// Amount of `token` worth `value` base units at the oracle price, rounded up.
     function _amountFor(address token, uint256 value) private view returns (uint256) {
         if (token == address(base)) return value;
         (uint256 p, uint8 fd) = _price(token);
-        return (value * (10 ** (uint256(assets[token].decimals) + fd))) / (p * (10 ** _baseDecimals));
+        return _mulDiv(value, 10 ** (uint256(assets[token].decimals) + fd), p * (10 ** _baseDecimals), true);
+    }
+
+    function _mulDiv(uint256 a, uint256 b, uint256 d, bool roundUp) private pure returns (uint256 r) {
+        r = (a * b) / d;
+        if (roundUp && mulmod(a, b, d) != 0) r += 1;
     }
 
     function _sweep(address token) private {

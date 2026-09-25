@@ -278,8 +278,52 @@ describe("hostile exchanges", () => {
     await freshPrices();
     const evil = await deploy("ReenteringVenue");
     const m = await makeMandate({}, { venueAddress: evil });
-    await send(deployer, evil, artifact("ReenteringVenue").abi, "aim", [m, usdc, weth]);
+    await send(deployer, evil, artifact("ReenteringVenue").abi, "aim", [m, usdc, weth, false]);
     await expectRevert(trade(m, usdc, weth, USD(10)), "Reentrancy");
+  });
+
+  test("an exchange can't trip the stop-loss mid-swap, while balances look low", async () => {
+    await freshPrices();
+    const evil = await deploy("ReenteringVenue");
+    const m = await makeMandate({}, { venueAddress: evil });
+    await send(deployer, evil, artifact("ReenteringVenue").abi, "aim", [m, usdc, weth, true]);
+    await expectRevert(trade(m, usdc, weth, USD(10)), "Reentrancy");
+    assert.equal(await read(m, M.abi, "frozen"), false);
+  });
+});
+
+describe("the owner's exit never depends on an oracle", () => {
+  test("a stale feed doesn't block a normal withdrawal", async () => {
+    await freshPrices();
+    const m = await makeMandate({ maxPriceAge: 3_600 });
+    await trade(m, usdc, weth, USD(30)); // now holds an asset whose feed will go stale
+    await send(deployer, ethFeed, FEED.abi, "setUpdatedAt", [(await now()) - 7_200n]);
+    try {
+      const before = await bal(usdc, OWNER);
+      await send(owner, m, M.abi, "withdraw", [usdc, USD(20)]);
+      assert.equal((await bal(usdc, OWNER)) - before, USD(20));
+      await expectRevert(trade(m, usdc, weth, USD(1)), "StalePrice"); // but the agent still can't trade blind
+    } finally {
+      await freshPrices();
+    }
+  });
+
+  test("a broken feed doesn't block withdrawals, and the asset can be dropped", async () => {
+    await freshPrices();
+    const m = await makeMandate();
+    await trade(m, usdc, weth, USD(30));
+    await send(deployer, ethFeed, FEED.abi, "setBroken", [true]);
+    try {
+      await send(owner, m, M.abi, "withdraw", [usdc, USD(10)]);
+      const wethBefore = await bal(weth, OWNER);
+      await send(owner, m, M.abi, "removeAsset", [weth]);
+      assert.equal((await bal(weth, OWNER)) - wethBefore, 12n * 10n ** 15n, "the stranded ETH came home");
+      assert.deepEqual(await read(m, M.abi, "assetList"), []);
+    } finally {
+      await send(deployer, ethFeed, FEED.abi, "setBroken", [false]);
+    }
+    await expectRevert(trade(m, usdc, weth, USD(1)), "AssetNotAllowed");
+    await expectRevert(send(agent, m, M.abi, "removeAsset", [weth]), "NotOwner");
   });
 });
 

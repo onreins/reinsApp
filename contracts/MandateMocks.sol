@@ -72,11 +72,19 @@ contract MockFeed is IPriceFeed {
         updatedAt = block.timestamp;
     }
 
+    bool public broken;
+
     function setUpdatedAt(uint256 t) external {
         updatedAt = t;
     }
 
+    /// Make every read revert, like a deprecated or paused feed.
+    function setBroken(bool b) external {
+        broken = b;
+    }
+
     function latestRoundData() external view override returns (uint80, int256, uint256, uint256, uint80) {
+        require(!broken, "feed: broken");
         return (1, answer, updatedAt, updatedAt, 1);
     }
 }
@@ -133,20 +141,24 @@ contract OracleVenue is ISwapVenue {
     }
 }
 
-/// A hostile venue: while holding the approval, it calls back into the mandate.
+/// A hostile venue: while holding the approval, it calls back into the mandate,
+/// either to trade again or to trip the stop-loss while balances look low.
 contract ReenteringVenue is ISwapVenue {
     Mandate public target;
     address public tokenA;
     address public tokenB;
+    bool public viaCheckpoint;
 
-    function aim(Mandate target_, address a, address b) external {
+    function aim(Mandate target_, address a, address b, bool viaCheckpoint_) external {
         target = target_;
         tokenA = a;
         tokenB = b;
+        viaCheckpoint = viaCheckpoint_;
     }
 
     function swap(address, address, uint256, uint256, address) external override returns (uint256) {
-        target.trade(tokenA, tokenB, 1, 0);
+        if (viaCheckpoint) target.checkpoint();
+        else target.trade(tokenA, tokenB, 1, 0);
         return 0;
     }
 }
