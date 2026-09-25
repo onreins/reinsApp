@@ -4,8 +4,19 @@
  *   node --env-file=.env agents/fx-reversion.js --once      # one decision
  *   node --env-file=.env agents/fx-reversion.js             # loop
  *
- * The idea is deliberately simple and explainable. Chainlink's EUR/USD is the
- * market's fair price; the Uniswap USDC/EURC pool drifts around it as people
+ * !! This strategy does not work on Arc, and we measured it rather than
+ * !! guessed. Over 23.8 hours of live mainnet data the pool moved 33.7bp in
+ * !! total and 0.48bp per minute, against a 10bp round-trip cost, so every
+ * !! threshold at or above cost fired zero trades. The Chainlink feed it
+ * !! reads updates on a 0.5% deviation, making it accurate to about +/-50bp:
+ * !! precise enough to refuse a bad fill, nowhere near precise enough to be a
+ * !! signal. See research/FINDINGS.md before building on this.
+ * !!
+ * !! It stays in the repo as a worked example of driving a Mandate from the
+ * !! SDK, and because its refusals are what the testnet run exercises.
+ *
+ * The idea is deliberately simple and explainable. Chainlink's EUR/USD stands
+ * in for fair value; the Uniswap USDC/EURC pool drifts around it as people
  * trade. When EURC is cheap in the pool (below the oracle by more than the
  * pool fee plus a margin), buy it; when it's rich, sell it back. Every
  * decision is logged with its reason, so anyone watching can see why.

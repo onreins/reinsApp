@@ -58,6 +58,17 @@ abstains rather than guessing when it cannot verify.
 
 ## Decisions and why
 
+- **The FX trading agent does not work, and we measured that rather than
+  assumed it.** 23.8h of live Arc mainnet data: the USDC/EURC pool moves 33.7bp
+  across a whole day and 0.48bp per minute, against a 10bp round-trip cost.
+  Every reversion threshold at or above cost fired zero trades; holding EURC
+  beat every strategy. Real reversion exists swap-to-swap (-0.1187 against a
+  ±0.0737 noise floor) but it is bid-ask bounce, far smaller than the fee. The
+  $68.84/day of fees goes to liquidity providers, not takers. Full write-up in
+  [../research/FINDINGS.md](../research/FINDINGS.md). Consequence: Chainlink is
+  a guardrail, not a signal, and the first real agent should spend money under
+  constraints rather than try to make it.
+
 - **Settle through Circle, not our own channel.** Circle's Nanopayments already do
   batched sub-cent USDC on Arc, gaslessly. Shipping a competing payment layer into a
   Circle grant reads as duplicating their stack. `RatchetVault` stays as a working

@@ -87,7 +87,7 @@ JavaScript, and `agents/fx-reversion.js` is a reference agent built on it.
 | Mandate + factory | `contracts/Mandate.sol` |
 | Uniswap v4 exchange adapter | `contracts/UniswapV4Venue.sol` |
 | SDK / MCP server | `mandate/sdk.js`, `mandate/mcp-server.js` |
-| reference agent | `agents/fx-reversion.js` |
+| reference agent | `agents/fx-reversion.js` — a worked example, **not a profitable strategy**: [research/FINDINGS.md](research/FINDINGS.md) |
 | mainnet deploy (dry run first) | `npm run deploy:mandate -- --dry-run` |
 
 An adversarial security review ran before any deployment. Nothing critical; it
