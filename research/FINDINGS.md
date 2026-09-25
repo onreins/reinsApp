@@ -86,3 +86,72 @@ any of this — it did its job correctly in every test, on testnet and in
 simulation against mainnet. What needs rethinking is what we put inside it: an
 agent that **spends** money under constraints has a real job to do here; an
 agent that tries to **make** money on this pair does not.
+
+---
+
+# Follow-up: is there a working strategy anywhere on Arc?
+
+Measured 2026-09-25, after the result above. Three seats, all checked.
+
+## 1. Taker on USDC/EURC — no
+
+Covered above. The price moves 0.48 bp per minute against a 10 bp round trip.
+
+## 2. Maker on USDC/EURC — 2.8% APY, worse than doing nothing
+
+The $68.84/day of fees is real, but it is spread across real capital. Walking
+the initialised ticks either side of spot, liquidity spans −622 to +553 bp and
+holds roughly **413,059 USDC + 431,358 EURC ≈ $905k**.
+
+$68.84 × 365 ÷ $905k = **2.8% APY, before impermanent loss.**
+
+USYC — Circle's tokenized T-bill, already on Arc — pays more than that with no
+FX risk and no inventory. Market making this pair is worse than holding cash.
+
+## 3. Something volatile — there is no market
+
+Arc has 32 Chainlink feeds, including BTC/USD, ETH/USD, SOL, XRP, AVAX, LINK,
+UNI, AAVE, HYPE and PAXG. It does not have the pools to go with them:
+
+| pool | state |
+|---|---|
+| USDC/cirBTC, fee 100 | initialised, **liquidity 0** |
+| USDC/WETH | never initialised, any fee tier |
+| cirBTC/WETH | never initialised |
+| USDC/USYC | never initialised |
+| USDC/EURC, fee 500 | the only pool with liquidity |
+
+Those feeds exist for lending protocols — AAVE runs on Arc, and one of the
+feeds is literally "AAVE Network Emergency Count (Arc)" — not for traders.
+
+## What Arc is actually used for
+
+In a 175-minute window: **758 new pools created, 58,381 swaps**, and 478 of the
+new pools sit behind a hook. Nearly every one is USDC against a freshly minted
+token. Pools involving WETH or cirBTC: **two**.
+
+Arc is a token-launch chain. That is where all the volume is, and none of those
+tokens has a price feed.
+
+## The conclusion
+
+There is no profitable trading strategy available to a Mandate on Arc today,
+and this is a fact about the market, not about our tuning. Anyone claiming an
+FX alpha story on Arc has not measured the pool.
+
+That leaves two honest directions, and both are about what we put in the safe
+rather than the safe itself:
+
+1. **An agent that spends under constraints** — pays for compute, settles
+   invoices, converts USDC to EURC to pay a European supplier. Needs no alpha
+   and no volatile market to be worth having.
+2. **A budget-capped Mandate with no oracle**, pointed where the volume is. For
+   an unpriced asset you cannot check a fair price, but you do not need to: a
+   hard cap on USDC spent bounds the loss exactly, measured on the way out
+   rather than valued on the way in. The agent may spend at most $X total and
+   $Y per trade on approved venues, everything it buys stays in the contract,
+   and only the owner can withdraw. Loss is bounded by the budget.
+
+Option 2 is not an alpha strategy and must never be sold as one — most launch
+tokens go to zero. It is a containment demonstration, which is what "money with
+a mandate" actually means.
