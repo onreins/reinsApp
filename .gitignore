@@ -13,3 +13,4 @@ rulings/
 !deployments/mainnet.json
 !deployments/mandate-testnet.json
 research/data/
+*.stackdump
