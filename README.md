@@ -1,4 +1,68 @@
-# Verdict
+# Mandate
+
+**Give an AI agent money it cannot misuse, on [Arc](https://arc.io).**
+
+A Mandate is a smart contract that holds an agent's USDC and enforces the rules
+the owner set, so the agent never has to be trusted:
+
+- **only allowed assets**, through one exchange the owner chose
+- **a size limit** on every trade
+- **fair prices**: every fill is checked against Chainlink; worse than the
+  slippage limit and it reverts
+- **a loss limit**: a trade that would breach it reverts, and anyone can freeze
+  the mandate if the market alone pushes it past the line (a public stop-loss)
+- **an expiry**, and **no way for the agent to move money out**
+
+The owner can withdraw everything, swap the agent or revoke it at any time, and
+that exit never depends on an oracle being healthy.
+
+This answers item 12 of Arc's [Request for Builders](https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money),
+"Money with a Mandate", and trades the one deep pool on Arc mainnet today:
+USDC/EURC on Uniswap v4.
+
+### Proven against Arc mainnet, without spending anything
+
+```bash
+npm run build && npm run sim:mainnet -- 10
+```
+
+One `eth_call` against live mainnet state: a Mandate is deployed inside the
+call, funded, and its agent trades $10 of USDC into EURC and back through the
+real Uniswap v4 pool, checked by the real Chainlink feed. Nothing is broadcast.
+
+```
+  Chainlink EURC/USD   $1.1379
+  bought               8.7808 EURC for $10.00  (fill $1.1388 per EURC, 0.081% vs oracle)
+  equity at the end    $19.9900  (round trip cost $0.0100)
+```
+
+### Plug in any AI agent
+
+```bash
+MANDATE_ADDRESS=0x… MANDATE_AGENT_KEY=0x… npm run mandate:mcp
+```
+
+An MCP server gives any MCP-speaking agent (Claude and others) three tools:
+`mandate_status` (money, holdings, rules, loss headroom), `mandate_price` and
+`mandate_trade`. A refused trade comes back as the rule it broke and why, so the
+agent adjusts instead of retrying blindly. `mandate/sdk.js` offers the same from
+JavaScript, and `agents/fx-reversion.js` is a reference agent built on it.
+
+| piece | file |
+|---|---|
+| Mandate + factory | `contracts/Mandate.sol` |
+| Uniswap v4 exchange adapter | `contracts/UniswapV4Venue.sol` |
+| SDK / MCP server | `mandate/sdk.js`, `mandate/mcp-server.js` |
+| reference agent | `agents/fx-reversion.js` |
+| mainnet deploy (dry run first) | `npm run deploy:mandate -- --dry-run` |
+
+An adversarial security review ran before any deployment. Nothing critical; it
+found a way a broken price feed could block partial withdrawals, a mid-swap
+stop-loss trigger, and rounding on dust trades, all fixed with regression tests.
+
+---
+
+# Verdict (earlier work)
 
 **A neutral evaluator for agent work on [Arc](https://arc.io).**
 

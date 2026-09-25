@@ -3,7 +3,27 @@
 Living status for whoever picks this up next — including a future session of
 the agent that wrote it. Update it at the end of every working stretch.
 
-## What this is
+## Current product: Mandate (since 2026-09-25)
+
+The founder judged Verdict too weak on demand and chose **Mandate**: a smart
+contract that holds an AI agent's USDC under rules it cannot break (Arc Request
+for Builders item 12). Built so far, all on `master`:
+
+| | |
+|---|---|
+| Contract | `contracts/Mandate.sol` + factory. 24 adversarial tests; reviewed, findings fixed |
+| Exchange | `contracts/UniswapV4Venue.sol`, per-pair routes set once. Proven on Arc mainnet state with `npm run sim:mainnet` (no spend) |
+| Agent surface | `mandate/sdk.js`, `mandate/mcp-server.js` (MCP tools), `agents/fx-reversion.js` |
+| Mainnet | Not deployed. `npm run deploy:mandate -- --dry-run` estimates ~$0.10 gas. Deployer is a fresh key `0x75Ff1C11FfFECF6EAF4fDc7f7d11df5b77674f41` (`MANDATE_MAINNET_KEY` in `.env`), unfunded |
+| Market reality | Only USDC/EURC has a liquid v4 pool on Arc mainnet (checked 2026-09-25); ETH/BTC have no pool yet, so v1 is an FX agent |
+
+**Blocked on the founder:** funding the mainnet deployer with real USDC (~$25:
+deploy + a small first mandate + agent gas).
+
+Next: deploy, run one live mandate with the reference agent, then the arena page
+(leaderboard from factory events) and an LLM agent over the MCP server.
+
+## What Verdict was
 
 **Verdict**: a neutral evaluator for agent work on Arc. ERC-8183 lets one agent
 hire another with escrowed USDC, and a named *evaluator* decides whether the
