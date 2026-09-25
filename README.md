@@ -20,6 +20,8 @@ This answers item 12 of Arc's [Request for Builders](https://www.arc.io/blog/the
 "Money with a Mandate", and trades the one deep pool on Arc mainnet today:
 USDC/EURC on Uniswap v4.
 
+**New here? Read [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)** for the plain-language version.
+
 ### Proven against Arc mainnet, without spending anything
 
 ```bash
