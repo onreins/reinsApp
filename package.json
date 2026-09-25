@@ -21,7 +21,8 @@
     "arbiter": "node --env-file=.env arbiter/server.js",
     "live:arbiter": "node --env-file=.env demo/live-arbiter.js",
     "sim:mainnet": "node scripts/sim-mainnet.js",
-    "mandate:mcp": "node mandate/mcp-server.js"
+    "mandate:mcp": "node mandate/mcp-server.js",
+    "deploy:mandate": "node --env-file=.env scripts/deploy-mandate.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",

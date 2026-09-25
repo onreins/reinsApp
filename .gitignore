@@ -10,3 +10,4 @@ deployments/*
 .verdict-state*.json.tmp
 verdicts/
 rulings/
+!deployments/mainnet.json
