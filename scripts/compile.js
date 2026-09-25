@@ -27,7 +27,9 @@ const input = {
     // Arc runs the Osaka hard fork; solc 0.8.28 tops out at cancun, which is a
     // strict subset, so the output is valid on Arc.
     evmVersion: "cancun",
-    outputSelection: { "*": { "*": ["abi", "evm.bytecode.object", "evm.gasEstimates"] } },
+    outputSelection: {
+      "*": { "*": ["abi", "evm.bytecode.object", "evm.deployedBytecode.object", "evm.gasEstimates"] },
+    },
   },
 };
 
@@ -48,7 +50,16 @@ for (const [file, contracts] of Object.entries(output.contracts ?? {})) {
   for (const [name, c] of Object.entries(contracts)) {
     writeFileSync(
       join(buildDir, `${name}.json`),
-      JSON.stringify({ abi: c.abi, bytecode: `0x${c.evm.bytecode.object}` }, null, 2),
+      JSON.stringify(
+        {
+          abi: c.abi,
+          bytecode: `0x${c.evm.bytecode.object}`,
+          // Runtime code, for injecting a contract into a simulated call.
+          deployedBytecode: `0x${c.evm.deployedBytecode.object}`,
+        },
+        null,
+        2,
+      ),
     );
     const size = c.evm.bytecode.object.length / 2;
     console.log(`compiled ${name} (${file}) — ${size} bytes of bytecode`);

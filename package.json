@@ -19,7 +19,8 @@
     "pay:x402": "node --env-file=.env demo/pay-x402.js",
     "evaluator": "node --env-file=.env evaluator/daemon.js",
     "arbiter": "node --env-file=.env arbiter/server.js",
-    "live:arbiter": "node --env-file=.env demo/live-arbiter.js"
+    "live:arbiter": "node --env-file=.env demo/live-arbiter.js",
+    "sim:mainnet": "node scripts/sim-mainnet.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",
