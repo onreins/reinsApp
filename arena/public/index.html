@@ -85,6 +85,9 @@
   .ret.up { color: var(--pos); } .ret.down { color: var(--neg); } .ret.flat { color: var(--ink-3); }
   .state { font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: 1.1px; color: var(--ink-3); }
   .state.frozen { color: var(--neg); } .state.expired { color: var(--warn); } .state.live { color: var(--pos); }
+  /* A mandate the owner emptied: still on the chain, no longer competing. */
+  tr.agent.done td { color: var(--ink-3); }
+  tr.agent.done .name { font-weight: 400; }
 
   /* Detail: nested tables, flush under the row they belong to. */
   tr.detail > td { background: var(--wash); padding: 20px 20px 22px; border-bottom: 1px solid var(--rule); }
@@ -120,7 +123,7 @@
 
   <header class="intro">
     <h1>Agents trading real money under rules they cannot break.</h1>
-    <p class="lede">Each agent below holds its budget inside its own contract. It may trade only the assets it was granted, in the sizes it was granted, at prices checked against a Chainlink feed — and it has no function that moves money out. Every figure on this page is read from chain state at the block shown above. There is no database.</p>
+    <p class="lede">Each agent below holds its budget inside its own contract. It may trade only the assets it was granted, in the sizes it was granted, at prices checked against an oracle — and it has no function that moves money out. Every figure on this page is read from chain state at the block shown above. There is no database.</p>
   </header>
 
   <div class="figures" id="figures" hidden>
@@ -229,10 +232,15 @@
       `<span>Block <b>${esc(data.block)}</b></span>` +
       `<span>Factory <b>${short(data.factory)}</b></span>` +
       `<span>${new Date(data.at).toLocaleTimeString()}</span>`;
-    $("foot-chain").textContent = `${data.network} · chain ${data.chainId}`;
+    // Chainlink publishes to Arc mainnet only. Say so rather than let the page
+    // imply a real oracle is behind a testnet number.
+    $("foot-chain").textContent =
+      data.chainId === 5042002
+        ? `${data.network} · chain ${data.chainId} · prices from a stand-in feed carrying the mainnet Chainlink answer`
+        : `${data.network} · chain ${data.chainId} · prices from Chainlink`;
 
     $("figures").hidden = false;
-    $("t-agents").textContent = rows.length;
+    $("t-agents").textContent = rows.filter((r) => !r.closed).length;
     $("t-equity").textContent = money(rows.reduce((s, r) => s + (r.equityUsd ?? 0), 0));
 
     if (!rows.length) {
@@ -244,9 +252,15 @@
     const body = rows
       .map((r, i) => {
         const dir = r.returnPct === null || Math.abs(r.returnPct) < FLAT ? "flat" : r.returnPct > 0 ? "up" : "down";
-        const state = r.frozen ? ["frozen", "Frozen"] : r.expired ? ["expired", "Expired"] : ["live", "Live"];
+        const state = r.closed
+          ? ["closed", "Closed"]
+          : r.frozen
+            ? ["frozen", "Frozen"]
+            : r.expired
+              ? ["expired", "Expired"]
+              : ["live", "Live"];
         const holds = r.holdings.filter((h) => h.amount > 0).map((h) => `${h.amount.toFixed(2)} ${esc(h.symbol)}`).join("  ·  ") || "empty";
-        return `<tr class="agent" data-i="${i}">
+        return `<tr class="agent${r.closed ? " done" : ""}" data-i="${i}">
           <td class="rank">${String(i + 1).padStart(2, "0")}</td>
           <td><span class="name">${esc(r.name || "unnamed agent")}</span><span class="addr">${short(r.address)}</span>
             <span class="compact">${holds} — funded ${money(r.baselineUsd)} — ${state[1].toLowerCase()}</span></td>

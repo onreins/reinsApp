@@ -11,18 +11,25 @@ for Builders item 12). Built so far, all on `master`:
 
 | | |
 |---|---|
-| Contract | `contracts/Mandate.sol` + factory. 24 adversarial tests; reviewed, findings fixed |
+| Contract | `contracts/Mandate.sol` + factory. 24 adversarial tests; reviewed, findings fixed. 249 tests overall |
 | Exchange | `contracts/UniswapV4Venue.sol`, per-pair routes set once. Proven on Arc mainnet state with `npm run sim:mainnet` (no spend) |
 | Arena | `npm run arena` — leaderboard + per-agent history, read from chain events only; 7 tests |
 | Agent surface | `mandate/sdk.js`, `mandate/mcp-server.js` (MCP tools), `agents/fx-reversion.js` |
+| Testnet | **Live and exercised end to end.** Factory `0x09e45d5b84d9c7cf4e8cdf5d5f1ff2b7d3589f82`, venue `0x007d5ad07b7a97fefcbd4302dfeafc11d8485052`, feed `0xfdde6a331c996d6fddbdce108ba18fff0b7f972e`, mandate `0x991b8687aca6Acd6b92438bb4cE22866827bD632`. We also created and funded the USDC/EURC v4 pool, because testnet had none. See [live-run/TESTNET-RUN.md](live-run/TESTNET-RUN.md) |
 | Mainnet | Not deployed. `npm run deploy:mandate -- --dry-run` estimates ~$0.10 gas. Deployer is a fresh key `0x75Ff1C11FfFECF6EAF4fDc7f7d11df5b77674f41` (`MANDATE_MAINNET_KEY` in `.env`), unfunded |
 | Market reality | Only USDC/EURC has a liquid v4 pool on Arc mainnet (checked 2026-09-25); ETH/BTC have no pool yet, so v1 is an FX agent |
 
 **Blocked on the founder:** funding the mainnet deployer with real USDC (~$25:
 deploy + a small first mandate + agent gas).
 
-Next: deploy, run one live mandate with the reference agent, then point the
-arena at mainnet and wire an LLM agent through the MCP server.
+Run the arena against the live testnet deployment with:
+
+```bash
+ARENA_NETWORK=testnet npm run arena
+```
+
+Next: deploy to mainnet, open a first real mandate, point the arena at it, and
+wire an LLM agent through the MCP server instead of the deterministic one.
 
 ## What Verdict was
 
@@ -118,6 +125,16 @@ mainnet use.
 
 ## Session log
 
+- **2026-09-25 (night)** — deployed Mandate to **Arc testnet** and ran it for
+  real: created and funded the USDC/EURC Uniswap v4 pool (testnet had none),
+  opened a mandate with $2, and put every rule through an on-chain transaction,
+  including the refusals. Added `PinnedFeed` (Chainlink does not publish to Arc
+  testnet) with 8 tests. Found and fixed three real defects along the way: the
+  SDK reported a venue-level price refusal as an undecodable revert; the arena
+  scanned from genesis and was rate-limited off the public RPC within seconds
+  (now batched through Multicall3); and a fully withdrawn mandate ranked as a
+  live agent holding nothing. 249 tests pass. Testnet spend: ~$0.50 of gas,
+  plus $6 of testnet USDC and 5.35 EURC now sitting in the pool.
 - **2026-09-25 (evening)** — the founder judged the site unprofessional. Two causes:
   it still sold Verdict, and the arena looked like a consumer app. Rewrote
   `site/index.html` around Mandate and restyled `arena/public/index.html` to the same

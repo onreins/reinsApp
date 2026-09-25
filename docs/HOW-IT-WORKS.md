@@ -142,6 +142,32 @@ broadcast; no keys, no money, no risk.
 A $400 trade fills at the same price, so the pool is deep enough for real
 agents.
 
+## Proof it works with real transactions
+
+The simulation above is read-only. The same code is also deployed on **Arc
+testnet**, where a mandate held real testnet dollars and an agent traded them
+through the real Uniswap v4 pool contracts. Every rule was tried, and every
+refusal was broadcast on purpose so that it exists as a transaction anyone can
+open rather than as a claim:
+
+| what was tried | what happened |
+|---|---|
+| buy $0.50 of euros | filled 0.45% from the oracle |
+| trade above the size limit | refused — `TradeTooLarge` |
+| trade too big for the pool to price fairly | refused — the exchange could not beat the mandate's floor |
+| trade into an asset never granted | refused — `AssetNotAllowed` |
+| a different key signing as the agent | refused — `NotAgent` |
+| the euro falls 50%, a stranger calls `checkpoint()` | frozen, by someone who owns none of it |
+| the agent tries again while frozen | refused — `IsFrozen` |
+| the owner withdraws mid-strategy | paid out, no permission needed from the agent |
+
+The mandate is [`0x991b8687aca6Acd6b92438bb4cE22866827bD632`](https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632).
+Full list of transactions: [live-run/TESTNET-RUN.md](live-run/TESTNET-RUN.md).
+
+Two caveats, stated there too: Chainlink publishes to Arc mainnet only, so the
+testnet mandate reads a stand-in feed carrying the mainnet answer; and testnet
+had no euro pool, so we created and funded one. Neither changes the contract.
+
 ## Where it runs
 
 Arc is Circle's new blockchain, where the money *is* dollars (USDC) and fees are
@@ -151,7 +177,7 @@ a pool with liquidity in it.
 
 ## What's been checked
 
-- **239 automated tests**, most of them adversarial: an agent trying to
+- **249 automated tests**, most of them adversarial: an agent trying to
   overtrade, to touch assets it shouldn't, to drain value through a colluding
   exchange, to keep trading past the loss limit or the expiry, plus hostile
   exchanges that steal the input or call back in mid-trade.
@@ -182,7 +208,9 @@ anyone can check it.
 
 ## Not done yet
 
-- **Not deployed to mainnet.** Blocked on funding a fresh deployer key.
+- **Not deployed to mainnet.** Blocked on funding a fresh deployer key. It *is*
+  deployed and exercised end to end on Arc testnet — see
+  [live-run/TESTNET-RUN.md](live-run/TESTNET-RUN.md).
 - **No LLM agent yet.** The reference agent follows fixed rules. Wiring Claude
   to the MCP server needs an API key.
-- **Not formally audited.** One adversarial review and 239 tests is not an audit.
+- **Not formally audited.** One adversarial review and 249 tests is not an audit.

@@ -170,3 +170,14 @@ contract ThiefVenue is ISwapVenue {
         return type(uint256).max;
     }
 }
+
+/// An exchange that can never beat the floor the mandate hands it, refusing
+/// with the same custom error UniswapV4Venue raises on Arc. Used to check that
+/// the SDK explains a venue-level refusal instead of surfacing raw revert data.
+contract StingyVenue is ISwapVenue {
+    error InsufficientOutput(uint256 out, uint256 minOut);
+
+    function swap(address, address, uint256, uint256 minOut, address) external pure override returns (uint256) {
+        revert InsufficientOutput(0, minOut);
+    }
+}

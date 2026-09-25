@@ -38,6 +38,38 @@ real Uniswap v4 pool, checked by the real Chainlink feed. Nothing is broadcast.
   equity at the end    $19.9900  (round trip cost $0.0100)
 ```
 
+### Running live on Arc testnet
+
+The whole thing is deployed and has been put through its paces on-chain — every
+rule, including the ones that refuse:
+
+| contract | address |
+|---|---|
+| `MandateFactory` | [`0x09e45d5b84d9c7cf4e8cdf5d5f1ff2b7d3589f82`](https://explorer.testnet.arc.io/address/0x09e45d5b84d9c7cf4e8cdf5d5f1ff2b7d3589f82) |
+| `UniswapV4Venue` | [`0x007d5ad07b7a97fefcbd4302dfeafc11d8485052`](https://explorer.testnet.arc.io/address/0x007d5ad07b7a97fefcbd4302dfeafc11d8485052) |
+| a live mandate | [`0x991b8687aca6Acd6b92438bb4cE22866827bD632`](https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632) |
+
+An agent bought euros through the real Uniswap v4 PoolManager at 0.45% from the
+oracle; the mandate then refused a trade over its size limit, a trade into an
+asset it was never granted, a trade too large for the pool to price fairly, and
+a trade signed by a key that is not its agent. A stranger who owns none of it
+froze it when it fell through its floor, and the owner withdrew mid-strategy.
+Each refusal was broadcast deliberately, so it exists on-chain as a transaction
+you can open, not just as a simulation.
+
+**[Every step, with transaction links →](docs/live-run/TESTNET-RUN.md)**
+
+```bash
+npm run deploy:testnet   # factory, venue, price feed
+npm run seed:testnet     # create and fund the USDC/EURC pool
+npm run live:testnet     # the run above
+```
+
+Two things differ from mainnet and both are stated in that document: Chainlink
+publishes no feeds to Arc testnet, so the mandate reads a stand-in carrying the
+mainnet answer; and testnet had no USDC/EURC pool, so we created one and funded
+it. Neither touches the Mandate contract itself.
+
 ### Plug in any AI agent
 
 ```bash
@@ -78,7 +110,7 @@ Verdict holds that seat with nothing to gain from the answer. It re-runs the
 delivered code against tests both sides agreed to up front, pays or refuses
 accordingly, and **abstains rather than guessing** when it cannot verify.
 
-## Live on Arc testnet
+## Verdict's contracts, live on Arc testnet
 
 | contract | address |
 |---|---|

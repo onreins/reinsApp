@@ -24,7 +24,10 @@
     "mandate:mcp": "node mandate/mcp-server.js",
     "deploy:mandate": "node --env-file=.env scripts/deploy-mandate.js",
     "agent:fx": "node --env-file=.env agents/fx-reversion.js",
-    "arena": "node --env-file=.env arena/server.js"
+    "arena": "node --env-file=.env arena/server.js",
+    "deploy:testnet": "node --env-file=.env scripts/deploy-testnet.js",
+    "seed:testnet": "node --env-file=.env scripts/seed-testnet-pool.js",
+    "live:testnet": "node --env-file=.env scripts/live-testnet.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",

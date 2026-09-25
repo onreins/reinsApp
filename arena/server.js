@@ -34,27 +34,41 @@ const localChain = defineChain({
 });
 const chain = network === "testnet" ? arcTestnet : network === "local" ? localChain : arc;
 
-function factoryAddress() {
-  if (process.env.ARENA_FACTORY) return process.env.ARENA_FACTORY;
-  const file = `deployments/${network}.json`;
-  if (existsSync(file)) {
+/**
+ * Where this network's Mandate deployment was written. `mandate-<network>.json`
+ * comes first because `<network>.json` predates Mandate on testnet and belongs
+ * to an older set of contracts.
+ */
+function deployment() {
+  for (const file of [`deployments/mandate-${network}.json`, `deployments/${network}.json`]) {
+    if (!existsSync(file)) continue;
     const d = JSON.parse(readFileSync(file, "utf8"));
-    if (d.contracts?.mandateFactory) return d.contracts.mandateFactory;
+    if (d.contracts?.mandateFactory) return d;
   }
   return null;
 }
 
-const factory = factoryAddress();
+const found = deployment();
+const factory = process.env.ARENA_FACTORY ?? found?.contracts?.mandateFactory ?? null;
+// Reading from genesis would be millions of empty blocks on a live chain.
+const fromBlock = BigInt(process.env.ARENA_FROM_BLOCK ?? found?.fromBlock ?? 0);
 if (!factory) {
   console.error(`\n  No factory address. Set ARENA_FACTORY, or deploy first (npm run deploy:mandate).\n`);
   process.exit(1);
 }
 
-const publicClient = createPublicClient({ chain, transport: http(process.env.ARENA_RPC) });
+// A leaderboard asks a dozen questions per mandate. Sent one at a time, a
+// public RPC rate-limits us within seconds, so collapse each render's reads
+// into Multicall3 calls and batch the remaining JSON-RPC requests.
+const publicClient = createPublicClient({
+  chain,
+  transport: http(process.env.ARENA_RPC, { batch: { wait: 16 } }),
+  batch: { multicall: { wait: 16 } },
+});
 const indexer = new ArenaIndexer({
   publicClient,
   factory,
-  fromBlock: BigInt(process.env.ARENA_FROM_BLOCK ?? 0),
+  fromBlock,
 });
 
 /** Cache the leaderboard briefly: the page polls, and the RPC is shared. */

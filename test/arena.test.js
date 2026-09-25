@@ -127,6 +127,21 @@ describe("the leaderboard", () => {
     }
   });
 
+  test("a mandate the owner emptied reads as closed, not as a live agent holding nothing", async () => {
+    const done = await makeOne({ name: "wound down", deposit: "10" });
+    await send(owner, done, M.abi, "withdrawAll");
+
+    const board = await indexer.leaderboard();
+    const row = board.mandates.find((m) => m.name === "wound down");
+    assert.equal(row.closed, true);
+    assert.equal(row.equityUsd, 0);
+    assert.equal(row.returnPct, null, "no baseline left to measure a return against");
+    assert.equal(board.mandates.at(-1).name, "wound down", "a closed mandate ranks below every live one");
+
+    const live = board.mandates.find((m) => m.name === "fx reversion");
+    assert.equal(live.closed, false);
+  });
+
   test("reports a frozen mandate as frozen", async () => {
     await send(deployer, feed, FEED.abi, "set", [EUR_PRICE / 2n]); // past the 10% floor
     try {

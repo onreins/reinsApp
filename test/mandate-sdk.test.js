@@ -116,6 +116,39 @@ describe("SDK", () => {
   test("an asset outside the mandate is refused before anything is sent", async () => {
     await assert.rejects(sdk.trade({ from: "USDC", to: "DOGE", amount: "1" }), /not in this mandate/);
   });
+
+  test("an exchange that cannot beat the mandate's price floor is named, not dumped as a raw revert", async () => {
+    // On Arc the refusal comes from UniswapV4Venue's own error, not from the
+    // Mandate, because the venue is handed the oracle floor as its minimum.
+    // An agent still has to be told what happened in words it can act on.
+    const stingy = await deploy("StingyVenue");
+    const refusing = await createMandate({
+      publicClient,
+      ownerWallet: owner,
+      factory,
+      name: "fx agent on a thin pool",
+      agent: account(2).address,
+      base: usdc,
+      venue: stingy,
+      rules: {
+        maxTradeUsd: 10,
+        maxLossPercent: 5,
+        maxSlippagePercent: 1,
+        expiresAt: new Date(((await chainTime()) + 7 * 86_400) * 1000),
+        maxPriceAgeSeconds: 86_400,
+      },
+      assets: [{ token: eurc, feed }],
+      deposit: "10",
+    });
+
+    await freshPrice();
+    const client = new MandateClient({ publicClient, wallet: agent, address: refusing });
+    await assert.rejects(client.trade({ from: "USDC", to: "EURC", amount: "1" }), (err) => {
+      assert.equal(err.mandate.rule, "InsufficientOutput");
+      assert.match(err.mandate.reason, /worse price than the mandate allows/);
+      return true;
+    });
+  });
 });
 
 describe("MCP server", () => {

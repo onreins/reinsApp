@@ -1,0 +1,142 @@
+{
+  "network": "testnet",
+  "chainId": 5042002,
+  "deployer": "0x817Bbc1726a81ef360f8971186Df8AaE0682BE38",
+  "fromBlock": "63907868",
+  "contracts": {
+    "mandateFactory": "0x09e45d5b84d9c7cf4e8cdf5d5f1ff2b7d3589f82",
+    "uniswapV4Venue": "0x007d5ad07b7a97fefcbd4302dfeafc11d8485052",
+    "pinnedFeed": "0xfdde6a331c996d6fddbdce108ba18fff0b7f972e"
+  },
+  "txs": {
+    "mandateFactory": "0x91f13edaaed333ce5d3358d3f99281b56e5ab91613c2992308c3ea20ac0166ba",
+    "uniswapV4Venue": "0x4cfadc0c037eb35159bdce54b7cb964d99afe253e784a2741825dc5bf79aa2e7",
+    "pinnedFeed": "0xb3a0a996913d1dca849cfe64269972465c10c1a0c6529daaa9a7c11102bd841e",
+    "setRoute": "0xb668117c2a1bc6d5165096e273580ab9a392150245455301a92ad780c7497fae"
+  },
+  "external": {
+    "poolManager": "0x8366a39CC670B4001A1121B8F6A443A643e40951",
+    "positionManager": "0x6049c9a0e26405C0985f9E3685C87d0aE917f82B",
+    "stateView": "0xF3334192D15450CdD385c8B70e03f9A6bD9E673b",
+    "permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "usdc": "0x3600000000000000000000000000000000000000",
+    "eurc": "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a",
+    "route": {
+      "fee": 500,
+      "tickSpacing": 10,
+      "hooks": "0x0000000000000000000000000000000000000000"
+    }
+  },
+  "oracleNote": "PinnedFeed carries the mainnet Chainlink answer; Chainlink does not publish to Arc testnet.",
+  "deployedAt": "2026-09-25T09:16:17.662Z",
+  "pool": {
+    "poolId": "0xf775c49a5149d5d85f0667782c0b5ccde7fbaeeac0cdbe0ea3b47eea8d7829ea",
+    "key": {
+      "currency0": "0x3600000000000000000000000000000000000000",
+      "currency1": "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a",
+      "fee": 500,
+      "tickSpacing": 10,
+      "hooks": "0x0000000000000000000000000000000000000000"
+    },
+    "sqrtPriceX96": "74271594406172228383875792896",
+    "tick": -1293,
+    "tickLower": -2300,
+    "tickUpper": -300,
+    "liquidity": "116226331",
+    "seeded": {
+      "usdc": "6",
+      "eurc": "5.354321"
+    },
+    "txs": {
+      "approveUSDC": "0xc5d04d9ccce7478a75cedfecb2f3a3323f52e4067342263d4966e7f88080a1cb",
+      "permitUSDC": "0x307d1a47fdd88b1473381e330e9a1df2a0c8009586fbfebbc0f4018174001452",
+      "approveEURC": "0x062591d7baf8c04ffb94e711f361c3ae710ec5a28eb1525d3847b165dd4e49e1",
+      "permitEURC": "0x045d9030ba82cbb1dbdd010a0b6d2e7b70a5c5572c9cf2834c319fec2c7a082b",
+      "seed": "0xaf501a43d1bc91272b2c20a6345dc0972a5d1750fa64d08cf3c6049a24805725"
+    },
+    "note": "Liquidity is ours. Arc testnet has no USDC/EURC market, so we made one.",
+    "seededAt": "2026-09-25T09:18:53.588Z"
+  },
+  "liveRun": {
+    "mandate": "0x991b8687aca6Acd6b92438bb4cE22866827bD632",
+    "agent": "0xEAcD19BE7BDe6a8826B9A8252D5Bc3ea51c1416f",
+    "steps": [
+      {
+        "title": "pool arbitraged back to the oracle",
+        "detail": "-80 bps off → -0 bps, selling 0.437846 EURC",
+        "hash": "0xe91b0a83bcdfdc16827301fa92d99b8d47b30db87fd459e1e59eea4eec53990d"
+      },
+      {
+        "title": "mandate created and funded",
+        "detail": "0x991b8687aca6Acd6b92438bb4cE22866827bD632 with $2",
+        "hash": null
+      },
+      {
+        "title": "opening position",
+        "detail": "equity $2.0000 · floor $1.80 · max $2/trade · within 1% of the oracle",
+        "hash": null
+      },
+      {
+        "title": "agent buys $0.5 of EURC",
+        "detail": "0.437411 EURC at $1.143090 — 0.454% vs oracle $1.137925",
+        "hash": "0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec"
+      },
+      {
+        "title": "trade above the $2 limit",
+        "detail": "refused on-chain: TradeTooLarge",
+        "hash": "0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e"
+      },
+      {
+        "title": "a trade too big for the pool to price fairly",
+        "detail": "refused on-chain: InsufficientOutput",
+        "hash": "0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa"
+      },
+      {
+        "title": "trade into an asset never allowed",
+        "detail": "refused on-chain: AssetNotAllowed",
+        "hash": "0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d"
+      },
+      {
+        "title": "a stranger's key tries to trade",
+        "detail": "refused on-chain: NotAgent",
+        "hash": "0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752"
+      },
+      {
+        "title": "euro falls 50% on the feed",
+        "detail": "$0.56896254 per EURC",
+        "hash": "0x345f005b0dcb98adae8f256841e71f869aabb2ca9f0e68be2d53d4cf2b78dbbf"
+      },
+      {
+        "title": "a stranger freezes it",
+        "detail": "equity $1.9977 → $1.7489, under the $1.80 floor · frozen by 0x668640c4f897F55661139D153Feee8b989d5d100, who owns none of it",
+        "hash": "0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba"
+      },
+      {
+        "title": "agent tries to keep trading",
+        "detail": "refused on-chain: IsFrozen",
+        "hash": "0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f"
+      },
+      {
+        "title": "price restored",
+        "detail": "$1.137925 per EURC",
+        "hash": "0xbeac9c84663acb26e18e745e56a388a9ebb620c9df62e1f84e0cf1657c31cddb"
+      },
+      {
+        "title": "owner resumes it",
+        "detail": "frozen = false",
+        "hash": "0xd29eb5f2d90d62f95cca0b9c060c7a5542aa9e982b2fb4676fa0f20a9ca136c3"
+      },
+      {
+        "title": "owner withdraws mid-strategy",
+        "detail": "$0.25 out of $1.5 USDC held, without asking the agent",
+        "hash": "0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5"
+      },
+      {
+        "title": "closing position",
+        "detail": "equity $1.7477 · holds 1.2500 USDC + 0.4374 EURC",
+        "hash": null
+      }
+    ],
+    "ranAt": "2026-09-25T09:32:15.868Z"
+  }
+}

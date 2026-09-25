@@ -16,6 +16,7 @@ import { artifact } from "../scripts/artifact.js";
 
 const MANDATE = artifact("Mandate");
 const FACTORY = artifact("MandateFactory");
+const VENUE = artifact("UniswapV4Venue");
 const ERC20 = parseAbi([
   "function symbol() view returns (string)",
   "function decimals() view returns (uint8)",
@@ -30,6 +31,14 @@ const FEED = parseAbi([
 /** Factory errors can come from inside the Mandate it deploys; decode both. */
 const FACTORY_ABI = [...FACTORY.abi, ...MANDATE.abi.filter((x) => x.type === "error")];
 
+/**
+ * A trade can also be refused one level down, by the exchange. The mandate
+ * hands the venue its oracle floor as the minimum, so a pool that cannot beat
+ * that floor reverts first and the mandate's own PriceTooLow never runs.
+ * Decoding the venue's errors too is what turns that into a sentence.
+ */
+const TRADE_ABI = [...MANDATE.abi, ...VENUE.abi.filter((x) => x.type === "error")];
+
 /** Plain-language reasons for every rule a trade can hit. */
 const REASONS = {
   NotAgent: "this key is not the mandate's agent (it may have been revoked)",
@@ -39,6 +48,7 @@ const REASONS = {
   SameAsset: "cannot trade an asset for itself",
   TradeTooLarge: "the trade is larger than the mandate's per-trade limit",
   PriceTooLow: "the exchange offered a worse price than the mandate allows",
+  InsufficientOutput: "the exchange offered a worse price than the mandate allows; the pool is too thin for this size",
   DrawdownLimit: "the trade would take losses past the mandate's loss limit",
   StalePrice: "the oracle price is too old to trade on right now",
   BadPrice: "the oracle returned an invalid price",
@@ -194,7 +204,7 @@ export class MandateClient {
     try {
       const hash = await this.wallet.writeContract({
         address: this.address,
-        abi: MANDATE.abi,
+        abi: TRADE_ABI,
         functionName: "trade",
         args: [tIn.address, tOut.address, amountIn, min],
         account: this.wallet.account,

@@ -143,6 +143,9 @@ export class ArenaIndexer {
       equityUsd,
       baselineUsd,
       floorUsd: usd(floor),
+      // The owner took everything back. It is finished, not an agent sitting
+      // on an empty balance, and the arena should not rank it as one.
+      closed: baselineUsd === 0 && equityUsd === 0,
       // Return since the mandate was funded: the arena's ranking.
       returnPct: equityUsd === null || baselineUsd === 0 ? null : ((equityUsd - baselineUsd) / baselineUsd) * 100,
       holdings,

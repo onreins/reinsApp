@@ -11,3 +11,4 @@ deployments/*
 verdicts/
 rulings/
 !deployments/mainnet.json
+!deployments/mandate-testnet.json
