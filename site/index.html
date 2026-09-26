@@ -1,520 +1,393 @@
 <title>Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    color-scheme: dark;
-    --bg: #0a0b0f;
-    --bg-2: #0d0f14;
-    --card: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018));
-    --card-deep: linear-gradient(180deg, #0d1017, #090b10);
-    --stroke: rgba(255,255,255,.075);
-    --stroke-soft: rgba(255,255,255,.05);
-    --ink: #f2f4f8;
-    --ink-2: #9aa3b5;
-    --ink-3: #626b7d;
-    --blue: #4d7df7;
-    --blue-hi: #7ba0ff;
-    --blue-soft: rgba(77,125,247,.13);
-    --up: #34c98e;
-    --up-soft: rgba(52,201,142,.12);
-    --down: #f16a56;
-    --down-soft: rgba(241,106,86,.12);
-    --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+    --page: #eef1fb;
+    --ink: #14173a;
+    --ink-2: #5b6180;
+    --ink-3: #8d92ad;
+    --pill: #c9d7ff;
+    --pill-ink: #1d2c6b;
+    --blue: #3d6bf3;
+    --blue-deep: #2246c7;
+    --navy: #111433;
+    --navy-2: #191d45;
+    --sky: #aac4ff;
+    --green: #0f9f77;
+    --white: #ffffff;
+    --up: #12b380;
+    --down: #e0503c;
+    --sans: "Figtree", "Helvetica Neue", Arial, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-    --r-lg: 18px; --r-md: 12px; --r-sm: 9px;
-    --shadow-card: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.055);
   }
 
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    margin: 0;
-    background:
-      radial-gradient(90rem 40rem at 50% -18rem, rgba(77,125,247,.09), transparent 60%),
-      var(--bg);
-    color: var(--ink);
-    font: 400 15.5px/1.6 var(--sans);
-    -webkit-font-smoothing: antialiased;
-    font-variant-numeric: tabular-nums;
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 500 16px/1.55 var(--sans);
+    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
   }
   a { color: inherit; }
-  h1, h2, h3 { margin: 0; text-wrap: balance; }
-  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
-  ::selection { background: rgba(77,125,247,.35); }
+  h1, h2, h3, p { margin: 0; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
 
-  .wrap { width: 100%; max-width: 1116px; margin: 0 auto; padding-inline: 24px; }
-  @media (max-width: 640px) { .wrap { padding-inline: 16px; } }
+  .gutter { padding-inline: clamp(14px, 2vw, 22px); }
+  .center { text-align: center; }
 
-  .kicker {
-    display: inline-flex; align-items: center; gap: 8px;
-    font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .16em;
-    color: var(--ink-3);
-  }
-  .kicker::before { content: ""; width: 5px; height: 5px; border-radius: 1.5px; background: var(--blue); }
-
-  /* ---------------------------------------------------------------- wordmark */
-  .brand { font: 600 18px/1 var(--sans); letter-spacing: -.03em; text-decoration: none; }
-  .brand b { font-weight: 600; color: var(--blue-hi); }
-
-  /* --------------------------------------------------------------------- nav */
-  .navbar {
-    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40;
-    background: rgba(10,11,15,.64);
-    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--stroke-soft);
-  }
-  .nav { display: flex; align-items: center; gap: 16px; padding-block: 13px; }
-  .capsule {
-    margin: 0 auto; display: flex; gap: 2px; padding: 4px;
-    background: rgba(255,255,255,.045);
-    border: 1px solid var(--stroke-soft); border-radius: 999px;
-  }
-  .capsule a { padding: 7px 15px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color .15s, background .15s; }
-  .capsule a:hover { color: var(--ink); background: rgba(255,255,255,.05); }
-  @media (max-width: 900px) { .capsule { display: none; } }
-
-  .btn {
+  /* ---------------------------------------------------------------- nav */
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 14px clamp(16px, 2.4vw, 26px); }
+  .brand { font-weight: 800; font-size: 21px; letter-spacing: -.04em; text-decoration: none; }
+  .brand b { color: var(--blue); }
+  .nav-r { display: flex; align-items: center; gap: 10px; }
+  .pillbtn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    height: 40px; padding-inline: 19px; border-radius: 999px; border: 0;
-    font: 600 14px var(--sans); letter-spacing: -.01em; text-decoration: none; cursor: pointer;
-    background: linear-gradient(180deg, #6390ff, #3d6cf2);
-    color: #fff;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 10px 26px rgba(61,108,242,.32);
-    transition: filter .15s, transform .15s;
+    height: 46px; padding-inline: 22px; border-radius: 999px; border: 0; cursor: pointer;
+    background: var(--pill); color: var(--pill-ink);
+    font: 700 15px var(--sans); letter-spacing: -.01em; text-decoration: none;
+    transition: transform .16s ease, background .16s ease;
   }
-  .btn:hover { filter: brightness(1.09); }
-  .btn:active { transform: translateY(1px); }
-  .btn.quiet {
-    background: rgba(255,255,255,.055); color: var(--ink);
-    border: 1px solid var(--stroke); box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  .pillbtn:hover { background: #bccdfd; transform: scale(1.03); }
+  .pillbtn.on-dark { background: var(--white); color: var(--ink); }
+  .pillbtn.on-dark:hover { background: #e9edfb; }
+  .roundbtn {
+    width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--white); color: var(--ink); text-decoration: none;
+    transition: transform .16s ease;
   }
-  .btn.quiet:hover { background: rgba(255,255,255,.09); filter: none; }
-  .btn.lg { height: 47px; padding-inline: 25px; font-size: 15px; }
+  .roundbtn:hover { transform: scale(1.06); }
 
-  /* -------------------------------------------------------------------- hero */
-  .hero { position: relative; overflow: hidden; text-align: center; padding-block: clamp(58px, 8vw, 96px) clamp(46px, 6vw, 72px); }
+  /* ---------------------------------------------------------------- hero */
+  .hero-shell { padding: 4px clamp(14px, 2vw, 22px) 0; }
+  .hero {
+    position: relative; overflow: hidden; border-radius: 30px;
+    background: var(--navy);
+    min-height: clamp(480px, 74vh, 660px);
+    display: grid; place-items: center; text-align: center;
+    padding: clamp(48px, 7vw, 90px) 22px;
+  }
   .hero::before {
-    content: ""; position: absolute; left: 50%; bottom: -46rem;
-    width: 110rem; height: 70rem; transform: translateX(-50%); pointer-events: none;
-    background: radial-gradient(closest-side, rgba(77,125,247,.34), rgba(77,125,247,.10) 46%, transparent 72%);
+    content: ""; position: absolute; left: 50%; bottom: -70%;
+    width: 130%; aspect-ratio: 1.3/1; transform: translateX(-50%); pointer-events: none;
+    background: radial-gradient(closest-side, rgba(88,131,255,.55), rgba(61,107,243,.16) 48%, transparent 74%);
   }
   .hero::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .05;
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  .hero .wrap { position: relative; z-index: 1; }
-  .hero .kicker { color: var(--ink-2); }
+  .hero > div { position: relative; z-index: 1; }
+  .kicker { font: 600 15px var(--sans); color: #aab7e8; }
   h1 {
-    margin: 18px auto 0;
-    font-size: clamp(38px, 6.6vw, 74px); line-height: 1.02; font-weight: 600;
-    letter-spacing: -.045em; max-width: 17ch;
+    margin: 14px auto 0; color: var(--white);
+    font-size: clamp(42px, 7.4vw, 88px); line-height: 1.0; font-weight: 700;
+    letter-spacing: -.045em; text-wrap: balance; max-width: 14ch;
   }
-  h1 em { font-style: normal; color: var(--blue-hi); }
-  .sub { margin: 20px auto 0; max-width: 46ch; font-size: 16.5px; line-height: 1.65; color: var(--ink-2); }
-  .hero .btns { margin-top: 30px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-  .meta-row { margin-top: 26px; display: flex; justify-content: center; gap: 8px 26px; flex-wrap: wrap; font: 400 12px var(--mono); color: var(--ink-3); }
-  .meta-row b { font-weight: 500; color: var(--ink-2); }
+  h1 em { font-style: normal; color: var(--sky); }
+  .hero .pillbtn { margin-top: 34px; height: 54px; padding-inline: 28px; font-size: 16px; }
+  .hero .fine { margin-top: 18px; font: 400 12px var(--mono); color: #7d89bd; letter-spacing: .04em; }
 
-  /* ------------------------------------------------- the board (Gemini-style) */
-  .stage { position: relative; z-index: 2; }
-  .board { display: grid; grid-template-columns: 1.66fr 1fr; gap: 14px; }
-  @media (max-width: 940px) { .board { grid-template-columns: 1fr; } }
-
-  .panel { background: var(--card); border: 1px solid var(--stroke); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
-  .chart-card { background: var(--card-deep); border: 1px solid var(--stroke); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 22px 22px 16px; }
-
-  .chart-top { display: flex; align-items: center; gap: 10px; }
-  .chart-top b { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
-  .chart-top .addr { font: 400 11px var(--mono); color: var(--ink-3); margin-left: auto; }
-  .live {
-    display: inline-flex; align-items: center; gap: 6px;
-    font: 500 10px var(--mono); letter-spacing: .14em; text-transform: uppercase;
-    color: var(--up); background: var(--up-soft); border: 1px solid rgba(52,201,142,.22);
-    padding: 4px 9px 4px 7px; border-radius: 999px;
+  /* ------------------------------------------------------- statements */
+  .statement { padding: clamp(72px, 11vw, 140px) 22px clamp(34px, 5vw, 56px); }
+  .statement h2 {
+    font-size: clamp(34px, 5.8vw, 68px); line-height: 1.04; font-weight: 700;
+    letter-spacing: -.04em; text-wrap: balance; max-width: 18ch; margin-inline: auto;
   }
-  .live i { width: 5px; height: 5px; border-radius: 50%; background: var(--up); box-shadow: 0 0 7px var(--up); }
-  @media (prefers-reduced-motion: no-preference) {
-    .live i { animation: pulse 2.2s ease-in-out infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .glyph {
+    display: inline-grid; place-items: center; vertical-align: -.08em;
+    width: .92em; height: .92em; border-radius: .26em; background: var(--blue); color: #fff;
   }
-
-  .big { margin-top: 14px; font-size: 34px; line-height: 1; font-weight: 600; letter-spacing: -.035em; }
-  .delta { margin-top: 9px; font: 500 13px var(--sans); color: var(--up); }
-  .delta span { font-weight: 400; color: var(--ink-3); }
-
-  .plot { margin-top: 16px; }
-  .plot svg { display: block; width: 100%; height: auto; }
-  .axis { display: flex; justify-content: space-between; margin-top: 9px; font: 400 10.5px var(--mono); color: var(--ink-3); letter-spacing: .04em; }
-  .ranges { display: flex; gap: 4px; margin-top: 13px; }
-  .ranges button {
-    font: 500 11px var(--mono); letter-spacing: .06em; color: var(--ink-3);
-    background: transparent; border: 0; padding: 6px 12px; border-radius: 999px; cursor: pointer;
-    transition: background .15s, color .15s;
+  .glyph svg { width: 62%; height: 62%; }
+  .see {
+    display: inline-flex; align-items: center; gap: 7px; margin-top: 26px;
+    height: 44px; padding-inline: 20px; border-radius: 999px;
+    background: var(--pill); color: var(--pill-ink); text-decoration: none;
+    font: 700 14px var(--sans); transition: transform .16s ease;
   }
-  .ranges button:hover { color: var(--ink-2); }
-  .ranges button[aria-current="true"] { background: rgba(255,255,255,.07); color: var(--ink); }
+  .see:hover { transform: scale(1.04); }
 
-  .log { margin: 14px -22px 0; border-top: 1px solid var(--stroke-soft); padding: 6px 22px 0; }
-  .log div { display: flex; align-items: baseline; gap: 12px; padding-block: 8px; font: 400 12px var(--mono); color: var(--ink-2); }
-  .log time { color: var(--ink-3); }
-  .chip { font-size: 10px; font-weight: 500; letter-spacing: .1em; padding: 2.5px 7px; border-radius: 5px; }
-  .chip.no { color: var(--down); background: var(--down-soft); }
-  .chip.ok { color: var(--up); background: var(--up-soft); }
-  .log .r { margin-left: auto; color: var(--ink-3); }
-  @media (max-width: 560px) { .log .r { display: none; } }
-
-  /* right rail */
-  .rail { display: flex; flex-direction: column; gap: 14px; }
-  .rail h3 { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; padding: 15px 16px 0; }
-  .snap { padding: 4px 16px 6px; }
-  .snap > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 10.5px; border-bottom: 1px solid var(--stroke-soft); }
-  .snap > div:last-child { border-bottom: 0; }
-  .snap dt { margin: 0; font-size: 13px; color: var(--ink-2); }
-  .snap dd { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
-  .snap dd.mono { font: 500 12px var(--mono); }
-
-  .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .act {
-    background: var(--card); border: 1px solid var(--stroke); border-radius: var(--r-md);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-    padding: 12px 4px 10px; text-align: center;
+  /* --------------------------------------------------------- carousels */
+  .group-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin: 0 0 14px clamp(14px, 2vw, 22px);
+    font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
   }
-  .act svg { display: block; margin: 0 auto 7px; color: var(--ink-2); }
-  .act span { font: 500 9.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+  .group-label::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--blue); }
 
-  .floor { padding: 14px 16px 16px; }
-  .floor .row1 { display: flex; justify-content: space-between; align-items: baseline; }
-  .floor b { font-size: 13px; font-weight: 600; }
-  .floor .pct { font: 500 12px var(--mono); color: var(--up); }
-  .floor small { display: block; margin-top: 3px; font-size: 12px; color: var(--ink-3); }
-  .meter { margin-top: 11px; height: 5px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
-  .meter i { display: block; height: 100%; width: 60%; border-radius: 99px; background: linear-gradient(90deg, #2fae7e, #34c98e); }
-
-  /* holdings + tables */
-  .holds { margin-top: 14px; padding: 6px 20px 8px; }
-  .holds h3 { font-size: 13.5px; font-weight: 600; padding-block: 12px 2px; }
-  .scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 580px; }
-  th {
-    font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .13em;
-    color: var(--ink-3); text-align: left; padding: 10px 18px 9px 0;
-    border-bottom: 1px solid var(--stroke); white-space: nowrap;
+  .carousel {
+    display: grid; grid-auto-flow: column;
+    grid-auto-columns: min(86%, 940px);
+    gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding: 0 clamp(14px, 2vw, 22px) 8px;
+    scrollbar-width: none;
   }
-  td { padding: 13px 18px 13px 0; border-bottom: 1px solid var(--stroke-soft); font-size: 14px; vertical-align: middle; }
-  tbody tr:last-child td { border-bottom: 0; }
-  tbody tr { transition: background .12s; }
-  tbody tr:hover { background: rgba(255,255,255,.018); }
-  th.r, td.r { text-align: right; padding-right: 0; padding-left: 22px; }
-  .asset { display: flex; align-items: center; gap: 11px; }
-  .sym {
-    width: 30px; height: 30px; border-radius: 50%; flex: none;
-    display: grid; place-items: center; font: 600 9.5px var(--sans); letter-spacing: .02em;
-    background: var(--blue-soft); color: var(--blue-hi); border: 1px solid rgba(77,125,247,.24);
+  .carousel::-webkit-scrollbar { display: none; }
+  .card {
+    scroll-snap-align: center; position: relative; overflow: hidden;
+    border-radius: 30px; min-height: clamp(430px, 58vw, 540px);
+    padding: clamp(28px, 4vw, 46px);
+    display: flex; flex-direction: column;
   }
-  .asset b { display: block; font-size: 13.5px; font-weight: 600; }
-  .asset small { font: 400 11px var(--mono); color: var(--ink-3); }
-  .cell-sub { display: block; font: 400 11px var(--mono); color: var(--ink-3); margin-top: 2px; }
-  .code { font: 500 12.5px var(--mono); color: var(--down); }
-  .dim { font: 400 12.5px var(--mono); color: var(--ink-2); }
-  .tx { font: 400 11.5px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
-  .tx:hover { color: var(--blue-hi); }
-  .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
-  .pill.ok { background: var(--blue-soft); color: var(--blue-hi); border: 1px solid rgba(77,125,247,.22); }
-  .pill.up { background: var(--up-soft); color: var(--up); border: 1px solid rgba(52,201,142,.2); }
-  .pill.no { background: var(--down-soft); color: var(--down); border: 1px solid rgba(241,106,86,.2); }
-  .pill.wait { background: rgba(255,255,255,.05); color: var(--ink-3); border: 1px solid var(--stroke-soft); }
+  .card h3 {
+    font-size: clamp(27px, 3.8vw, 46px); line-height: 1.05; font-weight: 700;
+    letter-spacing: -.035em; text-wrap: balance; max-width: 17ch;
+  }
+  .card .note { margin-top: 14px; font-size: 15.5px; max-width: 42ch; opacity: .82; }
+  .card.c-blue { background: var(--blue); color: #fff; }
+  .card.c-navy { background: var(--navy); color: #fff; }
+  .card.c-sky { background: var(--sky); color: var(--ink); }
+  .card.c-green { background: var(--green); color: #fff; }
+  .card.c-deep { background: var(--blue-deep); color: #fff; }
 
-  .caption { margin-top: 13px; font: 400 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+  /* the UI panel that bleeds off each card's bottom, like their phones */
+  .ui {
+    margin: auto auto -1px; width: min(430px, 92%);
+    background: var(--white); color: var(--ink);
+    border-radius: 22px 22px 0 0; padding: 18px 18px 26px;
+    box-shadow: 0 -18px 50px rgba(10, 14, 50, .28);
+    translate: 0 clamp(10px, 2vw, 22px);
+  }
+  .ui.dark { background: #0d1027; color: #eef1fb; }
+  .ui .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+  .ui .head b { font-size: 14px; font-weight: 700; }
+  .ui .head span { font: 400 10.5px var(--mono); color: var(--ink-3); }
+  .ui.dark .head span { color: #6e77a3; }
 
-  /* ---------------------------------------------------------------- sections */
-  section { padding-block: clamp(56px, 8vw, 104px); }
-  section + section { border-top: 1px solid var(--stroke-soft); }
-  h2 { margin-top: 16px; font-size: clamp(25px, 3.1vw, 36px); line-height: 1.12; font-weight: 600; letter-spacing: -.035em; max-width: 24ch; }
-  .say { margin: 14px 0 0; color: var(--ink-2); max-width: 56ch; }
+  .mrow { display: flex; align-items: baseline; gap: 10px; padding-block: 8px; font: 400 12.5px var(--mono); border-top: 1px solid rgba(20,23,58,.08); }
+  .ui.dark .mrow { border-top-color: rgba(255,255,255,.08); }
+  .mrow:first-of-type { border-top: 0; }
+  .mrow time { color: var(--ink-3); }
+  .ui.dark .mrow time { color: #6e77a3; }
+  .mrow .grow { flex: 1; }
+  .chip { font: 700 10px var(--mono); letter-spacing: .1em; padding: 3px 8px; border-radius: 6px; }
+  .chip.no { color: var(--down); background: rgba(224,80,60,.12); }
+  .chip.ok { color: var(--up); background: rgba(18,179,128,.12); }
 
-  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 38px; }
-  @media (max-width: 860px) { .three { grid-template-columns: 1fr; } }
-  .card3 { background: var(--card); border: 1px solid var(--stroke); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 22px 22px 24px; }
-  .card3 h3 { font-size: 15.5px; font-weight: 600; letter-spacing: -.015em; margin: 46px 0 7px; }
-  .card3 p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
-  .glyph { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--blue-soft); border: 1px solid rgba(77,125,247,.24); color: var(--blue-hi); }
+  .rules-list div { display: flex; justify-content: space-between; gap: 12px; padding-block: 9px; border-top: 1px solid rgba(20,23,58,.08); font-size: 13.5px; }
+  .rules-list div:first-child { border-top: 0; }
+  .rules-list dt { color: var(--ink-2); }
+  .rules-list dd { margin: 0; font-weight: 700; }
 
-  footer { border-top: 1px solid var(--stroke-soft); padding-block: 26px 48px; display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: space-between; align-items: baseline; }
-  footer .fine { font: 400 11.5px var(--mono); color: var(--ink-3); }
+  .bal-line { font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
+  .bal-sub { font-size: 12px; color: var(--up); font-weight: 700; margin-top: 3px; }
+  .spark { margin-top: 10px; }
+  .spark svg { display: block; width: 100%; height: auto; }
+
+  .meter-wrap small { display: block; font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+  .meter { margin-top: 10px; height: 7px; border-radius: 99px; background: rgba(20,23,58,.1); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 60%; border-radius: 99px; background: var(--up); }
+
+  .txlink { font: 500 11.5px var(--mono); color: inherit; opacity: .75; text-decoration: none; }
+  .txlink:hover { opacity: 1; }
+  .rulename { font: 700 clamp(21px, 2.6vw, 30px) var(--mono); letter-spacing: -.02em; color: var(--sky); }
+  .card .stamp { margin-top: auto; padding-top: 26px; font: 400 11.5px var(--mono); opacity: .62; letter-spacing: .05em; }
+
+  /* ------------------------------------------------------------ closing */
+  .closing { padding: clamp(90px, 13vw, 170px) 22px; }
+  .closing .small { font-size: 15px; color: var(--ink-2); max-width: 46ch; margin-inline: auto; }
+  .closing h2 {
+    margin-top: 16px; font-size: clamp(40px, 6.6vw, 82px); line-height: 1.02;
+    font-weight: 700; letter-spacing: -.045em; text-wrap: balance; max-width: 14ch; margin-inline: auto;
+  }
+  .closing h2 em { font-style: normal; color: var(--blue); }
+  .closing .pillbtn { margin-top: 32px; height: 54px; padding-inline: 28px; font-size: 16px; background: var(--navy); color: #fff; }
+  .closing .pillbtn:hover { background: #1c2152; }
+
+  footer { padding: 0 clamp(16px, 2.4vw, 26px) 44px; }
+  footer hr { border: 0; border-top: 1px solid rgba(20,23,58,.1); margin: 0 0 22px; }
+  footer p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-width: 88ch; margin-bottom: 10px; font-weight: 400; }
+  footer .row { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
 </style>
 
-<div class="navbar">
-  <div class="wrap nav">
-    <a class="brand" href="#top">reins<b>.</b></a>
-    <div class="capsule">
-      <a href="#board">Product</a>
-      <a href="#rules">How it works</a>
-      <a href="#proof">Proof</a>
-      <a href="#status">Status</a>
-    </div>
-    <a class="btn" href="#board" style="height:37px">Open the app</a>
+<nav>
+  <a class="brand" href="#top">reins<b>.</b></a>
+  <div class="nav-r">
+    <a class="pillbtn" href="#proof">See the proof</a>
+    <a class="roundbtn" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" aria-label="The first mandate on the Arc explorer">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg>
+    </a>
   </div>
+</nav>
+
+<div class="hero-shell" id="top">
+  <header class="hero">
+    <div>
+      <p class="kicker">Where agents trade under rules</p>
+      <h1>Hand an agent the <em>reins</em>, never the keys</h1>
+      <a class="pillbtn on-dark" href="#rules">See how it holds</a>
+      <p class="fine">Live on Arc testnet &middot; 252 tests &middot; ~$0.01 a trade</p>
+    </div>
+  </header>
 </div>
 
-<header class="hero" id="top">
-  <div class="wrap">
-    <span class="kicker">Live on Arc testnet</span>
-    <h1>Hand an agent the <em>reins</em>.<br>Never the keys.</h1>
-    <p class="sub">
-      Run an automated strategy on your own money, or follow someone else's.
-      Your funds stay in a contract only you can withdraw from, under limits the
-      agent cannot break.
-    </p>
-    <div class="btns">
-      <a class="btn lg" href="#board">See it running</a>
-      <a class="btn quiet lg" href="#proof">Read the transactions</a>
-    </div>
-    <div class="meta-row">
-      <span><b>252</b> tests passing</span>
-      <span><b>~$0.01</b> per trade</span>
-      <span><b>$0.00</b> we can ever touch</span>
+<section class="statement center" id="rules">
+  <h2>Rules an agent
+    <span class="glyph" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2"/></svg></span>
+    can&rsquo;t break</h2>
+  <a class="see" href="#proof">See them refuse <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
+</section>
+
+<p class="group-label">Your rules</p>
+<div class="carousel">
+  <div class="card c-blue">
+    <h3>Cap every trade. Anything over it reverts.</h3>
+    <p class="note">The cap is set when the mandate is created and can never be edited &mdash; not by the agent, not by us.</p>
+    <div class="ui">
+      <div class="head"><b>Activity</b><span>mandate 0x991b&hellip;D632</span></div>
+      <div class="mrow"><time>14:02:11</time><span class="chip no">Refused</span><span class="grow">TradeTooLarge &mdash; $240 over the $200 cap</span></div>
+      <div class="mrow"><time>13:47:03</time><span class="chip ok">Filled</span><span class="grow">Buy 0.306 SPYx @ $653.90</span></div>
+      <div class="mrow"><time>11:20:44</time><span class="chip ok">Filled</span><span class="grow">Buy 0.301 SPYx @ $652.71</span></div>
     </div>
   </div>
-</header>
 
-<div class="wrap stage" id="board">
-  <div class="board">
-    <div class="chart-card">
-      <div class="chart-top">
-        <b>Momentum, weekly</b>
-        <span class="live"><i></i>Live</span>
-        <span class="addr">agent 0xEAcD…416f</span>
-      </div>
-      <div class="big" id="bal">$2,041.83</div>
-      <div class="delta" id="delta">▲ $41.83 (2.09%) <span>since funding</span></div>
-
-      <div class="plot">
-        <svg id="chart" viewBox="0 0 720 236" role="img" aria-label="Equity curve above the $2,000 funding line"></svg>
-      </div>
-      <div class="axis" id="axis"></div>
-      <div class="ranges" id="ranges">
-        <button type="button" id="rb-1d">1D</button>
-        <button type="button" id="rb-1w" aria-current="true">1W</button>
-        <button type="button" id="rb-1m">1M</button>
-        <button type="button" id="rb-3m">3M</button>
-        <button type="button" id="rb-all">All</button>
-      </div>
-
-      <div class="log">
-        <div>
-          <time>14:02:11</time><span class="chip no">Refused</span>
-          <span>TradeTooLarge &mdash; $240.00 over the $200 cap</span>
-          <span class="r">block 63 911 248</span>
-        </div>
-        <div>
-          <time>13:47:03</time><span class="chip ok">Filled</span>
-          <span>Buy 0.306 SPYx @ $653.90</span>
-          <span class="r">block 63 909 771</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="rail">
-      <div class="panel">
-        <h3>The rules it runs under</h3>
-        <dl class="snap">
-          <div><dt>Per trade</dt><dd>at most $200</dd></div>
-          <div><dt>Loss limit</dt><dd>&minus;10%, then freeze</dd></div>
-          <div><dt>Allowed assets</dt><dd class="mono">SPYx &middot; USDC</dd></div>
-          <div><dt>Price bound</dt><dd>within 1% of oracle</dd></div>
-          <div><dt>Expires</dt><dd>in 84 days</dd></div>
-        </dl>
-      </div>
-
-      <div class="acts">
-        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M7.5 3v9M3 7.5h9"/></svg><span>Fund</span></div>
-        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M7.5 12V3m0 0L4 6.5M7.5 3 11 6.5"/></svg><span>Withdraw</span></div>
-        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 5h8m0 0L8.5 2.5M11 5 8.5 7.5M12 10H4m0 0 2.5-2.5M4 10l2.5 2.5"/></svg><span>Agent</span></div>
-        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5.5 3.5v8m4-8v8"/></svg><span>Freeze</span></div>
-      </div>
-
-      <div class="panel floor">
-        <div class="row1"><b>Distance to the floor</b><span class="pct">healthy</span></div>
-        <small>Floor $1,800.00 &middot; equity is $241.83 above it</small>
+  <div class="card c-navy">
+    <h3>Stop at &minus;10%. Any stranger can pull the brake.</h3>
+    <p class="note">If your mandate falls through its floor, anyone on the internet can freeze it. You don&rsquo;t have to be awake.</p>
+    <div class="ui">
+      <div class="head"><b>Distance to the floor</b><span>healthy</span></div>
+      <div class="meter-wrap">
+        <div class="bal-line">$241.83</div>
+        <small>above the $1,800.00 floor</small>
         <div class="meter"><i></i></div>
       </div>
+    </div>
+  </div>
 
-      <div class="panel holds" style="margin-top:0">
-        <h3>Holdings</h3>
-        <div class="scroll">
-          <table style="min-width:0">
-            <thead><tr><th>Asset</th><th class="r">Balance</th><th class="r">Value</th></tr></thead>
-            <tbody>
-              <tr>
-                <td><span class="asset"><span class="sym">SPY</span><span><b>SPYx</b><small>1.842 shares</small></span></span></td>
-                <td class="r dim">59.0%</td>
-                <td class="r">$1,204.66</td>
-              </tr>
-              <tr>
-                <td><span class="asset"><span class="sym">USD</span><span><b>USDC</b><small>837.17</small></span></span></td>
-                <td class="r dim">41.0%</td>
-                <td class="r">$837.17</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+  <div class="card c-sky">
+    <h3>Only the assets you allow exist to it.</h3>
+    <p class="note">Everything else refuses on contact. The list is fixed at creation, like every other rule.</p>
+    <div class="ui">
+      <div class="head"><b>The mandate, in your words</b><span>immutable</span></div>
+      <dl class="rules-list">
+        <div><dt>Funded</dt><dd>$2,000 USDC</dd></div>
+        <div><dt>May trade</dt><dd>SPYx &middot; USDC</dd></div>
+        <div><dt>Per trade</dt><dd>at most $200</dd></div>
+        <div><dt>Stop at</dt><dd>&minus;10%, then freeze</dd></div>
+        <div><dt>Expires</dt><dd>in 90 days</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card c-deep">
+    <h3>Every fill is checked against the oracle.</h3>
+    <p class="note">A price worse than your band reverts the whole trade. The classic drain &mdash; trading into a rigged pool &mdash; simply doesn&rsquo;t execute.</p>
+    <div class="ui">
+      <div class="head"><b>Last fill</b><span>vs Chainlink</span></div>
+      <div class="bal-line">0.454%</div>
+      <small style="font-size:12px;color:var(--ink-2)">from the oracle price &middot; inside the 1% band</small>
+      <div class="mrow" style="margin-top:12px"><time>12:58:20</time><span class="chip ok">Filled</span><span class="grow">$1.143090 per EURC</span></div>
+    </div>
+  </div>
+
+  <div class="card c-green">
+    <h3>Leave whenever. Withdrawing asks nobody.</h3>
+    <p class="note">Even mid-strategy, even while the agent holds a position. There is no function that lets it object.</p>
+    <div class="ui">
+      <div class="head"><b>Withdraw</b><span>owner only</span></div>
+      <div class="bal-line">$2,041.83</div>
+      <small style="font-size:12px;color:var(--ink-2)">available now &mdash; no notice period, no permission</small>
+      <div class="mrow" style="margin-top:12px"><time>15:11:02</time><span class="chip ok">Paid out</span><span class="grow">withdraw() &rarr; your wallet</span></div>
+    </div>
+  </div>
+</div>
+
+<section class="statement center">
+  <h2>Run your strategy, or follow someone else&rsquo;s</h2>
+  <a class="see" href="#proof">Why records can&rsquo;t be faked <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
+</section>
+
+<p class="group-label">Follow</p>
+<div class="carousel">
+  <div class="card c-navy">
+    <h3>Track records that cannot be faked.</h3>
+    <p class="note">Every trade every strategy has ever made is a public transaction. No backtests, no screenshots, no trust.</p>
+    <div class="ui">
+      <div class="head"><b>Momentum, weekly</b><span>since funding</span></div>
+      <div class="bal-line">$2,041.83</div>
+      <div class="bal-sub">&#9650; $41.83 (2.09%)</div>
+      <div class="spark">
+        <svg viewBox="0 0 380 90" role="img" aria-label="Equity curve rising from 2,000 to 2,041 dollars">
+          <path d="M0 66 L24 60 L48 64 L72 52 L96 56 L120 44 L144 49 L168 38 L192 44 L216 30 L240 36 L264 24 L288 30 L312 18 L336 24 L360 12 L380 16 L380 90 L0 90 Z" fill="rgba(18,179,128,.14)"/>
+          <path d="M0 66 L24 60 L48 64 L72 52 L96 56 L120 44 L144 49 L168 38 L192 44 L216 30 L240 36 L264 24 L288 30 L312 18 L336 24 L360 12 L380 16" fill="none" stroke="#12b380" stroke-width="2" stroke-linejoin="round"/>
+          <line x1="0" y1="70" x2="380" y2="70" stroke="rgba(20,23,58,.18)" stroke-dasharray="3 5"/>
+          <circle cx="380" cy="16" r="3.5" fill="#12b380"/>
+        </svg>
       </div>
     </div>
   </div>
-  <p class="caption">Example mandate &mdash; SPYx is not on Arc yet. Everything under &ldquo;Proof&rdquo; is real.</p>
+
+  <div class="card c-blue">
+    <h3>Their strategy. Your limits, on top.</h3>
+    <p class="note">Following someone never pools your money with theirs. It stays in your contract, and your rules outrank their calls.</p>
+    <div class="ui">
+      <div class="head"><b>Following</b><span>your mandate, their agent</span></div>
+      <dl class="rules-list">
+        <div><dt>Strategy</dt><dd>Momentum, weekly</dd></div>
+        <div><dt>Can trade</dt><dd>inside your limits</dd></div>
+        <div><dt>Can withdraw</dt><dd>never &mdash; no such function</dd></div>
+        <div><dt>Your exit</dt><dd>instant, unilateral</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card c-sky">
+    <h3>Fire the agent in one block.</h3>
+    <p class="note">Revoke its key and it stops next block. Or swap it for a better one without moving a cent.</p>
+    <div class="ui">
+      <div class="head"><b>Agent</b><span>owner controls</span></div>
+      <div class="mrow"><time>16:40:15</time><span class="chip no">Revoked</span><span class="grow">agent 0xEAcD&hellip;416f removed</span></div>
+      <div class="mrow"><time>16:40:15</time><span class="chip ok">Holds</span><span class="grow">funds untouched &mdash; $2,041.83</span></div>
+    </div>
+  </div>
 </div>
 
-<section class="wrap" id="rules">
-  <span class="kicker">Why it holds</span>
-  <h2>Limits enforced by the contract, not promised in a footer.</h2>
-  <p class="say">A broker's limits are instructions someone honours later. Here they are conditions checked before any money moves — a trade that breaks one reverts, and nothing happens.</p>
-  <div class="three">
-    <div class="card3">
-      <span class="glyph"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="6.5" rx="1.8"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>
-      <h3>The rules can't be edited</h3>
-      <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable after that — by us or by anyone.</p>
-    </div>
-    <div class="card3">
-      <span class="glyph"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M13 3v10M8 8H2.5m0 0L5 5.5M2.5 8 5 10.5"/></svg></span>
-      <h3>You can leave mid-strategy</h3>
-      <p>Withdraw everything at any moment without asking the agent, even while it holds a position. There is no function that lets it object.</p>
-    </div>
-    <div class="card3">
-      <span class="glyph"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.5 13.5 4.8v3.4c0 3.1-2.3 4.8-5.5 5.8-3.2-1-5.5-2.7-5.5-5.8V4.8z"/></svg></span>
-      <h3>The stop-loss is public</h3>
-      <p>If a mandate falls through its floor, any stranger can freeze it. You don't have to be awake for your loss limit to work, and neither do we.</p>
-    </div>
-  </div>
+<section class="statement center" id="proof">
+  <h2>Broadcast, not promised</h2>
+  <a class="see" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632">All 8 transactions <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
 </section>
 
-<section class="wrap" id="proof">
-  <span class="kicker">Arc testnet &middot; mandate 0x991b…D632</span>
-  <h2>The first one, and everything it was stopped from doing.</h2>
-  <p class="say">Every refusal below was broadcast on purpose rather than simulated, so it exists as a transaction you can open. A mandate that only refuses in private proves nothing.</p>
-  <div class="scroll" style="margin-top:28px">
-    <table>
-      <thead><tr><th>What was tried</th><th>What happened</th><th class="r">Rule</th><th class="r">Transaction</th></tr></thead>
-      <tbody>
-        <tr><td>Buy $0.50 of euros</td><td>Filled at $1.143090 — <span class="dim">0.454% from the oracle</span></td><td class="r"><span class="pill up">Allowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td></tr>
-        <tr><td>Trade $2.50, over the size limit</td><td>Refused on-chain</td><td class="r"><span class="code">TradeTooLarge</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td></tr>
-        <tr><td>A trade too big for the pool to price fairly</td><td>The exchange couldn't beat the oracle floor</td><td class="r"><span class="code">InsufficientOutput</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td></tr>
-        <tr><td>Buy an asset the mandate never allowed</td><td>Refused on-chain</td><td class="r"><span class="code">AssetNotAllowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td></tr>
-        <tr><td>A stranger's key signs a trade</td><td>Refused on-chain</td><td class="r"><span class="code">NotAgent</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">0x48b35a90… ↗</a></td></tr>
-        <tr><td>The euro falls 50%, a stranger calls the stop-loss</td><td>Frozen at $1.7489 against a $1.80 floor, by someone who owns none of it</td><td class="r"><span class="pill no">Frozen</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">0x3cafe35c… ↗</a></td></tr>
-        <tr><td>The agent tries again while frozen</td><td>Refused on-chain</td><td class="r"><span class="code">IsFrozen</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f">0xddad294e… ↗</a></td></tr>
-        <tr><td>The owner withdraws mid-strategy</td><td>Paid out, without the agent's permission</td><td class="r"><span class="pill ok">Owner</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5">0x0c437da1… ↗</a></td></tr>
-      </tbody>
-    </table>
+<p class="group-label">Real refusals &middot; Arc testnet</p>
+<div class="carousel">
+  <div class="card c-navy">
+    <p class="rulename">TradeTooLarge</p>
+    <h3 style="margin-top:10px">It tried to trade $2.50 over a $2 cap.</h3>
+    <p class="note">Refused on-chain. We broadcast the refusals on purpose &mdash; a mandate that only refuses in private proves nothing.</p>
+    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">tx 0x685d4a90&hellip; &nearr;</a></p>
   </div>
+  <div class="card c-navy">
+    <p class="rulename">AssetNotAllowed</p>
+    <h3 style="margin-top:10px">It tried to buy an asset it was never given.</h3>
+    <p class="note">The allowed list is part of the contract. Everything outside it refuses on contact.</p>
+    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">tx 0x5c50decb&hellip; &nearr;</a></p>
+  </div>
+  <div class="card c-navy">
+    <p class="rulename">NotAgent</p>
+    <h3 style="margin-top:10px">A stranger&rsquo;s key tried to trade.</h3>
+    <p class="note">Only the one key you appointed can trade, and it can do nothing else.</p>
+    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">tx 0x48b35a90&hellip; &nearr;</a></p>
+  </div>
+  <div class="card c-deep">
+    <p class="rulename" style="color:#fff">Frozen</p>
+    <h3 style="margin-top:10px">The euro fell 50%. A stranger pulled the brake.</h3>
+    <p class="note">Frozen at $1.7489 against a $1.80 floor by someone who owns none of it. That is the public stop-loss working.</p>
+    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">tx 0x3cafe35c&hellip; &nearr;</a></p>
+  </div>
+</div>
+
+<section class="closing center">
+  <p class="small">One mandate live on Arc testnet. Stocks are next &mdash; Circle has named xStocks and Dinari among the issuers coming to Arc.</p>
+  <h2>Get started. Hold the <em>reins</em>.</h2>
+  <a class="pillbtn" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632">Watch the first mandate</a>
 </section>
 
-<section class="wrap" id="status">
-  <span class="kicker">Where this goes</span>
-  <h2>Stocks are arriving on Arc. The rails are already here.</h2>
-  <p class="say">Circle named xStocks and Dinari among the issuers bringing tokenized products to Arc, a chain whose validators include BlackRock, DTCC and the NYSE's parent. A trade there costs about a cent — which is what finally makes daily averaging and real stop-losses worth running on a small account.</p>
-  <div class="scroll" style="margin-top:28px">
-    <table>
-      <thead><tr><th>Piece</th><th>State</th><th class="r">&nbsp;</th></tr></thead>
-      <tbody>
-        <tr><td>The contract that holds money under rules</td><td>Reviewed, 252 tests, live on testnet</td><td class="r"><span class="pill ok">Done</span></td></tr>
-        <tr><td>Holding transfer-restricted securities</td><td>Tokenized shares carry allowlists; it handles them</td><td class="r"><span class="pill ok">Done</span></td></tr>
-        <tr><td>A leaderboard read from chain state alone</td><td>No database, nothing we could fake</td><td class="r"><span class="pill ok">Done</span></td></tr>
-        <tr><td>Following someone else's strategy</td><td>Your rules bind on top of theirs</td><td class="r"><span class="pill wait">Building</span></td></tr>
-        <tr><td>Equity price feeds on Arc</td><td>32 Chainlink feeds live, none for stocks yet</td><td class="r"><span class="pill wait">Waiting</span></td></tr>
-      </tbody>
-    </table>
+<footer>
+  <hr>
+  <div class="row">
+    <a class="brand" href="#top" style="font-size:16px">reins<b>.</b></a>
+    <span style="font:400 11.5px var(--mono);color:var(--ink-3)">Arc testnet &middot; 26 Sep 2026</span>
   </div>
-</section>
-
-<footer class="wrap">
-  <a class="brand" href="#top" style="font-size:15px">reins<b>.</b></a>
-  <span class="fine">Figures read from Arc testnet, 26 Sep 2026 &middot; not investment advice</span>
+  <p>Reins is software. Funds placed under a mandate sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The mandate shown in product panels is an example &mdash; tokenized equities such as SPYx are not yet issued on Arc. Every transaction under &ldquo;Broadcast, not promised&rdquo; is real and links to the Arc testnet explorer.</p>
+  <p>Nothing on this page is investment advice or an offer of securities. Automated strategies can lose money up to the loss limit their mandate sets. Figures dated above were read from Arc testnet chain state.</p>
 </footer>
-
-<script>
-(function () {
-  "use strict";
-  var svg = document.getElementById("chart");
-  var axisEl = document.getElementById("axis");
-  var deltaEl = document.getElementById("delta");
-  if (!svg) return;
-
-  var W = 720, H = 236, PADR = 54, PADT = 10, PADB = 12;
-  var plotW = W - PADR, plotH = H - PADT - PADB;
-  var END = 2041.83, FUND = 2000;
-
-  var RANGES = {
-    "1d":  { seed: 11, n: 30,  pct: 0.0031, labels: ["09:30","11:00","12:30","14:00","15:30"] },
-    "1w":  { seed: 7,  n: 84,  pct: 0.020915, labels: ["Sep 19","Sep 21","Sep 23","Sep 25","Today"] },
-    "1m":  { seed: 23, n: 110, pct: 0.0342, labels: ["Aug 27","Sep 4","Sep 12","Sep 20","Today"] },
-    "3m":  { seed: 41, n: 130, pct: 0.0128, labels: ["Jun 26","Jul 24","Aug 21","Sep 18","Today"] },
-    "all": { seed: 61, n: 150, pct: 0.0421, labels: ["May 30","Jun 27","Jul 25","Aug 22","Today"] }
-  };
-
-  function series(cfg) {
-    var s = cfg.seed, out = [], v = 0;
-    var rnd = function () { s = (s * 16807) % 2147483647; return s / 2147483647; };
-    for (var i = 0; i < cfg.n; i++) { v += (rnd() - 0.485) * 1.6; out.push(v); }
-    // Rescale the walk so it starts at the range's start price and ends at END.
-    var start = END / (1 + cfg.pct);
-    var a = out[0], b = out[out.length - 1] || 1;
-    var span = (b - a) === 0 ? 1 : (b - a);
-    return out.map(function (y) { return start + ((y - a) / span) * (END - start); });
-  }
-
-  function fmt(n) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-
-  function draw(key) {
-    var cfg = RANGES[key];
-    var pts = series(cfg);
-    var lo = Math.min.apply(null, pts.concat([FUND])), hi = Math.max.apply(null, pts.concat([FUND]));
-    var pad = (hi - lo) * 0.14 || 1; lo -= pad; hi += pad;
-    var X = function (i) { return (i / (pts.length - 1)) * plotW; };
-    var Y = function (v) { return PADT + (1 - (v - lo) / (hi - lo)) * plotH; };
-
-    var line = pts.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
-    var area = line + " L" + plotW + " " + (H - PADB) + " L0 " + (H - PADB) + " Z";
-
-    var grid = "", labels = "";
-    var step = (hi - lo) / 3;
-    for (var g = 0; g < 4; g++) {
-      var gv = lo + step * g + step / 2;
-      var gy = Y(gv).toFixed(1);
-      grid += '<line x1="0" y1="' + gy + '" x2="' + plotW + '" y2="' + gy + '" stroke="rgba(255,255,255,.055)" stroke-width="1"/>';
-      labels += '<text x="' + (plotW + 10) + '" y="' + (+gy + 3.5) + '" fill="#626b7d" font-size="10" font-family="IBM Plex Mono, monospace">' + Math.round(gv).toLocaleString("en-US") + "</text>";
-    }
-    var fy = Y(FUND).toFixed(1);
-    var endX = X(pts.length - 1).toFixed(1), endY = Y(pts[pts.length - 1]).toFixed(1);
-
-    svg.innerHTML =
-      '<defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#34c98e" stop-opacity=".22"/>' +
-      '<stop offset="100%" stop-color="#34c98e" stop-opacity="0"/></linearGradient></defs>' +
-      grid + labels +
-      '<line x1="0" y1="' + fy + '" x2="' + plotW + '" y2="' + fy + '" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="3 5"/>' +
-      '<text x="' + (plotW + 10) + '" y="' + (+fy + 3.5) + '" fill="#9aa3b5" font-size="10" font-family="IBM Plex Mono, monospace">funded</text>' +
-      '<path d="' + area + '" fill="url(#fade)"/>' +
-      '<path d="' + line + '" fill="none" stroke="#34c98e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<circle cx="' + endX + '" cy="' + endY + '" r="7" fill="rgba(52,201,142,.18)"/>' +
-      '<circle cx="' + endX + '" cy="' + endY + '" r="3" fill="#34c98e"/>';
-
-    axisEl.innerHTML = cfg.labels.map(function (t) { return "<span>" + t + "</span>"; }).join("");
-    var gain = END - END / (1 + cfg.pct);
-    deltaEl.innerHTML = "▲ $" + fmt(gain) + " (" + (cfg.pct * 100).toFixed(2) + "%) <span>" +
-      (key === "1w" ? "since funding" : "past " + { "1d": "day", "1m": "month", "3m": "3 months", "all": "lifetime" }[key]) + "</span>";
-  }
-
-  var btns = { "1d": "rb-1d", "1w": "rb-1w", "1m": "rb-1m", "3m": "rb-3m", "all": "rb-all" };
-  Object.keys(btns).forEach(function (key) {
-    var el = document.getElementById(btns[key]);
-    el.addEventListener("click", function () {
-      Object.keys(btns).forEach(function (k) { document.getElementById(btns[k]).removeAttribute("aria-current"); });
-      el.setAttribute("aria-current", "true");
-      draw(key);
-    });
-  });
-  draw("1w");
-})();
-</script>
