@@ -168,6 +168,11 @@ describe("encoding a deposit", () => {
     assert.equal(d.args[0], parseUnits("25", 6));
   });
 
+  test("refuses a zero or negative deposit, and a deposit to a non-address", async () => {
+    const { status } = await post("/api/tx/deposit", { mandate: "0x123", amountUsd: 5 });
+    assert.equal(status, 400);
+  });
+
   test("refuses a zero or negative deposit", async () => {
     for (const amountUsd of [0, -3]) {
       const { status } = await post("/api/tx/deposit", {
@@ -176,5 +181,61 @@ describe("encoding a deposit", () => {
       });
       assert.equal(status, 400);
     }
+  });
+});
+
+describe("encoding owner and public actions", () => {
+  const mandate = "0x991b8687aca6Acd6b92438bb4cE22866827bD632";
+  const decode = (data) => decodeFunctionData({ abi: MANDATE.abi, data });
+
+  test("withdraw-everything, freeze and unfreeze each encode the right call to the mandate", async () => {
+    for (const [action, fn] of [["withdrawAll", "withdrawAll"], ["checkpoint", "checkpoint"], ["unfreeze", "unfreeze"]]) {
+      const { status, body } = await post("/api/tx/action", { mandate, action });
+      assert.equal(status, 200, action);
+      assert.equal(body.to.toLowerCase(), mandate.toLowerCase());
+      assert.equal(decode(body.data).functionName, fn);
+    }
+  });
+
+  test("a partial withdrawal names the token and the exact amount", async () => {
+    const { status, body } = await post("/api/tx/action", {
+      mandate,
+      action: "withdraw",
+      token: deployment.external.usdc,
+      amount: 0.25,
+    });
+    assert.equal(status, 200);
+    const d = decode(body.data);
+    assert.equal(d.functionName, "withdraw");
+    assert.equal(d.args[0].toLowerCase(), deployment.external.usdc.toLowerCase());
+    assert.equal(d.args[1], parseUnits("0.25", 6));
+  });
+
+  test("refuses to withdraw a token the mandate cannot hold, or a non-positive amount", async () => {
+    const stranger = await post("/api/tx/action", {
+      mandate, action: "withdraw", token: "0x000000000000000000000000000000000000dEaD", amount: 1,
+    });
+    assert.equal(stranger.status, 400);
+    const zero = await post("/api/tx/action", { mandate, action: "withdraw", token: deployment.external.usdc, amount: 0 });
+    assert.equal(zero.status, 400);
+  });
+
+  test("changing the agent takes a real address, and the zero address revokes it", async () => {
+    const swap = await post("/api/tx/action", { mandate, action: "setAgent", agent: "0xEAcD19BE7BDe6a8826B9A8252D5Bc3ea51c1416f" });
+    assert.equal(swap.status, 200);
+    assert.equal(decode(swap.body.data).functionName, "setAgent");
+
+    const revoke = await post("/api/tx/action", { mandate, action: "setAgent", agent: "0x0000000000000000000000000000000000000000" });
+    assert.equal(revoke.status, 200);
+    assert.match(revoke.body.label, /revoke/i);
+
+    const bad = await post("/api/tx/action", { mandate, action: "setAgent", agent: "nope" });
+    assert.equal(bad.status, 400);
+  });
+
+  test("refuses an action it doesn't know rather than guessing", async () => {
+    const { status, body } = await post("/api/tx/action", { mandate, action: "transferOwnership" });
+    assert.equal(status, 400);
+    assert.match(body.error, /unknown action/i);
   });
 });

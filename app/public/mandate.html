@@ -5,180 +5,524 @@
 <title>Reins — Mandate</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <link rel="stylesheet" href="/app.css">
 
-<div class="wrap">
-  <nav>
-    <a class="brand" href="/">reins<b>.</b></a>
-    <div class="nav-links">
+<header class="topbar">
+  <div class="bar">
+    <a class="logo" href="/">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="#7ba0ff" stroke-width="1.7"/><path d="M6 13.6c0-4 2-6.6 4.6-6.6 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 3-4.4 3" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>
+      Reins
+    </a>
+    <div class="switcher">
+      <button class="switch-btn" id="switch" type="button" aria-expanded="false" aria-haspopup="true">
+        <span id="switch-name">Mandate</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+      <div class="menu" id="menu" hidden></div>
+    </div>
+    <nav class="tabs">
       <a href="/">Strategies</a>
       <a href="/create.html">Create</a>
-    </div>
-    <div class="nav-right">
-      <span class="net" id="net"><i></i>connecting…</span>
-      <a class="btn quiet" id="explorer" href="#" target="_blank" rel="noopener" style="height:38px">Explorer ↗</a>
-    </div>
-  </nav>
-
-  <div class="page-head">
-    <h1 id="name">Reading the chain…</h1>
-    <p class="sub">
-      <span class="mono" id="addr"></span>
-      <button class="copy" id="copy" type="button" hidden>copy</button>
-      <span id="state"></span>
-    </p>
-  </div>
-
-  <div class="stat-row" id="stats" hidden>
-    <div><b id="s-equity">—</b><span>Equity</span></div>
-    <div><b id="s-return">—</b><span>Since funding</span></div>
-    <div><b id="s-funded">—</b><span>Funded</span></div>
-    <div>
-      <b id="s-floor">—</b><span id="s-headroom">Floor</span>
-      <div class="meter"><i id="s-meter" style="width:0%"></i></div>
+      <a href="#" aria-current="page">Mandate</a>
+    </nav>
+    <div class="bar-right">
+      <span class="net hide-sm" id="net"><i></i>Arc</span>
+      <a class="hide-sm" id="explorer-top" href="#" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg>Explorer
+      </a>
+      <button class="wallet" id="wallet" type="button">Connect</button>
+      <span class="avatar hide-sm" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4"><circle cx="8" cy="5.5" r="2.8"/><path d="M2.8 14c.6-2.8 2.7-4.3 5.2-4.3s4.6 1.5 5.2 4.3"/></svg></span>
     </div>
   </div>
+</header>
 
-  <div class="grid two" style="margin-top:14px">
-    <div class="card">
-      <div class="head">Everything it has done <span>each line is a transaction</span></div>
-      <div class="pad feed" id="feed"><p class="empty">Reading its history…</p></div>
-    </div>
+<main class="wrap">
+  <div class="page-head"><h1>Mandate</h1></div>
 
+  <div class="grid two">
     <div class="grid">
-      <div class="card">
-        <div class="head">The rules <span>immutable</span></div>
-        <dl class="pad rules-list" id="rules"></dl>
-      </div>
-      <div class="card">
-        <div class="head">Holdings <span>where the money is, right now</span></div>
-        <dl class="pad rules-list" id="holdings"></dl>
-      </div>
+      <section class="chart-card" aria-label="Equity">
+        <div class="chart-top"><b id="name">Reading the chain…</b><span class="badge dark" id="badge" hidden></span></div>
+        <div class="big" id="equity">—</div>
+        <div class="delta flat" id="delta"><span class="dot" id="delta-dot">•</span><span id="delta-v">—</span><span class="when" id="delta-when"></span></div>
+        <div class="plot" id="plot"><div class="chart-empty">Reading equity from the chain…</div></div>
+        <div class="axis" id="axis"></div>
+        <div class="ranges" id="ranges">
+          <button type="button" id="r-1d" data-r="1d">1D</button>
+          <button type="button" id="r-1w" data-r="1w">1W</button>
+          <button type="button" id="r-1m" data-r="1m">1M</button>
+          <button type="button" id="r-all" data-r="all" aria-current="true">All</button>
+        </div>
+      </section>
+
+      <section class="card" id="holdings-card">
+        <div class="head">Holdings
+          <button class="collapse" id="collapse" type="button" aria-label="Collapse holdings" aria-expanded="true">
+            <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 7.5 6 4l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="body pad scroll">
+          <table>
+            <thead><tr><th>Asset</th><th>Balance</th><th>Allocation %</th><th class="r"></th></tr></thead>
+            <tbody id="holdings"><tr><td colspan="4" class="dim">Reading…</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head">Activity <span>every line is a transaction</span></div>
+        <div class="pad feed" id="feed"><p class="empty">Reading its history…</p></div>
+      </section>
     </div>
+
+    <aside class="rail">
+      <h2>Owner&rsquo;s mandates</h2>
+      <div class="snaps" id="snaps"></div>
+      <div class="rule"></div>
+
+      <div class="actions">
+        <button class="action" id="a-fund" type="button"><i><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7.5 3v8m0 0L4 7.5M7.5 11 11 7.5"/><path d="M3 13h9"/></svg></i><span>Fund</span></button>
+        <button class="action" id="a-withdraw" type="button"><i><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7.5 12V4m0 0L4 7.5M7.5 4 11 7.5"/><path d="M3 2h9"/></svg></i><span>Withdraw</span></button>
+        <button class="action" id="a-agent" type="button"><i><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 5h8m0 0L8.5 2.5M11 5 8.5 7.5M12 10H4m0 0 2.5-2.5M4 10l2.5 2.5"/></svg></i><span>Agent</span></button>
+        <button class="action" id="a-freeze" type="button"><i><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.5 3.5v8m4-8v8"/></svg></i><span id="a-freeze-label">Freeze</span></button>
+        <a class="action" id="a-explorer" href="#" target="_blank" rel="noopener"><i><svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></i><span>Explorer</span></a>
+      </div>
+
+      <a class="alert-row" href="#rules-card">
+        <span class="ico"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.5 13.5 4.8v3.4c0 3.1-2.3 4.8-5.5 5.8-3.2-1-5.5-2.7-5.5-5.8V4.8z"/></svg></span>
+        <span><b id="floor-title">Loss limit</b><small id="floor-sub">Reading…</small></span>
+        <span class="chev" aria-hidden="true">›</span>
+      </a>
+
+      <section class="card" id="rules-card" style="margin-top:16px">
+        <div class="head">Rules <span>immutable</span></div>
+        <dl class="pad rules-list" id="rules"></dl>
+      </section>
+    </aside>
   </div>
 
   <footer>
-    <span>Reins · read live from chain state</span>
+    <span id="foot">Reins · read live from chain state</span>
     <span>Not investment advice</span>
   </footer>
-</div>
+</main>
 
+<dialog id="dlg"><div class="dlg" id="dlg-body"></div></dialog>
+
+<script src="/wallet.js"></script>
 <script>
 (function () {
   "use strict";
+  var W = window.ReinsWallet;
   var $ = function (id) { return document.getElementById(id); };
   var address = new URLSearchParams(location.search).get("a") || "";
-  var cfg = null;
+  var cfg = null, data = null, points = null, board = [], range = "all";
 
-  var money = function (n) {
-    return n === null || n === undefined
-      ? "—"
-      : "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var money = function (n, dp) {
+    if (n === null || n === undefined) return "—";
+    var d = dp === undefined ? 2 : dp;
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   };
   var esc = function (s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-    });
+    return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
   };
-  var short = function (a) { return a.slice(0, 10) + "…"; };
+  var short = function (a) { return a ? a.slice(0, 6) + "…" + a.slice(-4) : ""; };
+  var stateOf = function (r) {
+    if (r.closed) return ["closed", "Closed"];
+    if (r.frozen) return ["frozen", "Frozen"];
+    if (r.expired) return ["expired", "Expired"];
+    return ["live", "Live"];
+  };
 
-  function line(e) {
-    if (e.event === "Traded")
-      return ["ok", "traded " + e.sold.amount.toFixed(4) + " " + esc(e.sold.symbol) + " for " + e.bought.amount.toFixed(4) + " " + esc(e.bought.symbol)];
-    if (e.event === "Frozen")
-      return ["no", "hit the loss limit — " + money(e.equityUsd) + " against a " + money(e.floorUsd) + " floor, frozen"];
-    if (e.event === "Deposited") return ["own", "owner added " + esc(e.amount) + " " + esc(e.symbol)];
-    if (e.event === "Withdrawn") return ["own", "owner took out " + esc(e.amount) + " " + esc(e.symbol)];
-    if (e.event === "AgentChanged") {
-      var zero = /^0x0{40}$/i.test(e.agent);
-      return ["own", zero ? "agent revoked by the owner" : "agent set to " + e.agent.slice(0, 8) + "…"];
+  // ------------------------------------------------------------------ chart
+  var SPAN = { "1d": 86400, "1w": 604800, "1m": 2592000 };
+  var WHEN = { "1d": "past 24 hours", "1w": "past week", "1m": "past month", all: "since funding" };
+
+  function renderChart() {
+    if (!points || !points.length) return;
+    var now = Math.floor(Date.now() / 1000);
+    var start = SPAN[range] ? now - SPAN[range] : points[0].t;
+    var v0 = points[0].equityUsd, b0 = points[0].baselineUsd;
+    points.forEach(function (p) { if (p.t <= start) { v0 = p.equityUsd; b0 = p.baselineUsd; } });
+    var series = [{ t: start, v: v0, b: b0, events: [] }];
+    points.forEach(function (p) {
+      if (p.t > start) series.push({ t: p.t, v: p.equityUsd, b: p.baselineUsd, events: p.events || [] });
+    });
+    var tail = series[series.length - 1];
+    if (tail.t < now) series.push({ t: now, v: tail.v, b: tail.b, events: [] });
+
+    // Return, not equity change: deposits and withdrawals move equity but are
+    // not gains or losses. The contract's baseline moves with them, so
+    // equity / baseline is the flow-free measure; a withdrawal leaves it flat.
+    var end = series[series.length - 1];
+    var last = end.v;
+    var r0 = b0 > 0 ? v0 / b0 : null;
+    var r1 = end.b > 0 ? end.v / end.b : null;
+    var diff, pct;
+    if (r0 && r1) {
+      pct = (r1 / r0 - 1) * 100;
+      diff = end.v - end.b * r0;
+    } else {
+      diff = last - v0;
+      pct = v0 ? (diff / v0) * 100 : 0;
     }
-    return ["own", esc(e.event)];
+    var dir = Math.abs(diff) < 0.00005 ? "flat" : diff > 0 ? "up" : "down";
+    var color = dir === "down" ? "#ef4b4b" : dir === "up" ? "#1fb574" : "#8d8e98";
+
+    $("delta").className = "delta " + dir;
+    $("delta-dot").textContent = dir === "down" ? "−" : dir === "up" ? "+" : "•";
+    $("delta-v").textContent = (diff < 0 ? "−" : "+") + money(Math.abs(diff), 4) +
+      " (" + (pct < 0 ? "−" : "+") + Math.abs(pct).toFixed(2) + "%)";
+    $("delta-when").textContent = WHEN[range];
+
+    var W = 640, H = 200, PR = 64, TOP = 12, BOT = 188;
+    var plotW = W - PR;
+    var vals = series.map(function (s) { return s.v; });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var pad = (hi - lo) * 0.18 || Math.max(hi * 0.004, 0.001);
+    lo -= pad; hi += pad;
+    var t0 = series[0].t, t1 = series[series.length - 1].t || t0 + 1;
+    var X = function (t) { return ((t - t0) / Math.max(1, t1 - t0)) * plotW; };
+    var Y = function (v) { return TOP + (1 - (v - lo) / (hi - lo)) * (BOT - TOP); };
+
+    // Step line: hold each value until the next event, as the chain did.
+    var d = "M" + X(series[0].t).toFixed(1) + " " + Y(series[0].v).toFixed(1);
+    for (var i = 1; i < series.length; i++) {
+      d += " H" + X(series[i].t).toFixed(1) + " V" + Y(series[i].v).toFixed(1);
+    }
+    var area = d + " V" + BOT + " H0 Z";
+
+    var dec = hi - lo < 0.1 ? 4 : 2;
+    var ticks = "";
+    for (var k = 0; k < 4; k++) {
+      var tv = hi - ((hi - lo) * (k + 0.5)) / 4;
+      var ty = Y(tv);
+      ticks += '<line x1="0" x2="' + plotW + '" y1="' + ty.toFixed(1) + '" y2="' + ty.toFixed(1) + '" stroke="rgba(255,255,255,.06)"/>' +
+        '<text x="' + (W - 2) + '" y="' + (ty + 3.5).toFixed(1) + '" text-anchor="end" fill="#8d8e98" font-size="10.5" font-family="Inter, sans-serif">' +
+        "$" + tv.toFixed(dec) + "</text>";
+    }
+    var marks = "";
+    series.forEach(function (s) {
+      if (!s.events.length) return;
+      var label = s.events.filter(function (e, j, a) { return a.indexOf(e) === j; }).join(" + ");
+      marks += '<circle cx="' + X(s.t).toFixed(1) + '" cy="' + Y(s.v).toFixed(1) + '" r="3.2" fill="' + color + '" stroke="#000" stroke-width="1.5">' +
+        "<title>" + esc(label === "now" ? "now" : label) + " · " + money(s.v, 4) + " · " + new Date(s.t * 1000).toLocaleString() + "</title></circle>";
+    });
+
+    $("plot").innerHTML =
+      '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Equity ' + esc(WHEN[range]) + ', from ' + money(v0, 4) + " to " + money(last, 4) + '">' +
+      '<defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + color + '" stop-opacity=".35"/><stop offset="1" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+      ticks +
+      '<line x1="0" x2="' + plotW + '" y1="' + Y(v0).toFixed(1) + '" y2="' + Y(v0).toFixed(1) + '" stroke="rgba(255,255,255,.4)" stroke-dasharray="2 4"/>' +
+      '<path d="' + area + '" fill="url(#fill)"/>' +
+      '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linejoin="round"/>' +
+      marks + "</svg>";
+
+    var labels = [];
+    var prevDay = null;
+    for (var n = 0; n < 5; n++) {
+      var dt = new Date((t0 + ((t1 - t0) * n) / 4) * 1000);
+      var day = dt.toDateString();
+      labels.push(day !== prevDay && (n === 0 || t1 - t0 > 86400)
+        ? dt.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+        : dt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }));
+      prevDay = day;
+    }
+    $("axis").innerHTML = labels.map(function (l) { return "<span>" + l + "</span>"; }).join("");
   }
 
-  function render(d) {
+  // ------------------------------------------------------------ the rest
+  function eventLine(e) {
+    if (e.event === "Traded")
+      return ["ok", "Trade", "sold " + e.sold.amount.toFixed(4) + " " + esc(e.sold.symbol) + " for " + e.bought.amount.toFixed(4) + " " + esc(e.bought.symbol)];
+    if (e.event === "Frozen")
+      return ["no", "Stop", "fell to " + money(e.equityUsd, 4) + ", under its " + money(e.floorUsd, 4) + " floor, and froze"];
+    if (e.event === "Deposited") return ["own", "Owner", "added " + esc(e.amount) + " " + esc(e.symbol)];
+    if (e.event === "Withdrawn") return ["own", "Owner", "took out " + esc(e.amount) + " " + esc(e.symbol)];
+    if (e.event === "AgentChanged")
+      return ["own", "Owner", /^0x0{40}$/i.test(e.agent) ? "revoked the agent" : "set the agent to " + short(e.agent)];
+    return ["own", "Event", esc(e.event)];
+  }
+
+  function renderPage() {
+    var d = data;
+    var st = stateOf(d);
+    document.title = "Reins — " + (d.name || "Mandate");
     $("name").textContent = d.name || "unnamed mandate";
-    $("addr").textContent = address;
-    $("copy").hidden = false;
+    $("switch-name").textContent = d.name || short(address);
+    $("badge").hidden = false;
+    $("badge").className = "badge dark " + st[0];
+    $("badge").textContent = st[1];
+    $("equity").textContent = money(d.equityUsd, 4);
 
-    var st = d.closed ? ["closed", "Closed"] : d.frozen ? ["frozen", "Frozen"] : d.expired ? ["expired", "Expired"] : ["live", "Live"];
-    $("state").innerHTML = ' &nbsp;<span class="pill ' + st[0] + '">' + st[1] + "</span>";
-
-    $("stats").hidden = false;
-    $("s-equity").textContent = money(d.equityUsd);
-    var r = d.returnPct;
-    $("s-return").textContent = r === null || r === undefined ? "—" : (r > 0 ? "+" : "") + r.toFixed(2) + "%";
-    $("s-return").className = r === null || r === undefined || Math.abs(r) < 0.005 ? "" : r > 0 ? "up" : "down";
-    $("s-funded").textContent = money(d.baselineUsd);
-    $("s-floor").textContent = money(d.floorUsd);
-    var headroom = d.equityUsd != null && d.floorUsd != null ? Math.max(0, d.equityUsd - d.floorUsd) : null;
-    $("s-headroom").textContent = headroom === null ? "Floor" : "Floor · " + money(headroom) + " of headroom";
-    var span = d.baselineUsd - d.floorUsd;
-    $("s-meter").style.width = headroom === null || span <= 0 ? "0%" : Math.max(2, Math.min(100, (headroom / span) * 100)) + "%";
-
-    var rules = d.rules || {};
-    $("rules").innerHTML =
-      "<div><dt>Per trade</dt><dd>at most " + money(rules.maxTradeUsd) + "</dd></div>" +
-      "<div><dt>Loss limit</dt><dd>−" + rules.maxLossPercent + "%, then freeze</dd></div>" +
-      "<div><dt>Price bound</dt><dd>within " + rules.maxSlippagePercent + "% of the oracle</dd></div>" +
-      "<div><dt>May trade</dt><dd>" + (rules.allowedAssets || []).map(esc).join(" · ") + "</dd></div>" +
-      "<div><dt>Expires</dt><dd>" + new Date(d.expiresAt).toLocaleDateString() + "</dd></div>" +
-      "<div><dt>Can withdraw</dt><dd>only the owner, any time</dd></div>";
-
-    $("holdings").innerHTML =
-      (d.holdings || [])
-        .filter(function (h) { return h.amount > 0; })
-        .map(function (h) {
-          return "<div><dt>" + esc(h.symbol) + "</dt><dd>" + h.amount.toFixed(4) +
-            (h.valueUsd != null ? ' <span class="dim">· ' + money(h.valueUsd) + "</span>" : "") + "</dd></div>";
-        })
-        .join("") || '<div><dt>Empty</dt><dd>nothing held</dd></div>';
+    var equity = d.equityUsd;
+    var syms = { USDC: "usdc", EURC: "eurc" };
+    var glyph = { USDC: "$", EURC: "€" };
+    $("holdings").innerHTML = (d.holdings || []).map(function (h) {
+      var alloc = equity && h.valueUsd != null ? ((h.valueUsd / equity) * 100).toFixed(2) + "%" : "—";
+      var tok = cfg.tokens[h.symbol];
+      return "<tr><td><span class=\"asset\"><span class=\"coin " + (syms[h.symbol] || "") + "\">" + (glyph[h.symbol] || esc(h.symbol[0])) + "</span>" +
+        "<span><b>" + esc(h.symbol) + "</b><small>" + (h.symbol === "USDC" ? "US Dollar Coin" : h.symbol === "EURC" ? "Euro Coin" : "") + "</small></span></span></td>" +
+        "<td>" + h.amount.toFixed(4) + " " + esc(h.symbol) + '<span class="cell-sub">' + money(h.valueUsd, 4) + "</span></td>" +
+        "<td>" + alloc + "</td>" +
+        '<td class="r">' + (tok ? '<a class="more" href="' + cfg.explorer + "/token/" + tok.address + '" target="_blank" rel="noopener" aria-label="' + esc(h.symbol) + ' on the explorer">•••</a>' : "") + "</td></tr>";
+    }).join("") || '<tr><td colspan="4" class="dim">Nothing held.</td></tr>';
 
     var hist = d.history || [];
     $("feed").innerHTML = hist.length
       ? hist.map(function (e) {
-          var l = line(e);
-          return '<div><span class="chip ' + l[0] + '">' + (l[0] === "no" ? "stop" : l[0] === "ok" ? "trade" : "owner") + "</span>" +
-            '<span class="grow">' + l[1] + "</span>" +
-            '<a href="' + cfg.explorer + "/tx/" + e.tx + '" target="_blank" rel="noopener">' + short(e.tx) + " ↗</a></div>";
+          var l = eventLine(e);
+          return '<div><span class="chip ' + l[0] + '">' + l[1] + '</span><span class="grow">' + l[2] + "</span>" +
+            '<a href="' + cfg.explorer + "/tx/" + e.tx + '" target="_blank" rel="noopener">' + e.tx.slice(0, 10) + "… ↗</a></div>";
         }).join("")
-      : '<p class="empty">Quiet so far — no activity yet.</p>';
-  }
+      : '<p class="empty">Quiet so far.</p>';
 
-  function tick() {
-    fetch("/api/mandate/" + address)
-      .then(function (r) {
-        if (!r.ok) throw new Error("bad address");
-        return r.json();
-      })
-      .then(render)
-      .catch(function () {
-        $("name").textContent = "Couldn't read that mandate";
-        $("feed").innerHTML = '<p class="empty">Check the address, or try again shortly.</p>';
+    var r = d.rules || {};
+    $("rules").innerHTML =
+      "<div><dt>Per trade</dt><dd>at most " + money(r.maxTradeUsd) + "</dd></div>" +
+      "<div><dt>Loss limit</dt><dd>−" + r.maxLossPercent + "%, then freeze</dd></div>" +
+      "<div><dt>Price bound</dt><dd>within " + r.maxSlippagePercent + "% of the oracle</dd></div>" +
+      "<div><dt>May trade</dt><dd>" + (r.allowedAssets || []).map(esc).join(" · ") + "</dd></div>" +
+      "<div><dt>Expires</dt><dd>" + new Date(d.expiresAt).toLocaleDateString() + "</dd></div>" +
+      "<div><dt>Agent</dt><dd class=\"mono\">" + (/^0x0{40}$/i.test(d.agent || "") ? "none — revoked" : short(d.agent)) + "</dd></div>" +
+      "<div><dt>Owner</dt><dd class=\"mono\">" + short(d.owner) + "</dd></div>";
+
+    var headroom = d.equityUsd != null && d.floorUsd != null ? d.equityUsd - d.floorUsd : null;
+    $("floor-title").textContent = "Loss limit −" + r.maxLossPercent + "%";
+    $("floor-sub").textContent = d.closed
+      ? "Closed — the owner withdrew everything"
+      : d.frozen
+        ? "Frozen under its " + money(d.floorUsd) + " floor"
+        : headroom === null
+          ? "Floor " + money(d.floorUsd) + " · price feed stale"
+          : money(headroom, 4) + " above the " + money(d.floorUsd, 4) + " floor";
+
+    // Freeze is public, but only works below the floor; unfreeze is the owner's.
+    var fz = $("a-freeze");
+    if (d.frozen) {
+      $("a-freeze-label").textContent = "Unfreeze";
+      fz.disabled = false;
+      fz.title = "Owner only";
+    } else {
+      $("a-freeze-label").textContent = "Freeze";
+      fz.disabled = !(headroom !== null && headroom < 0);
+      fz.title = fz.disabled ? "Anyone can freeze a mandate once it falls below its floor. This one is above it." : "Anyone can freeze it now";
+    }
+    $("a-explorer").href = cfg.explorer + "/address/" + address;
+    $("explorer-top").href = cfg.explorer + "/address/" + address;
+
+    var mine = board
+      .filter(function (m) { return d.owner && m.owner && m.owner.toLowerCase() === d.owner.toLowerCase(); })
+      .sort(function (a, b) {
+        var cur = function (m) { return m.address.toLowerCase() === address.toLowerCase() ? 0 : m.closed ? 2 : 1; };
+        return cur(a) - cur(b);
       });
+    var snapHtml = mine.map(function (m) {
+      var isCur = m.address.toLowerCase() === address.toLowerCase();
+      var ms = stateOf(m);
+      return '<a class="snap' + (m.closed ? " dim" : "") + '" href="/mandate.html?a=' + m.address + '"' + (isCur ? ' aria-current="true"' : "") + ">" +
+        '<span class="t"><b>' + esc(m.name || "unnamed") + "</b> " + (isCur ? '<span class="badge">Viewing</span>' : '<span class="badge ' + ms[0] + '">' + ms[1] + "</span>") +
+        "<small>" + short(m.address) + "</small></span>" +
+        '<span class="v">' + money(m.equityUsd || 0) + "</span></a>";
+    }).join("");
+    $("snaps").innerHTML = snapHtml || '<p class="dim">No other mandates for this owner.</p>';
+    $("menu").innerHTML = mine.map(function (m) {
+      return '<a href="/mandate.html?a=' + m.address + '"><span>' + esc(m.name || "unnamed") + "</span><small>" + money(m.equityUsd || 0) + "</small></a>";
+    }).join("") + '<a href="/create.html"><span>+ New mandate</span></a>';
   }
 
-  $("copy").addEventListener("click", function () {
-    navigator.clipboard.writeText(address).then(
-      function () { $("copy").textContent = "copied"; setTimeout(function () { $("copy").textContent = "copy"; }, 1200); },
-      function () {}
+  // ------------------------------------------------------------ dialogs
+  var dlg = $("dlg");
+  function openDialog(html) {
+    $("dlg-body").innerHTML = html;
+    dlg.showModal();
+    var cancel = $("dlg-cancel");
+    if (cancel) cancel.addEventListener("click", function () { dlg.close(); });
+  }
+  function step(msg, cls) {
+    var box = $("dlg-steps");
+    if (!box) return;
+    var div = document.createElement("div");
+    if (cls) div.className = cls;
+    div.innerHTML = msg;
+    box.appendChild(div);
+  }
+  var txLink = function (h) { return '<a href="' + cfg.explorer + "/tx/" + h + '" target="_blank" rel="noopener">' + h.slice(0, 10) + "…</a>"; };
+
+  async function execute(buildTxs, ownerOnly, buttonIds) {
+    buttonIds.forEach(function (id) { if ($(id)) $(id).disabled = true; });
+    try {
+      if (!W.account) await connectWallet();
+      if (ownerOnly && W.account.toLowerCase() !== (data.owner || "").toLowerCase()) {
+        throw new Error("Only the owner can do this. The owner is " + short(data.owner) + " and you are connected as " + short(W.account) + ".");
+      }
+      await W.ensureChain();
+      var txs = await buildTxs();
+      for (var i = 0; i < txs.length; i++) {
+        step("Check your wallet: " + esc(txs[i].label || "confirm"));
+        var h = await W.send(txs[i]);
+        step(esc(txs[i].label || "sent") + " · " + txLink(h), "ok");
+      }
+      step("Done. The page refreshes in a few seconds.", "ok");
+      setTimeout(function () { refresh(); }, 5000);
+    } catch (err) {
+      step(esc(W.explain(err)), "err");
+      buttonIds.forEach(function (id) { if ($(id)) $(id).disabled = false; });
+    }
+  }
+
+  function fundDialog() {
+    openDialog(
+      "<h3>Fund this mandate</h3>" +
+      '<p class="lead">USDC moves from your wallet into the contract. Only the owner can fund it, and only the owner can ever take it out.</p>' +
+      '<div class="field"><label for="d-amt">Amount, USDC</label><input id="d-amt" type="number" min="0" step="0.01" value="1"></div>' +
+      '<div class="row-btns"><button class="btn quiet" id="dlg-cancel" type="button">Cancel</button><button class="btn" id="d-go" type="button">Fund</button></div>' +
+      '<div class="steps" id="dlg-steps"></div>'
     );
+    $("d-go").addEventListener("click", function () {
+      var amt = Number($("d-amt").value);
+      execute(async function () {
+        var r = await W.post("/api/tx/deposit", { mandate: address, amountUsd: amt });
+        return r.txs;
+      }, true, ["d-go"]);
+    });
+  }
+
+  function withdrawDialog() {
+    var opts = (data.holdings || []).filter(function (h) { return h.amount > 0 && cfg.tokens[h.symbol]; });
+    openDialog(
+      "<h3>Withdraw</h3>" +
+      '<p class="lead">Take money out at any time, even mid-strategy. The agent is never asked.</p>' +
+      '<div class="field-row"><div class="field"><label for="d-tok">Asset</label><select id="d-tok">' +
+      opts.map(function (h) { return '<option value="' + h.symbol + '" data-max="' + h.amount + '">' + esc(h.symbol) + " · " + h.amount.toFixed(4) + "</option>"; }).join("") +
+      '</select></div><div class="field"><label for="d-amt">Amount</label><input id="d-amt" type="number" min="0" step="0.0001" value="' + (opts[0] ? opts[0].amount.toFixed(4) : "0") + '"></div></div>' +
+      '<div class="row-btns"><button class="btn quiet" id="dlg-cancel" type="button">Cancel</button><button class="btn" id="d-go" type="button"' + (opts.length ? "" : " disabled") + ">Withdraw</button></div>" +
+      '<div class="row-btns" style="margin-top:8px"><button class="btn quiet" id="d-all" type="button">Withdraw everything and remove the agent</button></div>' +
+      '<div class="steps" id="dlg-steps"></div>'
+    );
+    if ($("d-tok")) $("d-tok").addEventListener("change", function () {
+      $("d-amt").value = Number($("d-tok").selectedOptions[0].getAttribute("data-max")).toFixed(4);
+    });
+    $("d-go").addEventListener("click", function () {
+      var sym = $("d-tok").value;
+      var amt = Number($("d-amt").value);
+      execute(async function () {
+        return [await W.post("/api/tx/action", { mandate: address, action: "withdraw", token: cfg.tokens[sym].address, amount: amt })];
+      }, true, ["d-go", "d-all"]);
+    });
+    $("d-all").addEventListener("click", function () {
+      execute(async function () {
+        return [await W.post("/api/tx/action", { mandate: address, action: "withdrawAll" })];
+      }, true, ["d-go", "d-all"]);
+    });
+  }
+
+  function agentDialog() {
+    var revoked = /^0x0{40}$/i.test(data.agent || "");
+    openDialog(
+      "<h3>Agent</h3>" +
+      '<p class="lead">The agent\'s key can trade inside the rules and nothing else. Swap it for another, or revoke it; either takes effect next block.</p>' +
+      '<p class="mono" style="margin-bottom:14px">Current: ' + (revoked ? "none (revoked)" : esc(data.agent)) + "</p>" +
+      '<div class="field"><label for="d-agent">New agent address</label><input id="d-agent" type="text" placeholder="0x…" spellcheck="false" autocomplete="off"></div>' +
+      '<div class="row-btns"><button class="btn quiet" id="d-revoke" type="button"' + (revoked ? " disabled" : "") + '>Revoke agent</button><button class="btn" id="d-go" type="button">Set agent</button></div>' +
+      '<div class="row-btns" style="margin-top:8px"><button class="btn quiet" id="dlg-cancel" type="button">Cancel</button></div>' +
+      '<div class="steps" id="dlg-steps"></div>'
+    );
+    $("d-go").addEventListener("click", function () {
+      var next = $("d-agent").value.trim();
+      execute(async function () {
+        return [await W.post("/api/tx/action", { mandate: address, action: "setAgent", agent: next })];
+      }, true, ["d-go", "d-revoke"]);
+    });
+    $("d-revoke").addEventListener("click", function () {
+      execute(async function () {
+        return [await W.post("/api/tx/action", { mandate: address, action: "setAgent", agent: "0x0000000000000000000000000000000000000000" })];
+      }, true, ["d-go", "d-revoke"]);
+    });
+  }
+
+  function freezeDialog() {
+    var unfreezing = data.frozen;
+    openDialog(
+      "<h3>" + (unfreezing ? "Unfreeze" : "Freeze") + "</h3>" +
+      '<p class="lead">' + (unfreezing
+        ? "Only the owner can unfreeze. The agent may trade again afterwards, under the same rules."
+        : "This is the public stop-loss. Anyone may freeze a mandate once it falls below its floor, including you.") + "</p>" +
+      '<div class="row-btns"><button class="btn quiet" id="dlg-cancel" type="button">Cancel</button><button class="btn' + (unfreezing ? "" : " danger") + '" id="d-go" type="button">' + (unfreezing ? "Unfreeze" : "Freeze it") + "</button></div>" +
+      '<div class="steps" id="dlg-steps"></div>'
+    );
+    $("d-go").addEventListener("click", function () {
+      execute(async function () {
+        return [await W.post("/api/tx/action", { mandate: address, action: unfreezing ? "unfreeze" : "checkpoint" })];
+      }, unfreezing, ["d-go"]);
+    });
+  }
+
+  async function connectWallet() {
+    var acct = await W.connect();
+    $("wallet").textContent = short(acct) + (data && data.owner && acct.toLowerCase() === data.owner.toLowerCase() ? " · owner" : "");
+    return acct;
+  }
+
+  // ------------------------------------------------------------ loading
+  async function refresh() {
+    var res = await fetch("/api/mandate/" + address);
+    if (!res.ok) throw new Error("that mandate could not be read");
+    data = await res.json();
+    var b = await fetch("/api/leaderboard").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    if (b && Array.isArray(b.mandates)) board = b.mandates;
+    renderPage();
+    var s = await fetch("/api/mandate/" + address + "/series").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+    if (s && s.points && s.points.length) {
+      points = s.points;
+      renderChart();
+    } else if (!points) {
+      $("plot").innerHTML = '<div class="chart-empty">Equity history is unavailable right now.</div>';
+    }
+  }
+
+  document.querySelectorAll("#ranges button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("#ranges button").forEach(function (b) { b.removeAttribute("aria-current"); });
+      btn.setAttribute("aria-current", "true");
+      range = btn.getAttribute("data-r");
+      renderChart();
+    });
   });
+  $("collapse").addEventListener("click", function () {
+    var card = $("holdings-card");
+    card.classList.toggle("collapsed");
+    $("collapse").setAttribute("aria-expanded", String(!card.classList.contains("collapsed")));
+  });
+  $("switch").addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    var open = $("menu").hidden;
+    $("menu").hidden = !open;
+    $("switch").setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("click", function () { $("menu").hidden = true; $("switch").setAttribute("aria-expanded", "false"); });
+  $("wallet").addEventListener("click", function () {
+    connectWallet().catch(function (err) { $("wallet").textContent = "No wallet"; $("wallet").title = W.explain(err); });
+  });
+  $("a-fund").addEventListener("click", function () { if (data) fundDialog(); });
+  $("a-withdraw").addEventListener("click", function () { if (data) withdrawDialog(); });
+  $("a-agent").addEventListener("click", function () { if (data) agentDialog(); });
+  $("a-freeze").addEventListener("click", function () { if (data) freezeDialog(); });
 
   if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
     $("name").textContent = "No mandate given";
-    $("feed").innerHTML = '<p class="empty">Open this page from the strategies list.</p>';
+    $("plot").innerHTML = '<div class="chart-empty">Open a mandate from the strategies list.</div>';
   } else {
-    fetch("/api/config")
-      .then(function (r) { return r.json(); })
-      .then(function (c) {
-        cfg = c;
-        $("net").innerHTML = "<i></i>Arc " + esc(c.network);
-        $("explorer").href = c.explorer + "/address/" + address;
-        tick();
-        setInterval(tick, 15000);
+    W.config().then(function (c) {
+      cfg = c;
+      $("net").innerHTML = "<i></i>Arc " + esc(c.network);
+      refresh().catch(function (err) {
+        $("name").textContent = "Couldn't read that mandate";
+        $("plot").innerHTML = '<div class="chart-empty">' + esc(err.message) + "</div>";
       });
+      setInterval(function () { refresh().catch(function () {}); }, 20000);
+    });
   }
 })();
 </script>

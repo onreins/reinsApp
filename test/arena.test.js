@@ -114,6 +114,10 @@ describe("the leaderboard", () => {
 
     const eur = fx.holdings.find((h) => h.symbol === "EURC");
     assert.ok(eur.amount > 17 && eur.amount < 18, `holds ${eur.amount} EURC`);
+    // Every holding carries its dollar value: the base at face, the rest at their feed.
+    assert.ok(Math.abs(eur.valueUsd - eur.amount * 1.138) < 0.001, `EURC valued at ${eur.valueUsd}`);
+    const cash = fx.holdings.find((h) => h.symbol === "USDC");
+    assert.equal(cash.valueUsd, cash.amount);
   });
 
   test("ranks by return, and a loss sorts below a flat mandate", async () => {

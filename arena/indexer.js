@@ -23,6 +23,14 @@ const ERC20 = parseAbi([
   "function balanceOf(address) view returns (uint256)",
 ]);
 
+const FEED = [
+  {
+    type: "function", name: "latestRoundData", stateMutability: "view", inputs: [],
+    outputs: [{ type: "uint80" }, { type: "int256" }, { type: "uint256" }, { type: "uint256" }, { type: "uint80" }],
+  },
+  { type: "function", name: "decimals", stateMutability: "view", inputs: [], outputs: [{ type: "uint8" }] },
+];
+
 export const LOG_WINDOW = 9_999n;
 
 /** Split [from, to] into windows the public RPC will accept. */
@@ -47,15 +55,41 @@ export class ArenaIndexer {
     this.factory = factory;
     this.fromBlock = fromBlock;
     this.meta = new Map(); // mandate address → tokens it can hold
+    this.logCache = new Map(); // address → { from, to, logs } already read
+    this.logLocks = new Map(); // address → the scan currently running for it
   }
 
-  async _logs({ address, fromBlock, toBlock }) {
-    const out = [];
-    for (const [from, to] of windows(fromBlock, toBlock)) {
-      const batch = await this.publicClient.getLogs({ address, fromBlock: from, toBlock: to });
-      out.push(...batch);
+  /**
+   * Logs for one address, read incrementally. Each address keeps what it has
+   * already read and the last block covered, so a refresh only asks for new
+   * blocks. Progress is saved per window: a scan cut off by a rate limit
+   * resumes at the window that failed instead of starting over.
+   */
+  _logs({ address, fromBlock, toBlock }) {
+    // One scan per address at a time: two readers racing would fetch the
+    // same windows and append them twice.
+    const key = address.toLowerCase();
+    const run = (this.logLocks.get(key) ?? Promise.resolve()).then(() =>
+      this._scan({ address, key, fromBlock, toBlock }),
+    );
+    this.logLocks.set(key, run.catch(() => {}));
+    return run;
+  }
+
+  async _scan({ address, key, fromBlock, toBlock }) {
+    let entry = this.logCache.get(key);
+    if (!entry || entry.from !== fromBlock) {
+      entry = { from: fromBlock, to: fromBlock - 1n, logs: [] };
+      this.logCache.set(key, entry);
     }
-    return out;
+    if (toBlock > entry.to) {
+      for (const [from, to] of windows(entry.to + 1n, toBlock)) {
+        const batch = await this.publicClient.getLogs({ address, fromBlock: from, toBlock: to });
+        entry.logs.push(...batch);
+        entry.to = to;
+      }
+    }
+    return toBlock >= entry.to ? entry.logs.slice() : entry.logs.filter((l) => l.blockNumber <= toBlock);
   }
 
   /** Every mandate the factory has ever created. */
@@ -93,10 +127,27 @@ export class ArenaIndexer {
         this.publicClient.readContract({ address, abi: ERC20, functionName: "symbol" }),
         this.publicClient.readContract({ address, abi: ERC20, functionName: "decimals" }),
       ]);
-      tokens[address.toLowerCase()] = { address, symbol, decimals, isBase: i === 0 };
+      // Each non-base asset is priced by the feed the mandate was created with.
+      const feed = i === 0 ? null : (await read("assets", [address]))[0];
+      tokens[address.toLowerCase()] = { address, symbol, decimals, isBase: i === 0, feed };
     }
     this.meta.set(mandate, tokens);
     return tokens;
+  }
+
+  /** Dollar value of a holding: the base at face, the rest at their own feed. */
+  async _value(token, amount) {
+    if (token.isBase) return amount;
+    if (!token.feed) return null;
+    try {
+      const [[, answer], decimals] = await Promise.all([
+        this.publicClient.readContract({ address: token.feed, abi: FEED, functionName: "latestRoundData" }),
+        this.publicClient.readContract({ address: token.feed, abi: FEED, functionName: "decimals" }),
+      ]);
+      return amount * (Number(answer) / 10 ** Number(decimals));
+    } catch {
+      return null; // a broken feed: the amount is still true, the value unknown
+    }
   }
 
   /** One mandate's standing: money, rules, and how it's doing. */
@@ -127,7 +178,8 @@ export class ArenaIndexer {
           functionName: "balanceOf",
           args: [mandate],
         });
-        return { symbol: t.symbol, amount: Number(formatUnits(raw, t.decimals)) };
+        const amount = Number(formatUnits(raw, t.decimals));
+        return { symbol: t.symbol, amount, valueUsd: await this._value(t, amount) };
       }),
     );
 
