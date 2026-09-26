@@ -23,6 +23,15 @@ your money, and with a track record nobody can fake.**
    own contract — the operator gets a key that can trade inside your limits and
    has no function that withdraws. Revoke it and it stops next block.
 
+## The wound this heals
+
+Ask anyone who kept money on Celsius, FTX, or a quiet vault: the failure mode
+was never bad trading, it was not knowing where the money was until it was
+gone. Most pools still cannot show you how they trade or where your funds sit.
+A mandate cannot hide either one. Your money has an address, its rules are
+readable, and every trade is public the moment it exists. The product is not a
+promise of returns; it is the end of "where is my money?".
+
 ## The structural idea, and why it is different
 
 Everyone else in this space **pools**. You deposit into a shared vault, receive
