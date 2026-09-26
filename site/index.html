@@ -1,288 +1,388 @@
 <title>Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
     color-scheme: dark;
-    --bg: #0c0d11;
-    --card: #06070a;
-    --raise: #14161c;
-    --raise-2: #1b1e26;
-    --line: #23262f;
-    --line-2: #191c23;
-    --ink: #f4f6fa;
-    --ink-2: #9aa2b3;
-    --ink-3: #6b7383;
-    --blue: #4c7dff;
-    --blue-2: #7a9dff;
-    --blue-soft: rgba(76,125,255,.14);
-    --up: #2fbf84;
-    --down: #f0604d;
-    --sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
+    --bg: #0a0b0f;
+    --bg-2: #0d0f14;
+    --card: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018));
+    --card-deep: linear-gradient(180deg, #0d1017, #090b10);
+    --stroke: rgba(255,255,255,.075);
+    --stroke-soft: rgba(255,255,255,.05);
+    --ink: #f2f4f8;
+    --ink-2: #9aa3b5;
+    --ink-3: #626b7d;
+    --blue: #4d7df7;
+    --blue-hi: #7ba0ff;
+    --blue-soft: rgba(77,125,247,.13);
+    --up: #34c98e;
+    --up-soft: rgba(52,201,142,.12);
+    --down: #f16a56;
+    --down-soft: rgba(241,106,86,.12);
+    --sans: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --r-lg: 18px; --r-md: 12px; --r-sm: 9px;
+    --shadow-card: 0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.055);
   }
 
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font: 400 16px/1.55 var(--sans);
-    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
+    margin: 0;
+    background:
+      radial-gradient(90rem 40rem at 50% -18rem, rgba(77,125,247,.09), transparent 60%),
+      var(--bg);
+    color: var(--ink);
+    font: 400 15.5px/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
   }
   a { color: inherit; }
   h1, h2, h3 { margin: 0; text-wrap: balance; }
-  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
+  ::selection { background: rgba(77,125,247,.35); }
 
-  .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding-inline: 24px; }
+  .wrap { width: 100%; max-width: 1116px; margin: 0 auto; padding-inline: 24px; }
   @media (max-width: 640px) { .wrap { padding-inline: 16px; } }
-  .eyebrow { font: 500 12px var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3); }
 
-  /* ------------------------------------------------ nav: Phantom's floating pill */
-  .nav { display: flex; align-items: center; gap: 16px; padding-block: 18px; }
-  .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 18px; letter-spacing: -.02em; text-decoration: none; }
+  .kicker {
+    display: inline-flex; align-items: center; gap: 8px;
+    font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .16em;
+    color: var(--ink-3);
+  }
+  .kicker::before { content: ""; width: 5px; height: 5px; border-radius: 1.5px; background: var(--blue); }
+
+  /* ---------------------------------------------------------------- wordmark */
+  .brand { font: 600 18px/1 var(--sans); letter-spacing: -.03em; text-decoration: none; }
+  .brand b { font-weight: 600; color: var(--blue-hi); }
+
+  /* --------------------------------------------------------------------- nav */
+  .navbar {
+    position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40;
+    background: rgba(10,11,15,.64);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--stroke-soft);
+  }
+  .nav { display: flex; align-items: center; gap: 16px; padding-block: 13px; }
   .capsule {
-    margin: 0 auto; display: flex; gap: 4px; padding: 5px;
-    background: var(--raise); border: 1px solid var(--line-2); border-radius: 999px;
+    margin: 0 auto; display: flex; gap: 2px; padding: 4px;
+    background: rgba(255,255,255,.045);
+    border: 1px solid var(--stroke-soft); border-radius: 999px;
   }
-  .capsule a { padding: 7px 15px; border-radius: 999px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
-  .capsule a:hover { background: var(--raise-2); color: var(--ink); }
+  .capsule a { padding: 7px 15px; border-radius: 999px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: color .15s, background .15s; }
+  .capsule a:hover { color: var(--ink); background: rgba(255,255,255,.05); }
   @media (max-width: 900px) { .capsule { display: none; } }
-  .pill-btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    height: 38px; padding-inline: 18px; border-radius: 999px;
-    background: var(--blue); color: #fff; font: 600 14px var(--sans); text-decoration: none;
-  }
-  .pill-btn:hover { background: var(--blue-2); color: #0c0d11; }
-  .pill-btn.quiet { background: var(--raise); color: var(--ink); border: 1px solid var(--line); }
-  .pill-btn.quiet:hover { background: var(--raise-2); color: var(--ink); }
 
-  /* ------------------------------------------- hero: centred, glow from the floor */
-  /* Bottom padding kept short so the dashboard peeks above the fold. */
-  .hero { position: relative; overflow: hidden; text-align: center; padding-block: clamp(54px, 8vw, 104px) clamp(70px, 9vw, 116px); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 40px; padding-inline: 19px; border-radius: 999px; border: 0;
+    font: 600 14px var(--sans); letter-spacing: -.01em; text-decoration: none; cursor: pointer;
+    background: linear-gradient(180deg, #6390ff, #3d6cf2);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 10px 26px rgba(61,108,242,.32);
+    transition: filter .15s, transform .15s;
+  }
+  .btn:hover { filter: brightness(1.09); }
+  .btn:active { transform: translateY(1px); }
+  .btn.quiet {
+    background: rgba(255,255,255,.055); color: var(--ink);
+    border: 1px solid var(--stroke); box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .btn.quiet:hover { background: rgba(255,255,255,.09); filter: none; }
+  .btn.lg { height: 47px; padding-inline: 25px; font-size: 15px; }
+
+  /* -------------------------------------------------------------------- hero */
+  .hero { position: relative; overflow: hidden; text-align: center; padding-block: clamp(58px, 8vw, 96px) clamp(46px, 6vw, 72px); }
+  .hero::before {
+    content: ""; position: absolute; left: 50%; bottom: -46rem;
+    width: 110rem; height: 70rem; transform: translateX(-50%); pointer-events: none;
+    background: radial-gradient(closest-side, rgba(77,125,247,.34), rgba(77,125,247,.10) 46%, transparent 72%);
+  }
   .hero::after {
-    content: ""; position: absolute; left: 50%; bottom: -60%;
-    width: min(1100px, 130%); aspect-ratio: 1.55 / 1; transform: translateX(-50%);
-    background: radial-gradient(ellipse at 50% 100%, rgba(76,125,255,.42), rgba(76,125,255,.12) 42%, transparent 68%);
-    pointer-events: none;
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  .hero .wrap { position: relative; }
+  .hero .wrap { position: relative; z-index: 1; }
+  .hero .kicker { color: var(--ink-2); }
   h1 {
-    font: 800 clamp(40px, 7.4vw, 82px)/1.03 var(--sans);
-    letter-spacing: -.035em; max-width: 16ch; margin-inline: auto;
+    margin: 18px auto 0;
+    font-size: clamp(38px, 6.6vw, 74px); line-height: 1.02; font-weight: 600;
+    letter-spacing: -.045em; max-width: 17ch;
   }
-  h1 span { color: var(--blue-2); }
-  .hero p { margin: 24px auto 0; max-width: 50ch; font-size: 17px; color: var(--ink-2); }
-  .hero .btns { margin-top: 34px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-  .hero .btns .pill-btn { height: 46px; padding-inline: 26px; font-size: 15px; }
+  h1 em { font-style: normal; color: var(--blue-hi); }
+  .sub { margin: 20px auto 0; max-width: 46ch; font-size: 16.5px; line-height: 1.65; color: var(--ink-2); }
+  .hero .btns { margin-top: 30px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .meta-row { margin-top: 26px; display: flex; justify-content: center; gap: 8px 26px; flex-wrap: wrap; font: 400 12px var(--mono); color: var(--ink-3); }
+  .meta-row b { font-weight: 500; color: var(--ink-2); }
 
-  /* ------------------------------------------- product: Gemini's portfolio screen */
-  .board { display: grid; grid-template-columns: 1.62fr 1fr; gap: 20px; }
+  /* ------------------------------------------------- the board (Gemini-style) */
+  .stage { position: relative; z-index: 2; }
+  .board { display: grid; grid-template-columns: 1.66fr 1fr; gap: 14px; }
   @media (max-width: 940px) { .board { grid-template-columns: 1fr; } }
 
-  .chart-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 20px 14px; }
+  .panel { background: var(--card); border: 1px solid var(--stroke); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
+  .chart-card { background: var(--card-deep); border: 1px solid var(--stroke); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 22px 22px 16px; }
+
   .chart-top { display: flex; align-items: center; gap: 10px; }
-  .chart-top b { font-size: 15px; font-weight: 700; }
-  .tag { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; padding: 4px 9px; border-radius: 999px; background: var(--blue-soft); color: var(--blue-2); }
-  .big { margin-top: 10px; font: 800 32px/1 var(--sans); letter-spacing: -.03em; }
-  .delta { margin-top: 8px; font-size: 13px; color: var(--up); }
-  .delta span { color: var(--ink-3); }
-  .plot { margin-top: 14px; position: relative; }
-  .plot svg { display: block; width: 100%; height: auto; }
-  .axis { display: flex; justify-content: space-between; margin-top: 8px; font: 400 11px var(--mono); color: var(--ink-3); }
-  .ranges { display: flex; gap: 6px; margin-top: 14px; }
-  .ranges button {
-    font: 500 11px var(--mono); color: var(--ink-3); background: transparent;
-    border: 0; padding: 6px 12px; border-radius: 999px; cursor: default;
+  .chart-top b { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+  .chart-top .addr { font: 400 11px var(--mono); color: var(--ink-3); margin-left: auto; }
+  .live {
+    display: inline-flex; align-items: center; gap: 6px;
+    font: 500 10px var(--mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--up); background: var(--up-soft); border: 1px solid rgba(52,201,142,.22);
+    padding: 4px 9px 4px 7px; border-radius: 999px;
   }
-  .ranges button[aria-current="true"] { background: var(--raise-2); color: var(--ink); }
+  .live i { width: 5px; height: 5px; border-radius: 50%; background: var(--up); box-shadow: 0 0 7px var(--up); }
+  @media (prefers-reduced-motion: no-preference) {
+    .live i { animation: pulse 2.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  }
 
-  .side { display: flex; flex-direction: column; gap: 12px; }
-  .side h3 { font-size: 15px; font-weight: 700; }
-  .snap { background: var(--raise); border: 1px solid var(--line-2); border-radius: 12px; padding: 4px 14px; }
-  .snap div { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding-block: 11px; border-bottom: 1px solid var(--line-2); }
-  .snap div:last-child { border-bottom: 0; }
-  .snap dt { font-size: 13px; color: var(--ink-2); margin: 0; }
-  .snap dd { margin: 0; font-weight: 700; font-size: 14px; }
+  .big { margin-top: 14px; font-size: 34px; line-height: 1; font-weight: 600; letter-spacing: -.035em; }
+  .delta { margin-top: 9px; font: 500 13px var(--sans); color: var(--up); }
+  .delta span { font-weight: 400; color: var(--ink-3); }
+
+  .plot { margin-top: 16px; }
+  .plot svg { display: block; width: 100%; height: auto; }
+  .axis { display: flex; justify-content: space-between; margin-top: 9px; font: 400 10.5px var(--mono); color: var(--ink-3); letter-spacing: .04em; }
+  .ranges { display: flex; gap: 4px; margin-top: 13px; }
+  .ranges button {
+    font: 500 11px var(--mono); letter-spacing: .06em; color: var(--ink-3);
+    background: transparent; border: 0; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .ranges button:hover { color: var(--ink-2); }
+  .ranges button[aria-current="true"] { background: rgba(255,255,255,.07); color: var(--ink); }
+
+  .log { margin: 14px -22px 0; border-top: 1px solid var(--stroke-soft); padding: 6px 22px 0; }
+  .log div { display: flex; align-items: baseline; gap: 12px; padding-block: 8px; font: 400 12px var(--mono); color: var(--ink-2); }
+  .log time { color: var(--ink-3); }
+  .chip { font-size: 10px; font-weight: 500; letter-spacing: .1em; padding: 2.5px 7px; border-radius: 5px; }
+  .chip.no { color: var(--down); background: var(--down-soft); }
+  .chip.ok { color: var(--up); background: var(--up-soft); }
+  .log .r { margin-left: auto; color: var(--ink-3); }
+  @media (max-width: 560px) { .log .r { display: none; } }
+
+  /* right rail */
+  .rail { display: flex; flex-direction: column; gap: 14px; }
+  .rail h3 { font-size: 13.5px; font-weight: 600; letter-spacing: -.01em; padding: 15px 16px 0; }
+  .snap { padding: 4px 16px 6px; }
+  .snap > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-block: 10.5px; border-bottom: 1px solid var(--stroke-soft); }
+  .snap > div:last-child { border-bottom: 0; }
+  .snap dt { margin: 0; font-size: 13px; color: var(--ink-2); }
+  .snap dd { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+  .snap dd.mono { font: 500 12px var(--mono); }
+
   .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .act { background: var(--raise); border: 1px solid var(--line-2); border-radius: 12px; padding: 13px 6px; text-align: center; }
-  .act i { display: grid; place-items: center; width: 26px; height: 26px; margin: 0 auto 7px; border-radius: 50%; background: var(--raise-2); color: var(--ink-2); font-style: normal; }
-  .act span { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
-  .floor { background: var(--raise); border: 1px solid var(--line-2); border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: center; }
-  .floor b { display: block; font-size: 13.5px; }
-  .floor small { display: block; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
-  .meter { margin-top: 8px; height: 4px; border-radius: 4px; background: var(--raise-2); overflow: hidden; }
-  .meter i { display: block; height: 100%; width: 68%; background: var(--up); }
+  .act {
+    background: var(--card); border: 1px solid var(--stroke); border-radius: var(--r-md);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    padding: 12px 4px 10px; text-align: center;
+  }
+  .act svg { display: block; margin: 0 auto 7px; color: var(--ink-2); }
+  .act span { font: 500 9.5px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 
-  .holds { margin-top: 20px; background: var(--raise); border: 1px solid var(--line-2); border-radius: 14px; padding: 6px 18px 10px; }
-  .holds h3 { padding-block: 14px 4px; }
+  .floor { padding: 14px 16px 16px; }
+  .floor .row1 { display: flex; justify-content: space-between; align-items: baseline; }
+  .floor b { font-size: 13px; font-weight: 600; }
+  .floor .pct { font: 500 12px var(--mono); color: var(--up); }
+  .floor small { display: block; margin-top: 3px; font-size: 12px; color: var(--ink-3); }
+  .meter { margin-top: 11px; height: 5px; border-radius: 99px; background: rgba(255,255,255,.07); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 60%; border-radius: 99px; background: linear-gradient(90deg, #2fae7e, #34c98e); }
 
-  /* ------------------------------------------------------------------- tables */
+  /* holdings + tables */
+  .holds { margin-top: 14px; padding: 6px 20px 8px; }
+  .holds h3 { font-size: 13.5px; font-weight: 600; padding-block: 12px 2px; }
   .scroll { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; min-width: 560px; }
-  th { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); text-align: left; padding: 10px 18px 10px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
-  td { padding: 14px 18px 14px 0; border-bottom: 1px solid var(--line-2); font-size: 15px; vertical-align: baseline; }
-  tr:last-child td { border-bottom: 0; }
-  th.r, td.r { text-align: right; padding-right: 0; padding-left: 20px; }
+  table { width: 100%; border-collapse: collapse; min-width: 580px; }
+  th {
+    font: 500 10.5px var(--mono); text-transform: uppercase; letter-spacing: .13em;
+    color: var(--ink-3); text-align: left; padding: 10px 18px 9px 0;
+    border-bottom: 1px solid var(--stroke); white-space: nowrap;
+  }
+  td { padding: 13px 18px 13px 0; border-bottom: 1px solid var(--stroke-soft); font-size: 14px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: rgba(255,255,255,.018); }
+  th.r, td.r { text-align: right; padding-right: 0; padding-left: 22px; }
   .asset { display: flex; align-items: center; gap: 11px; }
-  .sym { width: 30px; height: 30px; border-radius: 50%; background: var(--blue-soft); color: var(--blue-2); display: grid; place-items: center; font: 700 10px var(--sans); flex: none; }
-  .asset b { display: block; font-size: 14px; font-weight: 700; }
+  .sym {
+    width: 30px; height: 30px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; font: 600 9.5px var(--sans); letter-spacing: .02em;
+    background: var(--blue-soft); color: var(--blue-hi); border: 1px solid rgba(77,125,247,.24);
+  }
+  .asset b { display: block; font-size: 13.5px; font-weight: 600; }
   .asset small { font: 400 11px var(--mono); color: var(--ink-3); }
-  .sub { display: block; font: 400 12px var(--mono); color: var(--ink-3); margin-top: 2px; }
-  .code { font: 500 13px var(--mono); color: var(--down); }
-  .mono { font: 400 13px var(--mono); color: var(--ink-2); }
-  .tx { font: 400 12px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
-  .tx:hover { color: var(--blue-2); }
-  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
-  .pill.ok { background: var(--blue-soft); color: var(--blue-2); }
-  .pill.no { background: rgba(240,96,77,.14); color: var(--down); }
-  .pill.wait { background: rgba(154,162,179,.12); color: var(--ink-3); }
+  .cell-sub { display: block; font: 400 11px var(--mono); color: var(--ink-3); margin-top: 2px; }
+  .code { font: 500 12.5px var(--mono); color: var(--down); }
+  .dim { font: 400 12.5px var(--mono); color: var(--ink-2); }
+  .tx { font: 400 11.5px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
+  .tx:hover { color: var(--blue-hi); }
+  .pill { display: inline-block; padding: 3px 9px; border-radius: 999px; font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; }
+  .pill.ok { background: var(--blue-soft); color: var(--blue-hi); border: 1px solid rgba(77,125,247,.22); }
+  .pill.up { background: var(--up-soft); color: var(--up); border: 1px solid rgba(52,201,142,.2); }
+  .pill.no { background: var(--down-soft); color: var(--down); border: 1px solid rgba(241,106,86,.2); }
+  .pill.wait { background: rgba(255,255,255,.05); color: var(--ink-3); border: 1px solid var(--stroke-soft); }
 
-  section { padding-block: clamp(48px, 7vw, 86px); border-top: 1px solid var(--line-2); }
-  h2 { font: 800 clamp(26px, 3.2vw, 38px)/1.12 var(--sans); letter-spacing: -.03em; margin-top: 12px; max-width: 26ch; }
-  .say { margin: 14px 0 0; color: var(--ink-2); max-width: 58ch; }
-  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px; }
-  @media (max-width: 860px) { .three { grid-template-columns: 1fr; gap: 24px; } }
-  .three h3 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; }
-  .three p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
-  .ico { width: 32px; height: 32px; border-radius: 9px; background: var(--blue-soft); color: var(--blue-2); display: grid; place-items: center; }
+  .caption { margin-top: 13px; font: 400 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 
-  footer { border-top: 1px solid var(--line-2); padding-block: 26px 46px; display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: space-between; font: 400 12px var(--mono); color: var(--ink-3); }
+  /* ---------------------------------------------------------------- sections */
+  section { padding-block: clamp(56px, 8vw, 104px); }
+  section + section { border-top: 1px solid var(--stroke-soft); }
+  h2 { margin-top: 16px; font-size: clamp(25px, 3.1vw, 36px); line-height: 1.12; font-weight: 600; letter-spacing: -.035em; max-width: 24ch; }
+  .say { margin: 14px 0 0; color: var(--ink-2); max-width: 56ch; }
+
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 38px; }
+  @media (max-width: 860px) { .three { grid-template-columns: 1fr; } }
+  .card3 { background: var(--card); border: 1px solid var(--stroke); border-radius: var(--r-lg); box-shadow: var(--shadow-card); padding: 22px 22px 24px; }
+  .card3 h3 { font-size: 15.5px; font-weight: 600; letter-spacing: -.015em; margin: 46px 0 7px; }
+  .card3 p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); }
+  .glyph { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--blue-soft); border: 1px solid rgba(77,125,247,.24); color: var(--blue-hi); }
+
+  footer { border-top: 1px solid var(--stroke-soft); padding-block: 26px 48px; display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: space-between; align-items: baseline; }
+  footer .fine { font: 400 11.5px var(--mono); color: var(--ink-3); }
 </style>
 
-<div class="wrap nav">
-  <a class="brand" href="#top">
-    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-      <circle cx="10" cy="10" r="9" fill="none" stroke="var(--blue)" stroke-width="1.7"/>
-      <path d="M6 13.6c0-4 2-6.6 4.6-6.6 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 3-4.4 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-    </svg>
-    Reins
-  </a>
-  <div class="capsule">
-    <a href="#board">The app</a>
-    <a href="#rules">How it works</a>
-    <a href="#proof">Proof</a>
-    <a href="#status">Status</a>
+<div class="navbar">
+  <div class="wrap nav">
+    <a class="brand" href="#top">reins<b>.</b></a>
+    <div class="capsule">
+      <a href="#board">Product</a>
+      <a href="#rules">How it works</a>
+      <a href="#proof">Proof</a>
+      <a href="#status">Status</a>
+    </div>
+    <a class="btn" href="#board" style="height:37px">Open the app</a>
   </div>
-  <a class="pill-btn" href="#board">Open the app</a>
 </div>
 
 <header class="hero" id="top">
   <div class="wrap">
-    <h1>Hand an agent the <span>reins</span>. Never the keys.</h1>
-    <p>
+    <span class="kicker">Live on Arc testnet</span>
+    <h1>Hand an agent the <em>reins</em>.<br>Never the keys.</h1>
+    <p class="sub">
       Run an automated strategy on your own money, or follow someone else's.
       Your funds stay in a contract only you can withdraw from, under limits the
       agent cannot break.
     </p>
     <div class="btns">
-      <a class="pill-btn" href="#board">See it running</a>
-      <a class="pill-btn quiet" href="#proof">Read the transactions</a>
+      <a class="btn lg" href="#board">See it running</a>
+      <a class="btn quiet lg" href="#proof">Read the transactions</a>
+    </div>
+    <div class="meta-row">
+      <span><b>252</b> tests passing</span>
+      <span><b>~$0.01</b> per trade</span>
+      <span><b>$0.00</b> we can ever touch</span>
     </div>
   </div>
 </header>
 
-<div class="wrap" id="board">
+<div class="wrap stage" id="board">
   <div class="board">
     <div class="chart-card">
-      <div class="chart-top"><b>Momentum, weekly</b><span class="tag">Live</span></div>
-      <div class="big">$2,043.18</div>
-      <div class="delta">▲ $43.18 (2.16%) <span>since funding</span></div>
+      <div class="chart-top">
+        <b>Momentum, weekly</b>
+        <span class="live"><i></i>Live</span>
+        <span class="addr">agent 0xEAcD…416f</span>
+      </div>
+      <div class="big" id="bal">$2,041.83</div>
+      <div class="delta" id="delta">▲ $41.83 (2.09%) <span>since funding</span></div>
 
       <div class="plot">
-        <svg viewBox="0 0 640 190" role="img" aria-label="Equity rising from $2,000 to $2,043 over seven days">
-          <g stroke="#1b1e26" stroke-width="1">
-            <line x1="0" y1="30" x2="640" y2="30"/><line x1="0" y1="75" x2="640" y2="75"/>
-            <line x1="0" y1="120" x2="640" y2="120"/><line x1="0" y1="165" x2="640" y2="165"/>
-          </g>
-          <defs>
-            <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#2fbf84" stop-opacity=".26"/>
-              <stop offset="100%" stop-color="#2fbf84" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="M0 148 L80 141 L160 152 L240 118 L320 126 L400 96 L480 104 L560 72 L640 58 L640 190 L0 190 Z" fill="url(#fade)"/>
-          <path d="M0 148 L80 141 L160 152 L240 118 L320 126 L400 96 L480 104 L560 72 L640 58"
-                fill="none" stroke="#2fbf84" stroke-width="2" stroke-linejoin="round"/>
-          <circle cx="640" cy="58" r="3.5" fill="#2fbf84"/>
-        </svg>
+        <svg id="chart" viewBox="0 0 720 236" role="img" aria-label="Equity curve above the $2,000 funding line"></svg>
       </div>
-      <div class="axis"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Mon</span><span>Tue</span></div>
-      <div class="ranges">
-        <button type="button">1D</button>
-        <button type="button" aria-current="true">1W</button>
-        <button type="button">1M</button>
-        <button type="button">3M</button>
-        <button type="button">All</button>
+      <div class="axis" id="axis"></div>
+      <div class="ranges" id="ranges">
+        <button type="button" id="rb-1d">1D</button>
+        <button type="button" id="rb-1w" aria-current="true">1W</button>
+        <button type="button" id="rb-1m">1M</button>
+        <button type="button" id="rb-3m">3M</button>
+        <button type="button" id="rb-all">All</button>
+      </div>
+
+      <div class="log">
+        <div>
+          <time>14:02:11</time><span class="chip no">Refused</span>
+          <span>TradeTooLarge &mdash; $240.00 over the $200 cap</span>
+          <span class="r">block 63 911 248</span>
+        </div>
+        <div>
+          <time>13:47:03</time><span class="chip ok">Filled</span>
+          <span>Buy 0.306 SPYx @ $653.90</span>
+          <span class="r">block 63 909 771</span>
+        </div>
       </div>
     </div>
 
-    <div class="side">
-      <h3>The rules it runs under</h3>
-      <dl class="snap">
-        <div><dt>Per trade</dt><dd>at most $200</dd></div>
-        <div><dt>Allowed assets</dt><dd>SPYx, USDC</dd></div>
-        <div><dt>Price bound</dt><dd>within 1% of oracle</dd></div>
-        <div><dt>Expires</dt><dd>in 84 days</dd></div>
-      </dl>
-
-      <div class="acts">
-        <div class="act"><i>+</i><span>Fund</span></div>
-        <div class="act"><i>↑</i><span>Withdraw</span></div>
-        <div class="act"><i>⇄</i><span>Agent</span></div>
-        <div class="act"><i>❚❚</i><span>Freeze</span></div>
+    <div class="rail">
+      <div class="panel">
+        <h3>The rules it runs under</h3>
+        <dl class="snap">
+          <div><dt>Per trade</dt><dd>at most $200</dd></div>
+          <div><dt>Loss limit</dt><dd>&minus;10%, then freeze</dd></div>
+          <div><dt>Allowed assets</dt><dd class="mono">SPYx &middot; USDC</dd></div>
+          <div><dt>Price bound</dt><dd>within 1% of oracle</dd></div>
+          <div><dt>Expires</dt><dd>in 84 days</dd></div>
+        </dl>
       </div>
 
-      <div class="floor">
-        <div style="flex:1">
-          <b>Loss limit &minus;10%</b>
-          <small>$1,800.00 floor &middot; $243.18 of headroom left</small>
-          <div class="meter"><i></i></div>
+      <div class="acts">
+        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M7.5 3v9M3 7.5h9"/></svg><span>Fund</span></div>
+        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M7.5 12V3m0 0L4 6.5M7.5 3 11 6.5"/></svg><span>Withdraw</span></div>
+        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M3 5h8m0 0L8.5 2.5M11 5 8.5 7.5M12 10H4m0 0 2.5-2.5M4 10l2.5 2.5"/></svg><span>Agent</span></div>
+        <div class="act"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M5.5 3.5v8m4-8v8"/></svg><span>Freeze</span></div>
+      </div>
+
+      <div class="panel floor">
+        <div class="row1"><b>Distance to the floor</b><span class="pct">healthy</span></div>
+        <small>Floor $1,800.00 &middot; equity is $241.83 above it</small>
+        <div class="meter"><i></i></div>
+      </div>
+
+      <div class="panel holds" style="margin-top:0">
+        <h3>Holdings</h3>
+        <div class="scroll">
+          <table style="min-width:0">
+            <thead><tr><th>Asset</th><th class="r">Balance</th><th class="r">Value</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="asset"><span class="sym">SPY</span><span><b>SPYx</b><small>1.842 shares</small></span></span></td>
+                <td class="r dim">59.0%</td>
+                <td class="r">$1,204.66</td>
+              </tr>
+              <tr>
+                <td><span class="asset"><span class="sym">USD</span><span><b>USDC</b><small>837.17</small></span></span></td>
+                <td class="r dim">41.0%</td>
+                <td class="r">$837.17</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="holds">
-    <h3>Holdings</h3>
-    <div class="scroll">
-      <table>
-        <thead><tr><th>Asset</th><th>Balance</th><th>Allocation</th><th class="r">Value</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><span class="asset"><span class="sym">SPY</span><span><b>SPYx</b><small>SP500 xStock</small></span></span></td>
-            <td>1.842 <span class="sub">shares</span></td>
-            <td>58.96%</td>
-            <td class="r">$1,204.60</td>
-          </tr>
-          <tr>
-            <td><span class="asset"><span class="sym">USD</span><span><b>USDC</b><small>US Dollar Coin</small></span></span></td>
-            <td>838.58 <span class="sub">USDC</span></td>
-            <td>41.04%</td>
-            <td class="r">$838.58</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <p class="eyebrow" style="margin-top:14px">Example mandate &middot; SPYx is not on Arc yet</p>
+  <p class="caption">Example mandate &mdash; SPYx is not on Arc yet. Everything under &ldquo;Proof&rdquo; is real.</p>
 </div>
 
 <section class="wrap" id="rules">
-  <span class="eyebrow">Why it holds</span>
+  <span class="kicker">Why it holds</span>
   <h2>Limits enforced by the contract, not promised in a footer.</h2>
+  <p class="say">A broker's limits are instructions someone honours later. Here they are conditions checked before any money moves — a trade that breaks one reverts, and nothing happens.</p>
   <div class="three">
-    <div>
-      <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>
+    <div class="card3">
+      <span class="glyph"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="7" width="10" height="6.5" rx="1.8"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>
       <h3>The rules can't be edited</h3>
       <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable after that — by us or by anyone.</p>
     </div>
-    <div>
-      <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3h3v10h-3"/><path d="M8 8H2m0 0 2.5-2.5M2 8l2.5 2.5"/></svg></span>
+    <div class="card3">
+      <span class="glyph"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M13 3v10M8 8H2.5m0 0L5 5.5M2.5 8 5 10.5"/></svg></span>
       <h3>You can leave mid-strategy</h3>
       <p>Withdraw everything at any moment without asking the agent, even while it holds a position. There is no function that lets it object.</p>
     </div>
-    <div>
-      <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5 13.5 5v3.5c0 3-2.4 4.6-5.5 5.5-3.1-.9-5.5-2.5-5.5-5.5V5z"/></svg></span>
+    <div class="card3">
+      <span class="glyph"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 2.5 13.5 4.8v3.4c0 3.1-2.3 4.8-5.5 5.8-3.2-1-5.5-2.7-5.5-5.8V4.8z"/></svg></span>
       <h3>The stop-loss is public</h3>
       <p>If a mandate falls through its floor, any stranger can freeze it. You don't have to be awake for your loss limit to work, and neither do we.</p>
     </div>
@@ -290,18 +390,14 @@
 </section>
 
 <section class="wrap" id="proof">
-  <span class="eyebrow">Arc testnet &middot; mandate 0x991b…D632</span>
+  <span class="kicker">Arc testnet &middot; mandate 0x991b…D632</span>
   <h2>The first one, and everything it was stopped from doing.</h2>
-  <p class="say">
-    Every refusal below was broadcast on purpose rather than simulated, so it
-    exists as a transaction you can open. A mandate that only refuses in private
-    proves nothing.
-  </p>
-  <div class="scroll" style="margin-top:26px">
+  <p class="say">Every refusal below was broadcast on purpose rather than simulated, so it exists as a transaction you can open. A mandate that only refuses in private proves nothing.</p>
+  <div class="scroll" style="margin-top:28px">
     <table>
       <thead><tr><th>What was tried</th><th>What happened</th><th class="r">Rule</th><th class="r">Transaction</th></tr></thead>
       <tbody>
-        <tr><td>Buy $0.50 of euros</td><td>Filled at $1.143090 — <span class="mono">0.454% from the oracle</span></td><td class="r"><span class="pill ok">Allowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td></tr>
+        <tr><td>Buy $0.50 of euros</td><td>Filled at $1.143090 — <span class="dim">0.454% from the oracle</span></td><td class="r"><span class="pill up">Allowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td></tr>
         <tr><td>Trade $2.50, over the size limit</td><td>Refused on-chain</td><td class="r"><span class="code">TradeTooLarge</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td></tr>
         <tr><td>A trade too big for the pool to price fairly</td><td>The exchange couldn't beat the oracle floor</td><td class="r"><span class="code">InsufficientOutput</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td></tr>
         <tr><td>Buy an asset the mandate never allowed</td><td>Refused on-chain</td><td class="r"><span class="code">AssetNotAllowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td></tr>
@@ -315,15 +411,10 @@
 </section>
 
 <section class="wrap" id="status">
-  <span class="eyebrow">Where this goes</span>
+  <span class="kicker">Where this goes</span>
   <h2>Stocks are arriving on Arc. The rails are already here.</h2>
-  <p class="say">
-    Circle named xStocks and Dinari among the issuers bringing tokenized products
-    to Arc, a chain whose validators include BlackRock, DTCC and the NYSE's
-    parent. A trade there costs about a cent, which is what finally makes daily
-    averaging and real stop-losses worth running on a small account.
-  </p>
-  <div class="scroll" style="margin-top:26px">
+  <p class="say">Circle named xStocks and Dinari among the issuers bringing tokenized products to Arc, a chain whose validators include BlackRock, DTCC and the NYSE's parent. A trade there costs about a cent — which is what finally makes daily averaging and real stop-losses worth running on a small account.</p>
+  <div class="scroll" style="margin-top:28px">
     <table>
       <thead><tr><th>Piece</th><th>State</th><th class="r">&nbsp;</th></tr></thead>
       <tbody>
@@ -338,6 +429,92 @@
 </section>
 
 <footer class="wrap">
-  <span>Reins &middot; figures read from Arc testnet, 26 September 2026</span>
-  <span>Not investment advice</span>
+  <a class="brand" href="#top" style="font-size:15px">reins<b>.</b></a>
+  <span class="fine">Figures read from Arc testnet, 26 Sep 2026 &middot; not investment advice</span>
 </footer>
+
+<script>
+(function () {
+  "use strict";
+  var svg = document.getElementById("chart");
+  var axisEl = document.getElementById("axis");
+  var deltaEl = document.getElementById("delta");
+  if (!svg) return;
+
+  var W = 720, H = 236, PADR = 54, PADT = 10, PADB = 12;
+  var plotW = W - PADR, plotH = H - PADT - PADB;
+  var END = 2041.83, FUND = 2000;
+
+  var RANGES = {
+    "1d":  { seed: 11, n: 30,  pct: 0.0031, labels: ["09:30","11:00","12:30","14:00","15:30"] },
+    "1w":  { seed: 7,  n: 84,  pct: 0.020915, labels: ["Sep 19","Sep 21","Sep 23","Sep 25","Today"] },
+    "1m":  { seed: 23, n: 110, pct: 0.0342, labels: ["Aug 27","Sep 4","Sep 12","Sep 20","Today"] },
+    "3m":  { seed: 41, n: 130, pct: 0.0128, labels: ["Jun 26","Jul 24","Aug 21","Sep 18","Today"] },
+    "all": { seed: 61, n: 150, pct: 0.0421, labels: ["May 30","Jun 27","Jul 25","Aug 22","Today"] }
+  };
+
+  function series(cfg) {
+    var s = cfg.seed, out = [], v = 0;
+    var rnd = function () { s = (s * 16807) % 2147483647; return s / 2147483647; };
+    for (var i = 0; i < cfg.n; i++) { v += (rnd() - 0.485) * 1.6; out.push(v); }
+    // Rescale the walk so it starts at the range's start price and ends at END.
+    var start = END / (1 + cfg.pct);
+    var a = out[0], b = out[out.length - 1] || 1;
+    var span = (b - a) === 0 ? 1 : (b - a);
+    return out.map(function (y) { return start + ((y - a) / span) * (END - start); });
+  }
+
+  function fmt(n) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+  function draw(key) {
+    var cfg = RANGES[key];
+    var pts = series(cfg);
+    var lo = Math.min.apply(null, pts.concat([FUND])), hi = Math.max.apply(null, pts.concat([FUND]));
+    var pad = (hi - lo) * 0.14 || 1; lo -= pad; hi += pad;
+    var X = function (i) { return (i / (pts.length - 1)) * plotW; };
+    var Y = function (v) { return PADT + (1 - (v - lo) / (hi - lo)) * plotH; };
+
+    var line = pts.map(function (v, i) { return (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); }).join(" ");
+    var area = line + " L" + plotW + " " + (H - PADB) + " L0 " + (H - PADB) + " Z";
+
+    var grid = "", labels = "";
+    var step = (hi - lo) / 3;
+    for (var g = 0; g < 4; g++) {
+      var gv = lo + step * g + step / 2;
+      var gy = Y(gv).toFixed(1);
+      grid += '<line x1="0" y1="' + gy + '" x2="' + plotW + '" y2="' + gy + '" stroke="rgba(255,255,255,.055)" stroke-width="1"/>';
+      labels += '<text x="' + (plotW + 10) + '" y="' + (+gy + 3.5) + '" fill="#626b7d" font-size="10" font-family="IBM Plex Mono, monospace">' + Math.round(gv).toLocaleString("en-US") + "</text>";
+    }
+    var fy = Y(FUND).toFixed(1);
+    var endX = X(pts.length - 1).toFixed(1), endY = Y(pts[pts.length - 1]).toFixed(1);
+
+    svg.innerHTML =
+      '<defs><linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#34c98e" stop-opacity=".22"/>' +
+      '<stop offset="100%" stop-color="#34c98e" stop-opacity="0"/></linearGradient></defs>' +
+      grid + labels +
+      '<line x1="0" y1="' + fy + '" x2="' + plotW + '" y2="' + fy + '" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="3 5"/>' +
+      '<text x="' + (plotW + 10) + '" y="' + (+fy + 3.5) + '" fill="#9aa3b5" font-size="10" font-family="IBM Plex Mono, monospace">funded</text>' +
+      '<path d="' + area + '" fill="url(#fade)"/>' +
+      '<path d="' + line + '" fill="none" stroke="#34c98e" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + endX + '" cy="' + endY + '" r="7" fill="rgba(52,201,142,.18)"/>' +
+      '<circle cx="' + endX + '" cy="' + endY + '" r="3" fill="#34c98e"/>';
+
+    axisEl.innerHTML = cfg.labels.map(function (t) { return "<span>" + t + "</span>"; }).join("");
+    var gain = END - END / (1 + cfg.pct);
+    deltaEl.innerHTML = "▲ $" + fmt(gain) + " (" + (cfg.pct * 100).toFixed(2) + "%) <span>" +
+      (key === "1w" ? "since funding" : "past " + { "1d": "day", "1m": "month", "3m": "3 months", "all": "lifetime" }[key]) + "</span>";
+  }
+
+  var btns = { "1d": "rb-1d", "1w": "rb-1w", "1m": "rb-1m", "3m": "rb-3m", "all": "rb-all" };
+  Object.keys(btns).forEach(function (key) {
+    var el = document.getElementById(btns[key]);
+    el.addEventListener("click", function () {
+      Object.keys(btns).forEach(function (k) { document.getElementById(btns[k]).removeAttribute("aria-current"); });
+      el.setAttribute("aria-current", "true");
+      draw(key);
+    });
+  });
+  draw("1w");
+})();
+</script>
