@@ -1,334 +1,355 @@
 <title>Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    color-scheme: dark;
-    --base: #0e0c0b;
-    --raise: #171412;
-    --edge: #262019;
-    --edge-soft: #1d1916;
-    --ink: #f3efe8;
-    --ink-2: #b6ac9e;
-    --ink-3: #8a8175;
-    --tan: #d08b45;
-    --up: #4fb783;
-    --down: #e0705c;
-    --serif: "Fraunces", Georgia, serif;
+    color-scheme: light;
+    --paper: #ffffff;
+    --wash: #f4f6fb;
+    --line: #e3e7f0;
+    --line-2: #eef1f7;
+    --ink: #0a1122;
+    --ink-2: #545d70;
+    --ink-3: #8790a3;
+    --blue: #1a4ef0;
+    --blue-ink: #1540c4;
+    --blue-soft: #e7edfe;
+    --tile: #0a1226;
+    --tile-2: #141d36;
+    --up: #0a8f63;
+    --down: #d2473a;
+    --serif: "Source Serif 4", Georgia, serif;
     --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper: #080d18; --wash: #0d1526; --line: #1d2740; --line-2: #161e33;
+      --ink: #eef2fa; --ink-2: #a3adc2; --ink-3: #78829a;
+      --blue: #6c8dff; --blue-ink: #9db4ff; --blue-soft: #16224a;
+      --tile: #0d1526; --tile-2: #16203a;
+      --up: #3fc08c; --down: #f0776a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #080d18; --wash: #0d1526; --line: #1d2740; --line-2: #161e33;
+    --ink: #eef2fa; --ink-2: #a3adc2; --ink-3: #78829a;
+    --blue: #6c8dff; --blue-ink: #9db4ff; --blue-soft: #16224a;
+    --tile: #0d1526; --tile-2: #16203a;
+    --up: #3fc08c; --down: #f0776a;
   }
 
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    background: var(--base);
-    color: var(--ink);
-    font: 400 16px/1.6 var(--sans);
-    -webkit-font-smoothing: antialiased;
-    font-variant-numeric: tabular-nums;
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 400 16px/1.55 var(--sans);
+    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
   }
   a { color: inherit; }
   h1, h2, h3 { margin: 0; text-wrap: balance; }
-  :focus-visible { outline: 2px solid var(--tan); outline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 
-  .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding-inline: 24px; }
+  .wrap { width: 100%; max-width: 1140px; margin: 0 auto; padding-inline: 24px; }
   @media (max-width: 640px) { .wrap { padding-inline: 16px; } }
-
-  .label {
-    font: 400 11px var(--mono);
-    text-transform: uppercase;
-    letter-spacing: .14em;
-    color: var(--ink-3);
+  .eyebrow {
+    font: 500 12px var(--mono); text-transform: uppercase;
+    letter-spacing: .1em; color: var(--blue-ink);
   }
 
-  /* ---------------------------------------------------------------- masthead */
-  .top {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; padding-block: 22px;
-  }
-  .mark { font: 600 19px var(--serif); letter-spacing: .01em; text-decoration: none; }
-  .mark em { font-style: italic; color: var(--tan); }
-  .top .label { display: inline-flex; align-items: center; gap: 8px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--up); }
+  /* ------------------------------------------------------------------- nav */
+  nav { border-bottom: 1px solid var(--line-2); }
+  .nav-in { display: flex; align-items: center; gap: 28px; padding-block: 16px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 17px; text-decoration: none; letter-spacing: -.01em; }
+  .brand svg { display: block; }
+  .nav-links { display: flex; gap: 24px; margin-left: 12px; font-size: 14px; color: var(--ink-2); }
+  .nav-links a { text-decoration: none; }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  @media (max-width: 780px) { .nav-links { display: none; } }
 
-  /* -------------------------------------------------------------------- hero */
-  .hero {
-    position: relative; overflow: hidden;
-    border-block: 1px solid var(--edge-soft);
-    padding-block: clamp(56px, 11vw, 116px);
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 42px; padding-inline: 20px; border-radius: 999px;
+    font: 500 15px var(--sans); text-decoration: none; white-space: nowrap;
+    background: var(--blue); color: #fff; border: 1px solid transparent;
   }
-  .hero::before {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background:
-      radial-gradient(60% 90% at 22% 0%, rgba(208, 139, 69, .16), transparent 62%),
-      repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 88px);
-  }
-  .hero .wrap { position: relative; }
+  .btn:hover { background: var(--blue-ink); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn.ghost:hover { background: var(--wash); }
+  .btn.sm { height: 36px; padding-inline: 16px; font-size: 14px; }
+
+  /* ------------------------------------------------------------------ hero */
+  .hero { display: grid; grid-template-columns: 1fr 1.02fr; gap: 56px; align-items: center; padding-block: clamp(40px, 6vw, 76px); }
+  @media (max-width: 940px) { .hero { grid-template-columns: 1fr; gap: 40px; } }
   h1 {
-    font: 400 clamp(40px, 7.2vw, 84px)/1.03 var(--serif);
-    font-optical-sizing: auto;
-    letter-spacing: -.02em;
-    max-width: 15ch;
+    font: 600 clamp(38px, 5vw, 58px)/1.06 var(--serif);
+    letter-spacing: -.02em; max-width: 13ch;
   }
-  h1 em { font-style: italic; color: var(--tan); }
-  .lede { margin-top: 22px; max-width: 54ch; font-size: 18px; color: var(--ink-2); }
-  .cta-row { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-  .cta {
-    display: inline-block; padding: 13px 24px; border-radius: 999px;
-    background: var(--tan); color: #1b1109; text-decoration: none;
-    font-weight: 600; font-size: 15px;
-  }
-  .cta.ghost { background: transparent; color: var(--ink); border: 1px solid var(--edge); }
-  .cta:hover { filter: brightness(1.06); }
+  .hero p { margin: 20px 0 0; font-size: 17px; color: var(--ink-2); max-width: 46ch; }
+  .hero .row { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .trust { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px 22px; font: 400 13px var(--mono); color: var(--ink-3); }
+  .trust b { font-weight: 400; color: var(--ink-2); }
 
-  /* ------------------------------------------------------------------ blocks */
-  section { padding-block: clamp(52px, 8vw, 92px); border-bottom: 1px solid var(--edge-soft); }
-  h2 {
-    font: 400 clamp(27px, 3.6vw, 40px)/1.12 var(--serif);
-    letter-spacing: -.015em; margin-top: 14px; max-width: 20ch;
+  /* --------------------------------------------- the product, in a dark tile */
+  .tile { background: var(--tile); border-radius: 20px; padding: 26px; }
+  .tile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .tile-head span { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: #7f8cab; }
+  .app {
+    background: #fff; color: #0a1122; border-radius: 13px; overflow: hidden;
+    box-shadow: 0 18px 40px rgba(0,0,0,.34);
   }
-  .say { margin-top: 16px; max-width: 58ch; color: var(--ink-2); }
+  .app-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #eef1f7; }
+  .app-name { font-weight: 600; font-size: 14px; }
+  .app-name small { display: block; font: 400 11px var(--mono); color: #8790a3; margin-top: 2px; }
+  .tag { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; padding: 4px 9px; border-radius: 999px; background: #e6f6ee; color: #0a8f63; }
+  .bal { padding: 20px 16px 16px; text-align: center; background: linear-gradient(180deg, #f7f9ff, #fff); }
+  .bal b { display: block; font: 600 30px/1 var(--sans); letter-spacing: -.02em; }
+  .bal i { display: block; font-style: normal; font-size: 12px; color: #0a8f63; margin-top: 7px; }
+  .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding: 0 16px 16px; }
+  .chip { background: #eaf0fe; border-radius: 9px; padding: 9px 6px; text-align: center; }
+  .chip b { display: block; font: 600 12px var(--sans); color: #1540c4; }
+  .chip span { display: block; font: 400 9px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: #7c88a5; margin-top: 3px; }
+  .rows { border-top: 1px solid #eef1f7; }
+  .row-i { display: flex; align-items: center; gap: 11px; padding: 11px 16px; border-bottom: 1px solid #f4f6fb; }
+  .row-i:last-child { border-bottom: 0; }
+  .sym { width: 28px; height: 28px; border-radius: 50%; background: #eaf0fe; color: #1540c4; display: grid; place-items: center; font: 600 10px var(--sans); }
+  .row-i div { flex: 1; min-width: 0; }
+  .row-i b { display: block; font-size: 13px; font-weight: 600; }
+  .row-i small { font: 400 11px var(--mono); color: #8790a3; }
+  .row-i em { font-style: normal; font-size: 13px; font-weight: 600; }
+  .deny { display: flex; align-items: center; gap: 9px; padding: 11px 16px; background: #fdf3f2; border-top: 1px solid #f7e2e0; font-size: 12px; color: #a3372c; }
+  .deny code { font: 500 11px var(--mono); }
+  .deny i { width: 6px; height: 6px; border-radius: 50%; background: #d2473a; font-style: normal; flex: none; }
 
-  .cols { display: grid; gap: 28px; margin-top: 40px; grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 800px) { .cols { grid-template-columns: 1fr; gap: 24px; } }
-  .col h3 { font: 600 17px var(--sans); margin-bottom: 8px; }
-  .col p { margin: 0; color: var(--ink-2); font-size: 15px; }
-  .col .label { display: block; margin-bottom: 14px; color: var(--tan); }
+  /* --------------------------------------------------------------- sections */
+  .band { background: var(--wash); border-block: 1px solid var(--line-2); }
+  section { padding-block: clamp(46px, 6vw, 76px); }
+  h2 { font: 600 clamp(25px, 3vw, 34px)/1.15 var(--serif); letter-spacing: -.015em; margin-top: 12px; max-width: 28ch; }
+  .say { margin: 14px 0 0; color: var(--ink-2); max-width: 58ch; }
 
-  /* The rule card: a mandate written the way its owner would say it. */
-  .card {
-    margin-top: 44px; background: var(--raise);
-    border: 1px solid var(--edge); border-radius: 4px;
-    padding: 28px; max-width: 560px;
-  }
-  .card .label { display: block; margin-bottom: 18px; }
-  .card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 12px 22px; align-items: baseline; }
-  .card dt { font: 400 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); white-space: nowrap; }
-  .card dd { margin: 0; font-size: 15px; }
-  .card dd b { font-weight: 600; color: var(--tan); }
-  .card .seal {
-    margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--edge);
-    font-size: 14px; color: var(--ink-2);
-  }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+  @media (max-width: 860px) { .three { grid-template-columns: 1fr; gap: 26px; } }
+  .three h3 { font-size: 16px; font-weight: 600; margin: 14px 0 6px; }
+  .three p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+  .ico { width: 30px; height: 30px; border-radius: 8px; background: var(--blue-soft); color: var(--blue); display: grid; place-items: center; }
 
-  /* -------------------------------------------------------------------- data */
-  .scroll { overflow-x: auto; margin-top: 36px; }
-  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  .scroll { overflow-x: auto; margin-top: 30px; }
+  table { width: 100%; border-collapse: collapse; min-width: 620px; }
   th {
-    font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: .14em;
-    color: var(--ink-3); text-align: left; padding: 0 16px 10px 0;
-    border-bottom: 1px solid var(--edge); white-space: nowrap;
+    font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em;
+    color: var(--ink-3); text-align: left; padding: 0 18px 10px 0;
+    border-bottom: 1px solid var(--line); white-space: nowrap;
   }
-  td { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--edge-soft); vertical-align: baseline; font-size: 15px; }
-  /* Two right-aligned columns in a row would otherwise touch. */
-  th.r, td.r { text-align: right; padding-right: 0; padding-left: 22px; }
-  .rule { font: 500 13px var(--mono); color: var(--tan); }
+  td { padding: 14px 18px 14px 0; border-bottom: 1px solid var(--line-2); font-size: 15px; vertical-align: baseline; }
+  th.r, td.r { text-align: right; padding-right: 0; padding-left: 20px; }
+  .code { font: 500 13px var(--mono); color: var(--down); }
   .mono { font: 400 13px var(--mono); color: var(--ink-2); }
   .tx { font: 400 12px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
-  .tx:hover { color: var(--tan); }
+  .tx:hover { color: var(--blue); }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+  .pill.ok { background: var(--blue-soft); color: var(--blue-ink); }
+  .pill.no { background: rgba(210,71,58,.11); color: var(--down); }
+  .pill.wait { background: rgba(135,144,163,.15); color: var(--ink-3); }
 
-  .pill {
-    display: inline-block; padding: 3px 10px; border-radius: 999px;
-    font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em;
-  }
-  .pill.live { background: rgba(79,183,131,.14); color: var(--up); }
-  .pill.stop { background: rgba(224,112,92,.14); color: var(--down); }
-  .pill.soon { background: rgba(208,139,69,.14); color: var(--tan); }
-
-  .figures {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
-    margin-top: 44px; background: var(--edge-soft);
-    border: 1px solid var(--edge-soft);
-  }
-  @media (max-width: 720px) { .figures { grid-template-columns: 1fr 1fr; } }
-  .figures div { background: var(--base); padding: 22px 20px; }
-  .figures b { display: block; font: 400 30px/1 var(--serif); letter-spacing: -.02em; }
-  .figures span { display: block; margin-top: 10px; }
-
-  footer { padding-block: 34px 56px; display: flex; flex-wrap: wrap; gap: 14px 28px; justify-content: space-between; }
+  footer { border-top: 1px solid var(--line-2); padding-block: 28px 48px; display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: space-between; font-size: 13px; color: var(--ink-3); }
 </style>
 
-<div class="wrap">
-  <div class="top">
-    <a class="mark" href="#top">R<em>ei</em>ns</a>
-    <span class="label"><span class="dot"></span>Live on Arc testnet</span>
+<nav>
+  <div class="wrap nav-in">
+    <a class="brand" href="#top">
+      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M6 13.5c0-4 2-6.5 4.6-6.5 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 2.9-4.4 2.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      Reins
+    </a>
+    <div class="nav-links">
+      <a href="#rules">How it works</a>
+      <a href="#proof">Proof</a>
+      <a href="#status">Status</a>
+    </div>
+    <div class="nav-right">
+      <a class="btn ghost sm" href="#proof">See the transactions</a>
+      <a class="btn sm" href="#top">Open the app</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap hero" id="top">
+  <div>
+    <h1>Hand an agent the reins. Never the keys.</h1>
+    <p>
+      Run an automated strategy on your own money, or follow someone else's.
+      Your funds stay in a contract only you can withdraw from, under limits the
+      agent cannot break — and every trade it makes is on-chain.
+    </p>
+    <div class="row">
+      <a class="btn" href="#proof">See the first one running</a>
+      <a class="btn ghost" href="#rules">How the rules work</a>
+    </div>
+    <div class="trust">
+      <span><b>252</b> tests passing</span>
+      <span><b>~$0.01</b> a trade</span>
+      <span><b>$0.00</b> we can ever touch</span>
+    </div>
+  </div>
+
+  <div class="tile">
+    <div class="tile-head"><span>Example mandate</span><span>Reins</span></div>
+    <div class="app">
+      <div class="app-top">
+        <div class="app-name">Momentum, weekly<small>agent 0xEAcD…416f</small></div>
+        <span class="tag">Live</span>
+      </div>
+      <div class="bal">
+        <b>$2,043.18</b>
+        <i>+$43.18 &middot; +2.16% since funding</i>
+      </div>
+      <div class="chips">
+        <div class="chip"><b>$200</b><span>Per trade</span></div>
+        <div class="chip"><b>&minus;10%</b><span>Stop</span></div>
+        <div class="chip"><b>2</b><span>Assets</span></div>
+        <div class="chip"><b>84d</b><span>Left</span></div>
+      </div>
+      <div class="rows">
+        <div class="row-i">
+          <span class="sym">SPY</span>
+          <div><b>SPYx</b><small>1.842 shares</small></div>
+          <em>$1,204.60</em>
+        </div>
+        <div class="row-i">
+          <span class="sym">USD</span>
+          <div><b>USDC</b><small>838.58</small></div>
+          <em>$838.58</em>
+        </div>
+      </div>
+      <div class="deny"><i></i>Refused 14:02 — <code>TradeTooLarge</code>, $240 over your $200 limit</div>
+    </div>
   </div>
 </div>
 
-<header class="hero" id="top">
-  <div class="wrap">
-    <h1>Hand an agent the <em>reins</em>. Never the keys.</h1>
-    <p class="lede">
-      Run an automated strategy on your money, or follow someone else's, without
-      anyone being able to take it. Your funds sit in your own contract under
-      rules you set. The agent can trade. It has no function that withdraws.
-    </p>
-    <div class="cta-row">
-      <a class="cta" href="#mandate">See the first one running</a>
-      <a class="cta ghost" href="#rules">What the rules do</a>
-    </div>
-  </div>
-</header>
-
-<section id="rules">
-  <div class="wrap">
-    <span class="label">How it holds</span>
-    <h2>A stop-loss written into the contract, not promised in a footer.</h2>
-    <p class="say">
-      A broker's limits are instructions someone honours later. Here they are
-      conditions checked before any money moves. A trade that breaks one
-      reverts, and nothing happens.
-    </p>
-
-    <div class="cols">
-      <div class="col">
-        <span class="label">Set once</span>
-        <h3>The rules cannot be edited</h3>
-        <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable afterwards.</p>
+<div class="band">
+  <section class="wrap">
+    <span class="eyebrow">Why it holds</span>
+    <h2>Limits enforced by the contract, not promised in a footer.</h2>
+    <div class="three" style="margin-top:36px">
+      <div>
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>
+        <h3>The rules can't be edited</h3>
+        <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable after that — by us or by anyone.</p>
       </div>
-      <div class="col">
-        <span class="label">Always</span>
+      <div>
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3h3v10h-3"/><path d="M8 8H2m0 0 2.5-2.5M2 8l2.5 2.5"/></svg></span>
         <h3>You can leave mid-strategy</h3>
-        <p>Withdraw everything at any moment without asking the agent, even while it holds a position. It cannot object.</p>
+        <p>Withdraw everything at any moment without asking the agent, even while it holds a position. There is no function that lets it object.</p>
       </div>
-      <div class="col">
-        <span class="label">Anyone</span>
+      <div>
+        <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5 13.5 5v3.5c0 3-2.4 4.6-5.5 5.5-3.1-.9-5.5-2.5-5.5-5.5V5z"/></svg></span>
         <h3>The stop-loss is public</h3>
-        <p>If a mandate falls through its floor, any stranger can freeze it. You do not have to be awake, and neither do we.</p>
+        <p>If a mandate falls through its floor, any stranger can freeze it. You don't have to be awake for your loss limit to work, and neither do we.</p>
       </div>
     </div>
+  </section>
+</div>
 
-    <div class="card">
-      <span class="label">A mandate, in the owner's words</span>
-      <dl>
-        <dt>Funded</dt><dd><b>$2,000</b> in USDC</dd>
-        <dt>May trade</dt><dd>SPYx and NVDAx, nothing else</dd>
-        <dt>Per trade</dt><dd>at most <b>$200</b></dd>
-        <dt>Stop at</dt><dd><b>&minus;10%</b>, then freeze</dd>
-        <dt>Prices</dt><dd>within 1% of the oracle, refused if stale</dd>
-        <dt>Expires</dt><dd>in 90 days</dd>
-      </dl>
-      <p class="seal">
-        Six lines a person can say out loud, compiled to
-        <span class="mono">maxTradeValue</span>, <span class="mono">maxDrawdownBps</span>,
-        <span class="mono">maxSlippageBps</span>, <span class="mono">maxPriceAge</span>
-        and <span class="mono">expiresAt</span>.
-      </p>
-    </div>
+<section class="wrap" id="proof">
+  <span class="eyebrow">Arc testnet &middot; mandate 0x991b…D632</span>
+  <h2>The first one, and everything it was stopped from doing.</h2>
+  <p class="say">
+    Every refusal below was broadcast on purpose rather than simulated, so it
+    exists as a transaction you can open. A mandate that only refuses in private
+    proves nothing.
+  </p>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th>What was tried</th><th>What happened</th><th class="r">Rule</th><th class="r">Transaction</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Buy $0.50 of euros</td>
+          <td>Filled at $1.143090 — <span class="mono">0.454% from the oracle</span></td>
+          <td class="r"><span class="pill ok">Allowed</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td>
+        </tr>
+        <tr>
+          <td>Trade $2.50, over the size limit</td>
+          <td>Refused on-chain</td>
+          <td class="r"><span class="code">TradeTooLarge</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td>
+        </tr>
+        <tr>
+          <td>A trade too big for the pool to price fairly</td>
+          <td>The exchange couldn't beat the oracle floor</td>
+          <td class="r"><span class="code">InsufficientOutput</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td>
+        </tr>
+        <tr>
+          <td>Buy an asset the mandate never allowed</td>
+          <td>Refused on-chain</td>
+          <td class="r"><span class="code">AssetNotAllowed</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td>
+        </tr>
+        <tr>
+          <td>A stranger's key signs a trade</td>
+          <td>Refused on-chain</td>
+          <td class="r"><span class="code">NotAgent</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">0x48b35a90… ↗</a></td>
+        </tr>
+        <tr>
+          <td>The euro falls 50%, a stranger calls the stop-loss</td>
+          <td>Frozen at $1.7489 against a $1.80 floor, by someone who owns none of it</td>
+          <td class="r"><span class="pill no">Frozen</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">0x3cafe35c… ↗</a></td>
+        </tr>
+        <tr>
+          <td>The agent tries again while frozen</td>
+          <td>Refused on-chain</td>
+          <td class="r"><span class="code">IsFrozen</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f">0xddad294e… ↗</a></td>
+        </tr>
+        <tr>
+          <td>The owner withdraws mid-strategy</td>
+          <td>Paid out, without the agent's permission</td>
+          <td class="r"><span class="pill ok">Owner</span></td>
+          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5">0x0c437da1… ↗</a></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
-<section id="mandate">
-  <div class="wrap">
-    <span class="label">Arc testnet &middot; mandate 0x991b…D632</span>
-    <h2>The first one, and everything it was stopped from doing.</h2>
-    <p class="say">
-      Each refusal below was broadcast on purpose rather than simulated, so it
-      exists as a transaction anyone can open. A mandate that only refuses in
-      private proves nothing.
-    </p>
-
-    <div class="scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>What was tried</th>
-            <th>What happened</th>
-            <th class="r">Rule</th>
-            <th class="r">Transaction</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Buy $0.50 of euros</td>
-            <td>Filled 0.437411 at $1.143090 — <span class="mono">0.454% from the oracle</span></td>
-            <td class="r"><span class="pill live">Allowed</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td>
-          </tr>
-          <tr>
-            <td>Trade $2.50, over the size limit</td>
-            <td>Refused on-chain</td>
-            <td class="r"><span class="rule">TradeTooLarge</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td>
-          </tr>
-          <tr>
-            <td>A trade too big for the pool to price fairly</td>
-            <td>The exchange could not beat the oracle floor</td>
-            <td class="r"><span class="rule">InsufficientOutput</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td>
-          </tr>
-          <tr>
-            <td>Buy an asset the mandate never allowed</td>
-            <td>Refused on-chain</td>
-            <td class="r"><span class="rule">AssetNotAllowed</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td>
-          </tr>
-          <tr>
-            <td>A stranger's key signs a trade</td>
-            <td>Refused on-chain</td>
-            <td class="r"><span class="rule">NotAgent</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">0x48b35a90… ↗</a></td>
-          </tr>
-          <tr>
-            <td>The euro falls 50%, a stranger calls the stop-loss</td>
-            <td>Frozen at $1.7489 against a $1.80 floor, by someone who owns none of it</td>
-            <td class="r"><span class="pill stop">Frozen</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">0x3cafe35c… ↗</a></td>
-          </tr>
-          <tr>
-            <td>The agent tries again while frozen</td>
-            <td>Refused on-chain</td>
-            <td class="r"><span class="rule">IsFrozen</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f">0xddad294e… ↗</a></td>
-          </tr>
-          <tr>
-            <td>The owner withdraws mid-strategy</td>
-            <td>Paid out, without the agent's permission</td>
-            <td class="r"><span class="pill live">Owner</span></td>
-            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5">0x0c437da1… ↗</a></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="figures">
-      <div><b>252</b><span class="label">Tests passing</span></div>
-      <div><b>0.454%</b><span class="label">Fill vs oracle</span></div>
-      <div><b>~$0.01</b><span class="label">Cost of a trade</span></div>
-      <div><b>$0.00</b><span class="label">We can ever touch</span></div>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <span class="label">Where this goes</span>
+<div class="band">
+  <section class="wrap" id="status">
+    <span class="eyebrow">Where this goes</span>
     <h2>Stocks are arriving on Arc. The rails are already here.</h2>
     <p class="say">
       Circle named xStocks and Dinari among the issuers bringing tokenized
-      products to Arc, on a chain whose validators include BlackRock, DTCC and
-      the NYSE's parent. A trade costs about a cent, which is what finally makes
-      daily averaging and real stop-losses worth running on a small account.
+      products to Arc, a chain whose validators include BlackRock, DTCC and the
+      NYSE's parent. A trade there costs about a cent, which is what finally
+      makes daily averaging and real stop-losses worth running on a small account.
     </p>
 
     <div class="scroll">
       <table>
         <thead><tr><th>Piece</th><th>State</th><th class="r">&nbsp;</th></tr></thead>
         <tbody>
-          <tr><td>The contract that holds money under rules</td><td>Reviewed, 252 tests, live on testnet</td><td class="r"><span class="pill live">Done</span></td></tr>
-          <tr><td>Holding transfer-restricted securities</td><td>Tokenized shares carry allowlists; it handles them</td><td class="r"><span class="pill live">Done</span></td></tr>
-          <tr><td>A leaderboard read from chain state alone</td><td>No database, nothing we could fake</td><td class="r"><span class="pill live">Done</span></td></tr>
-          <tr><td>Following someone else's strategy</td><td>Your rules bind on top of theirs</td><td class="r"><span class="pill soon">Building</span></td></tr>
-          <tr><td>Equity price feeds on Arc</td><td>32 Chainlink feeds live, none for stocks yet</td><td class="r"><span class="pill soon">Waiting</span></td></tr>
+          <tr><td>The contract that holds money under rules</td><td>Reviewed, 252 tests, live on testnet</td><td class="r"><span class="pill ok">Done</span></td></tr>
+          <tr><td>Holding transfer-restricted securities</td><td>Tokenized shares carry allowlists; it handles them</td><td class="r"><span class="pill ok">Done</span></td></tr>
+          <tr><td>A leaderboard read from chain state alone</td><td>No database, nothing we could fake</td><td class="r"><span class="pill ok">Done</span></td></tr>
+          <tr><td>Following someone else's strategy</td><td>Your rules bind on top of theirs</td><td class="r"><span class="pill wait">Building</span></td></tr>
+          <tr><td>Equity price feeds on Arc</td><td>32 Chainlink feeds live, none for stocks yet</td><td class="r"><span class="pill wait">Waiting</span></td></tr>
         </tbody>
       </table>
     </div>
-  </div>
-</section>
+  </section>
+</div>
 
 <footer class="wrap">
-  <span class="label">Reins &middot; every figure above read from Arc testnet</span>
-  <span class="label">Not investment advice</span>
+  <span>Reins &middot; figures read from Arc testnet, 26 September 2026</span>
+  <span>Not investment advice</span>
 </footer>
