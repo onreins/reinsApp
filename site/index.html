@@ -78,7 +78,7 @@
     content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  .hero > div { position: relative; z-index: 1; }
+  .hero > div { position: relative; z-index: 2; }
   .kicker { font: 600 15px var(--sans); color: #aab7e8; }
   h1 {
     margin: 14px auto 0; color: var(--white);
@@ -236,6 +236,57 @@
     transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1);
   }
 
+  /* --------------------------------------------------------------- decor */
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .disc {
+    position: absolute; display: grid; place-items: center; border-radius: 50%;
+    color: #fff; font: 800 13px var(--sans); letter-spacing: .02em;
+    background: radial-gradient(circle at 32% 28%, #7da2ff, #2f57d9 62%, #1b3798);
+    border: 1px solid rgba(255,255,255,.35);
+    box-shadow: inset 0 -8px 18px rgba(10,16,60,.5), inset 0 3px 8px rgba(255,255,255,.35), 0 18px 34px rgba(8,12,46,.45);
+    z-index: 0;
+  }
+  .disc.s { width: 62px; height: 62px; font-size: 11px; }
+  .disc.m { width: 80px; height: 80px; font-size: 12px; }
+  .disc.l { width: 96px; height: 96px; font-size: 15px; }
+  .disc.green { background: radial-gradient(circle at 32% 28%, #4fd6a4, #0f9f77 62%, #0a6a50); }
+  .disc.navy { background: radial-gradient(circle at 32% 28%, #3d4c8f, #181f52 62%, #0e1233); }
+  @media (max-width: 760px) { .disc.hide-sm { display: none; } }
+  @media (prefers-reduced-motion: no-preference) {
+    .disc { animation: bob 6.5s ease-in-out infinite alternate; }
+    .disc:nth-of-type(2) { animation-duration: 7.8s; animation-delay: .8s; }
+    .disc:nth-of-type(3) { animation-duration: 5.9s; animation-delay: 1.5s; }
+    .disc:nth-of-type(4) { animation-duration: 8.6s; animation-delay: .4s; }
+    @keyframes bob { from { transform: translateY(-9px) rotate(-4deg); } to { transform: translateY(11px) rotate(5deg); } }
+  }
+
+  /* our loop glyph, oversized, as a watermark in each card's corner */
+  .card::after {
+    content: ""; position: absolute; right: -70px; bottom: -80px;
+    width: 320px; height: 320px; pointer-events: none;
+    background: rgba(255,255,255,.07); transform: rotate(-12deg);
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .card.c-sky::after { background: rgba(20,23,58,.06); }
+  .card h3, .card .note, .card .stamp, .card .rulename, .card .ui { position: relative; z-index: 1; }
+
+  /* the on-chain ticker tape */
+  .tape { overflow: hidden; border-block: 1px solid rgba(20,23,58,.09); margin-top: clamp(40px, 6vw, 72px); padding-block: 15px; }
+  .tape-in { display: flex; width: max-content; }
+  .tape-run { display: flex; font: 500 12.5px var(--mono); color: var(--ink-2); white-space: nowrap; }
+  .tape-run span { padding-inline: 26px; position: relative; }
+  .tape-run span::after { content: "◆"; position: absolute; right: -6px; top: 50%; translate: 0 -50%; font-size: 7px; color: var(--blue); }
+  .tape-run b { font-weight: 500; color: var(--down); }
+  .tape-run i { font-style: normal; color: var(--up); }
+  @media (prefers-reduced-motion: no-preference) {
+    .tape-in { animation: tape 42s linear infinite; }
+    @keyframes tape { to { transform: translateX(-50%); } }
+  }
+
+  .closing { position: relative; }
+  .closing .disc { z-index: 0; }
+
   footer { padding: 0 clamp(16px, 2.4vw, 26px) 44px; }
   footer hr { border: 0; border-top: 1px solid rgba(20,23,58,.1); margin: 0 0 22px; }
   footer p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-width: 88ch; margin-bottom: 10px; font-weight: 400; }
@@ -254,6 +305,11 @@
 
 <div class="hero-shell" id="top">
   <header class="hero">
+    <canvas id="rib" aria-hidden="true"></canvas>
+    <span class="disc l" style="left:7%;top:24%" aria-hidden="true">SPYx</span>
+    <span class="disc m hide-sm" style="right:9%;top:31%" aria-hidden="true">NVDAx</span>
+    <span class="disc s green" style="left:8%;bottom:15%" aria-hidden="true">USDC</span>
+    <span class="disc m navy hide-sm" style="right:14%;bottom:20%" aria-hidden="true">EURC</span>
     <div>
       <p class="kicker">Where agents trade under rules</p>
       <h1>Hand an agent the <em>reins</em>, never the keys</h1>
@@ -261,6 +317,33 @@
       <p class="fine">Live on Arc testnet &middot; 252 tests &middot; ~$0.01 a trade</p>
     </div>
   </header>
+</div>
+
+<div class="tape" aria-hidden="true">
+  <div class="tape-in">
+    <div class="tape-run">
+      <span><b>TradeTooLarge</b> &mdash; refused on-chain</span>
+      <span>fill <i>0.454%</i> from the oracle</span>
+      <span><b>AssetNotAllowed</b> &mdash; refused on-chain</span>
+      <span>frozen by a stranger at $1.7489</span>
+      <span><b>NotAgent</b> &mdash; refused on-chain</span>
+      <span>withdraw() &mdash; <i>no permission needed</i></span>
+      <span><b>IsFrozen</b> &mdash; refused on-chain</span>
+      <span>252 tests passing</span>
+      <span>a trade costs ~$0.01 on Arc</span>
+    </div>
+    <div class="tape-run">
+      <span><b>TradeTooLarge</b> &mdash; refused on-chain</span>
+      <span>fill <i>0.454%</i> from the oracle</span>
+      <span><b>AssetNotAllowed</b> &mdash; refused on-chain</span>
+      <span>frozen by a stranger at $1.7489</span>
+      <span><b>NotAgent</b> &mdash; refused on-chain</span>
+      <span>withdraw() &mdash; <i>no permission needed</i></span>
+      <span><b>IsFrozen</b> &mdash; refused on-chain</span>
+      <span>252 tests passing</span>
+      <span>a trade costs ~$0.01 on Arc</span>
+    </div>
+  </div>
 </div>
 
 <section class="statement center" id="rules">
@@ -418,6 +501,8 @@
 </div>
 
 <section class="closing center">
+  <span class="disc m hide-sm" style="left:12%;top:30%" aria-hidden="true">SPYx</span>
+  <span class="disc s green hide-sm" style="right:13%;bottom:26%" aria-hidden="true">USDC</span>
   <p class="small">One mandate live on Arc testnet. Stocks are next &mdash; Circle has named xStocks and Dinari among the issuers coming to Arc.</p>
   <h2>Get started. Hold the <em>reins</em>.</h2>
   <a class="pillbtn" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632">Watch the first mandate</a>
@@ -494,5 +579,51 @@
   addEventListener("scroll", onScroll, { passive: true });
   addEventListener("resize", onScroll, { passive: true });
   frame();
+
+  // Ribbons: slow-flowing rein lines drawn across the hero. Our own motif.
+  var cv = document.getElementById("rib");
+  if (cv && cv.getContext) {
+    var ctx = cv.getContext("2d");
+    var W = 0, Hh = 0, running = true;
+    var fit = function () {
+      var r = cv.parentElement.getBoundingClientRect();
+      var d = Math.min(devicePixelRatio || 1, 2);
+      W = cv.width = Math.round(r.width * d);
+      Hh = cv.height = Math.round(r.height * d);
+    };
+    fit();
+    addEventListener("resize", fit, { passive: true });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (e) { running = e[0].isIntersecting; }).observe(cv);
+    }
+    var RIBS = [
+      { y: .74, amp: .050, sp: .00020, ph: 0.0, c: "112,150,255" },
+      { y: .82, amp: .065, sp: .00015, ph: 2.1, c: "77,125,247" },
+      { y: .66, amp: .040, sp: .00026, ph: 4.4, c: "168,196,255" }
+    ];
+    (function loop(ts) {
+      requestAnimationFrame(loop);
+      if (!running) return;
+      ctx.clearRect(0, 0, W, Hh);
+      RIBS.forEach(function (rb) {
+        ctx.beginPath();
+        var steps = 64;
+        for (var i = 0; i <= steps; i++) {
+          var x = (i / steps) * W;
+          var y = Hh * rb.y +
+            Math.sin((i / steps) * 4.2 + ts * rb.sp + rb.ph) * Hh * rb.amp +
+            Math.sin((i / steps) * 9.1 + ts * rb.sp * 1.7 + rb.ph) * Hh * rb.amp * .35;
+          if (i === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
+        }
+        var g = ctx.createLinearGradient(0, 0, W, 0);
+        g.addColorStop(0, "rgba(" + rb.c + ",0)");
+        g.addColorStop(.5, "rgba(" + rb.c + ",.45)");
+        g.addColorStop(1, "rgba(" + rb.c + ",0)");
+        ctx.strokeStyle = g;
+        ctx.lineWidth = Math.max(1.4, Hh * .004);
+        ctx.stroke();
+      });
+    })(0);
+  }
 })();
 </script>
