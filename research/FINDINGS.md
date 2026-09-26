@@ -155,3 +155,75 @@ rather than the safe itself:
 Option 2 is not an alpha strategy and must never be sold as one — most launch
 tokens go to zero. It is a containment demonstration, which is what "money with
 a mandate" actually means.
+
+---
+
+# The market we could not find on Arc exists on Solana
+
+Scanned 2026-09-26. Every number below is from public reporting, not from our
+own measurement — unlike the Arc figures above, this has not yet been verified
+on-chain. Treat it as a lead, not a result.
+
+## Tokenized equities are real and liquid
+
+| | |
+|---|---|
+| xStocks tokenized assets | $858.1M across eight chains, **$502.4M on Solana** (58.5%) |
+| Solana tokenized equity supply | $684M all-time high, +47% in three weeks |
+| Trading volume | **$6B** on Solana alone; $25B lifetime across venues |
+| Raydium Q3 tokenized-stock volume | ~$2.3B, up 40% quarter on quarter |
+| Holders | 900,000 wallets, an all-time high |
+| Concentration | SPYx, CRCLx, TSLAx, NVDAx and QQQx = 64.5% of all volume |
+
+Ondo ($957M), Binance bStocks ($622M) and xStocks ($600M) hold 77% of the
+tokenized equity market between them.
+
+## All three things Arc lacks, this has
+
+1. **Assets that move.** SPY, NVDA and TSLA travel 100-300 bp a day. The Arc
+   euro pool travels 34 bp.
+2. **Depth.** $2.3B of quarterly volume on one venue, against $137k a day in
+   the only pool Arc has.
+3. **An oracle.** Pyth publishes SPY, NVDA, TSLA, AAPL, GOOGL, AMZN, META and
+   MSTR with confidence intervals, and is an approved external distributor of
+   Nasdaq Basic real-time equity data.
+
+## And it is not Solana-only
+
+xStocks are issued natively on **Ethereum, Solana, Arbitrum, Mantle, TON and
+Ink**, as SPL Token-2022 on Solana and plain **ERC-20 on the EVM chains**, with
+a bridge between them.
+
+Crucially for us, they carry **no contract-level whitelist for secondary
+trading**. KYC applies at mint and redeem only; the tokens transfer like any
+other ERC-20, sit in liquidity pools and serve as lending collateral. That is
+the opposite of the Dinari model, where a whitelist would force our contract
+itself to be KYC'd.
+
+If that holds on-chain, `Mandate.sol` needs no redesign to hold an xStock - the
+same Solidity, a different chain, a different venue adapter, and a Pyth adapter
+behind the existing `IPriceFeed` interface.
+
+## What still has to be checked before believing any of it
+
+- **Does an xStock have real depth on an EVM chain, or is the liquidity all on
+  Solana?** 58.5% is on Solana; the EVM remainder may be thin. This decides
+  whether we port a config or rewrite in Rust.
+- **Which venue?** Our adapter speaks Uniswap v4. If EVM xStocks trade on v3,
+  or on a Kraken venue, that is a new adapter.
+- **Pyth is a pull oracle on EVM.** It does not look like Chainlink's
+  `latestRoundData()`; a price update is posted in the same transaction. That
+  is a small adapter implementing `IPriceFeed` over `getPriceNoOlderThan`, not
+  a change to the Mandate.
+- **Equity feeds keep New York hours and publish nothing at weekends**, while
+  the tokens trade 24/7. Our `maxPriceAge` rule already handles this correctly:
+  the mandate simply refuses to trade when the feed goes stale. An agent
+  cannot trade your stock portfolio at 3am on a Sunday against Friday's close.
+  That is a feature we already built and never had a reason to use.
+- **The tokens trade at a premium or discount to the underlying share.** Price
+  the xStock off its own feed, not off the share behind it.
+- **xStocks reportedly carried no public audits** as of late 2025, while
+  holding the largest market share. Counterparty and contract risk is real.
+- **Not offered or marketed in the United States.** That is a restriction on
+  the issuer, not a transfer restriction, but it shapes who we can point this
+  at and needs a real answer before we build on it.
