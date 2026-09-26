@@ -1,438 +1,334 @@
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mandate</title>
-<meta name="description" content="Mandate holds an AI agent's capital under constraints enforced by the contract, not by trust. Position limits, oracle-checked execution, drawdown floors and a public stop-loss on Arc.">
+<title>Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    --paper: #ffffff; --wash: #f7f7f5; --ink: #0a0b0d; --ink-2: #4a4f57; --ink-3: #767d86;
-    --rule: #e4e5e2; --rule-strong: #c9ccc7;
-    --accent: #1f36d9; --pos: #0b6b3a; --neg: #ad2d1c; --warn: #8a6208;
-    --sans: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+    color-scheme: dark;
+    --base: #0e0c0b;
+    --raise: #171412;
+    --edge: #262019;
+    --edge-soft: #1d1916;
+    --ink: #f3efe8;
+    --ink-2: #b6ac9e;
+    --ink-3: #8a8175;
+    --tan: #d08b45;
+    --up: #4fb783;
+    --down: #e0705c;
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --paper: #0a0b0d; --wash: #101216; --ink: #eef0f2; --ink-2: #a7aeb8; --ink-3: #757c86;
-      --rule: #1e2127; --rule-strong: #2e333b;
-      --accent: #8d9bff; --pos: #4cbd83; --neg: #f07a67; --warn: #d9a441;
-    }
-  }
-  :root[data-theme="dark"] {
-    --paper: #0a0b0d; --wash: #101216; --ink: #eef0f2; --ink-2: #a7aeb8; --ink-3: #757c86;
-    --rule: #1e2127; --rule-strong: #2e333b;
-    --accent: #8d9bff; --pos: #4cbd83; --neg: #f07a67; --warn: #d9a441;
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
   body {
-    margin: 0; background: var(--paper); color: var(--ink);
-    font: 400 15.5px/1.6 var(--sans); -webkit-font-smoothing: antialiased;
+    margin: 0;
+    background: var(--base);
+    color: var(--ink);
+    font: 400 16px/1.6 var(--sans);
+    -webkit-font-smoothing: antialiased;
     font-variant-numeric: tabular-nums;
   }
   a { color: inherit; }
-  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  h1, h2, h3 { margin: 0; font-weight: 500; letter-spacing: -0.028em; }
-  p { margin: 0; }
-  .wrap { max-width: 1140px; margin: 0 auto; padding-inline: 28px; }
-  @media (max-width: 640px) { .wrap { padding-inline: 18px; } }
+  h1, h2, h3 { margin: 0; text-wrap: balance; }
+  :focus-visible { outline: 2px solid var(--tan); outline-offset: 3px; }
 
-  .lbl { font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
-  .lbl.acc { color: var(--accent); }
-  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .wrap { width: 100%; max-width: 1080px; margin: 0 auto; padding-inline: 24px; }
+  @media (max-width: 640px) { .wrap { padding-inline: 16px; } }
 
-  /* ---- top bar ---- */
-  .top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
-  .top .wrap { height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-  .brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; font-weight: 600; font-size: 17px; letter-spacing: -.03em; }
-  .brand em { font: 500 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-style: normal; border: 1px solid var(--rule-strong); padding: 3px 5px; }
-  .top nav { display: flex; gap: 26px; font-size: 14px; color: var(--ink-2); }
-  .top nav a { text-decoration: none; }
-  .top nav a:hover { color: var(--ink); }
-  .cta { font: 500 13px/1 var(--sans); text-decoration: none; border: 1px solid var(--ink); padding: 9px 14px; white-space: nowrap; }
-  .cta:hover { background: var(--ink); color: var(--paper); }
-  @media (max-width: 860px) { .top nav { display: none; } }
-
-  /* ---- hero ---- */
-  .hero { padding: clamp(56px, 8vw, 104px) 0 0; }
-  .hero h1 { font-size: clamp(38px, 5.4vw, 64px); line-height: 1.04; max-width: 20ch; margin-top: 18px; }
-  .hero .sub { margin-top: 22px; font-size: 18px; line-height: 1.55; color: var(--ink-2); max-width: 60ch; }
-  .hero .acts { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px; }
-  .btn { font: 500 14px/1 var(--sans); text-decoration: none; padding: 12px 18px; border: 1px solid var(--ink); }
-  .btn.solid { background: var(--ink); color: var(--paper); }
-  .btn.solid:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* ---- figure band ---- */
-  .band { margin-top: clamp(44px, 6vw, 72px); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
-  .band .wrap { display: grid; grid-template-columns: repeat(4, 1fr); }
-  .band div { padding: 20px 24px 22px 0; }
-  .band div + div { padding-left: 24px; border-left: 1px solid var(--rule); }
-  .band b { display: block; font: 500 clamp(26px, 3vw, 34px)/1 var(--sans); letter-spacing: -.035em; }
-  .band span { display: block; margin-top: 8px; }
-  @media (max-width: 800px) {
-    .band .wrap { grid-template-columns: 1fr 1fr; }
-    .band div:nth-child(n+3) { border-top: 1px solid var(--rule); }
-    .band div:nth-child(odd) { border-left: 0; padding-left: 0; }
+  .label {
+    font: 400 11px var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--ink-3);
   }
 
-  section { padding-block: clamp(56px, 7.5vw, 96px); border-bottom: 1px solid var(--rule); }
-  .head { display: grid; grid-template-columns: 1fr 1.1fr; gap: 24px 56px; align-items: start; margin-bottom: 40px; }
-  .head h2 { font-size: clamp(26px, 3.3vw, 38px); line-height: 1.1; }
-  .head p { color: var(--ink-2); }
-  .head .lbl { display: block; margin-bottom: 14px; }
-  @media (max-width: 860px) { .head { grid-template-columns: 1fr; } }
+  /* ---------------------------------------------------------------- masthead */
+  .top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding-block: 22px;
+  }
+  .mark { font: 600 19px var(--serif); letter-spacing: .01em; text-decoration: none; }
+  .mark em { font-style: italic; color: var(--tan); }
+  .top .label { display: inline-flex; align-items: center; gap: 8px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--up); }
 
-  /* ---- data tables ---- */
-  .tw { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
-  thead th { text-align: left; font: 500 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); padding: 0 16px 10px 0; border-bottom: 1px solid var(--ink); }
-  tbody td, tbody th { text-align: left; font-weight: 400; vertical-align: top; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--rule); }
-  tbody th { font-weight: 500; width: 26%; }
-  tbody td { color: var(--ink-2); }
-  tbody td.em { color: var(--ink); }
-  td small { display: block; color: var(--ink-3); font-size: 13px; margin-top: 3px; }
-  .rules-t tbody th { width: 30%; }
-  .rules-t td:last-child { width: 26%; }
-  @media (max-width: 760px) { table { min-width: 620px; } }
-  .hint { margin-top: 12px; font-size: 13px; color: var(--ink-3); }
+  /* -------------------------------------------------------------------- hero */
+  .hero {
+    position: relative; overflow: hidden;
+    border-block: 1px solid var(--edge-soft);
+    padding-block: clamp(56px, 11vw, 116px);
+  }
+  .hero::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(60% 90% at 22% 0%, rgba(208, 139, 69, .16), transparent 62%),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 88px);
+  }
+  .hero .wrap { position: relative; }
+  h1 {
+    font: 400 clamp(40px, 7.2vw, 84px)/1.03 var(--serif);
+    font-optical-sizing: auto;
+    letter-spacing: -.02em;
+    max-width: 15ch;
+  }
+  h1 em { font-style: italic; color: var(--tan); }
+  .lede { margin-top: 22px; max-width: 54ch; font-size: 18px; color: var(--ink-2); }
+  .cta-row { margin-top: 34px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+  .cta {
+    display: inline-block; padding: 13px 24px; border-radius: 999px;
+    background: var(--tan); color: #1b1109; text-decoration: none;
+    font-weight: 600; font-size: 15px;
+  }
+  .cta.ghost { background: transparent; color: var(--ink); border: 1px solid var(--edge); }
+  .cta:hover { filter: brightness(1.06); }
 
-  /* ---- sequence ---- */
-  .seq { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(24px, 4vw, 52px); align-items: start; }
-  .seq > * { min-width: 0; }
-  @media (max-width: 900px) { .seq { grid-template-columns: 1fr; } }
-  .steps { border-top: 1px solid var(--ink); }
-  .step { display: grid; grid-template-columns: 30px 1fr auto; gap: 14px; padding: 15px 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
-  .step .n { font: 500 12px/1.4 var(--mono); color: var(--ink-3); }
-  .step b { font-weight: 500; }
-  .step small { display: block; color: var(--ink-3); font-size: 13px; margin-top: 2px; }
-  .step .v { font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--neg); white-space: nowrap; }
-  .step.ok .v { color: var(--pos); }
+  /* ------------------------------------------------------------------ blocks */
+  section { padding-block: clamp(52px, 8vw, 92px); border-bottom: 1px solid var(--edge-soft); }
+  h2 {
+    font: 400 clamp(27px, 3.6vw, 40px)/1.12 var(--serif);
+    letter-spacing: -.015em; margin-top: 14px; max-width: 20ch;
+  }
+  .say { margin-top: 16px; max-width: 58ch; color: var(--ink-2); }
 
-  /* ---- terminal ---- */
-  .term { background: var(--wash); border: 1px solid var(--rule); }
-  .term .bar { display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--rule); font: 400 12px/1 var(--mono); color: var(--ink-3); }
-  .term pre { margin: 0; padding: 16px 14px 18px; overflow-x: auto; font: 400 12.5px/1.75 var(--mono); }
-  .term .k { color: var(--accent); } .term .g { color: var(--pos); } .term .r { color: var(--neg); } .term .d { color: var(--ink-3); }
+  .cols { display: grid; gap: 28px; margin-top: 40px; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 800px) { .cols { grid-template-columns: 1fr; gap: 24px; } }
+  .col h3 { font: 600 17px var(--sans); margin-bottom: 8px; }
+  .col p { margin: 0; color: var(--ink-2); font-size: 15px; }
+  .col .label { display: block; margin-bottom: 14px; color: var(--tan); }
 
-  /* ---- two-col prose ---- */
-  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 56px; }
-  @media (max-width: 800px) { .cols { grid-template-columns: 1fr; } }
-  .cols p + p { margin-top: 14px; }
-  .cols p { color: var(--ink-2); }
+  /* The rule card: a mandate written the way its owner would say it. */
+  .card {
+    margin-top: 44px; background: var(--raise);
+    border: 1px solid var(--edge); border-radius: 4px;
+    padding: 28px; max-width: 560px;
+  }
+  .card .label { display: block; margin-bottom: 18px; }
+  .card dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 12px 22px; align-items: baseline; }
+  .card dt { font: 400 12px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); white-space: nowrap; }
+  .card dd { margin: 0; font-size: 15px; }
+  .card dd b { font-weight: 600; color: var(--tan); }
+  .card .seal {
+    margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--edge);
+    font-size: 14px; color: var(--ink-2);
+  }
 
-  .st { font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 4px 7px; border: 1px solid currentColor; white-space: nowrap; }
-  .st.live { color: var(--pos); } .st.ready { color: var(--accent); } .st.soon { color: var(--warn); }
+  /* -------------------------------------------------------------------- data */
+  .scroll { overflow-x: auto; margin-top: 36px; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th {
+    font: 400 11px var(--mono); text-transform: uppercase; letter-spacing: .14em;
+    color: var(--ink-3); text-align: left; padding: 0 16px 10px 0;
+    border-bottom: 1px solid var(--edge); white-space: nowrap;
+  }
+  td { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--edge-soft); vertical-align: baseline; font-size: 15px; }
+  /* Two right-aligned columns in a row would otherwise touch. */
+  th.r, td.r { text-align: right; padding-right: 0; padding-left: 22px; }
+  .rule { font: 500 13px var(--mono); color: var(--tan); }
+  .mono { font: 400 13px var(--mono); color: var(--ink-2); }
+  .tx { font: 400 12px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
+  .tx:hover { color: var(--tan); }
 
-  footer { padding-block: 34px 60px; }
-  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-size: 13px; color: var(--ink-3); }
-  footer .mono { font-family: var(--mono); font-size: 12px; }
+  .pill {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em;
+  }
+  .pill.live { background: rgba(79,183,131,.14); color: var(--up); }
+  .pill.stop { background: rgba(224,112,92,.14); color: var(--down); }
+  .pill.soon { background: rgba(208,139,69,.14); color: var(--tan); }
+
+  .figures {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+    margin-top: 44px; background: var(--edge-soft);
+    border: 1px solid var(--edge-soft);
+  }
+  @media (max-width: 720px) { .figures { grid-template-columns: 1fr 1fr; } }
+  .figures div { background: var(--base); padding: 22px 20px; }
+  .figures b { display: block; font: 400 30px/1 var(--serif); letter-spacing: -.02em; }
+  .figures span { display: block; margin-top: 10px; }
+
+  footer { padding-block: 34px 56px; display: flex; flex-wrap: wrap; gap: 14px 28px; justify-content: space-between; }
 </style>
 
-<header class="top">
+<div class="wrap">
+  <div class="top">
+    <a class="mark" href="#top">R<em>ei</em>ns</a>
+    <span class="label"><span class="dot"></span>Live on Arc testnet</span>
+  </div>
+</div>
+
+<header class="hero" id="top">
   <div class="wrap">
-    <a class="brand" href="#top">Mandate<em>Arc</em></a>
-    <nav>
-      <a href="#why">Why</a>
-      <a href="#constraints">Constraints</a>
-      <a href="#execution">Execution</a>
-      <a href="#evidence">Evidence</a>
-      <a href="#integrate">Integrate</a>
-      <a href="#status">Status</a>
-    </nav>
-    <a class="cta" href="#evidence">See the evidence</a>
+    <h1>Hand an agent the <em>reins</em>. Never the keys.</h1>
+    <p class="lede">
+      Run an automated strategy on your money, or follow someone else's, without
+      anyone being able to take it. Your funds sit in your own contract under
+      rules you set. The agent can trade. It has no function that withdraws.
+    </p>
+    <div class="cta-row">
+      <a class="cta" href="#mandate">See the first one running</a>
+      <a class="cta ghost" href="#rules">What the rules do</a>
+    </div>
   </div>
 </header>
 
-<main id="top">
-  <section class="hero" style="border-bottom:0;padding-bottom:0">
-    <div class="wrap">
-      <span class="lbl acc">Capital controls for autonomous agents</span>
-      <h1>An AI agent can trade your capital. It cannot take it.</h1>
-      <p class="sub">Mandate is a smart contract that holds the funds and enforces the terms on every order: which assets, what size, at what price, and how much loss is tolerated before trading halts. The agent holds a key that can do one thing. There is no function it can call that moves money out.</p>
-      <div class="acts">
-        <a class="btn solid" href="#constraints">Read the constraints</a>
-        <a class="btn ghost" href="#evidence">Mainnet evidence</a>
-      </div>
-    </div>
-  </section>
-
-  <div class="band">
-    <div class="wrap">
-      <div><b>0.081%</b><span class="lbl">Execution vs oracle, $10 order</span></div>
-      <div><b>0.085%</b><span class="lbl">Execution vs oracle, $400 order</span></div>
-      <div><b>$0.00</b><span class="lbl">Recoverable by the agent</span></div>
-      <div><b>239</b><span class="lbl">Adversarial tests passing</span></div>
-    </div>
-  </div>
-
-  <!-- WHY -->
-  <section id="why">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="lbl">The problem</span>
-          <h2>Delegation without custody.</h2>
-        </div>
-        <div>
-          <p>An autonomous agent needs capital to be useful and needs supervision to be safe, and those requirements have been mutually exclusive. Handing an agent a wallet means a prompt injection, a model error or a compromised key is indistinguishable from a legitimate instruction, and the loss is discovered after settlement.</p>
-          <p style="margin-top:14px">Policy in a system prompt is not a control. Mandate moves the constraints into the settlement path: the contract holds the assets, validates each order against its terms, and reverts anything outside them. Supervision stops being a monitoring problem and becomes a property of the venue.</p>
-        </div>
-      </div>
-
-      <div class="tw">
-        <table>
-          <thead>
-            <tr><th>Failure mode</th><th>Agent holds the wallet</th><th>Agent holds a mandate</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>Prompt injection instructs a transfer</th>
-              <td>Funds leave to the attacker's address</td>
-              <td class="em">No transfer path exists in the agent's interface</td>
-            </tr>
-            <tr>
-              <th>Agent routes through a pool it controls</th>
-              <td>Position drained at an arbitrary price</td>
-              <td class="em">Fill compared to Chainlink; reverts beyond the slippage bound</td>
-            </tr>
-            <tr>
-              <th>Strategy degrades over many small losses</th>
-              <td>Discovered when the balance is checked</td>
-              <td class="em">Halts at the drawdown floor, enforced per order</td>
-            </tr>
-            <tr>
-              <th>Market moves against an idle position</th>
-              <td>Requires an operator watching</td>
-              <td class="em">Any third party can trigger the stop-loss on-chain</td>
-            </tr>
-            <tr>
-              <th>Agent key is compromised</th>
-              <td>Full loss</td>
-              <td class="em">Loss bounded by the drawdown floor; key revocable in one block</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- CONSTRAINTS -->
-  <section id="constraints">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="lbl">Terms</span>
-          <h2>Five constraints, fixed at issuance.</h2>
-        </div>
-        <p>Set by the owner when the mandate is created and immutable thereafter. Neither the agent nor the issuer can widen them afterwards; a new mandate is required.</p>
-      </div>
-
-      <div class="tw">
-        <table class="rules-t">
-          <thead>
-            <tr><th>Constraint</th><th>Enforcement</th><th>Reference value</th></tr>
-          </thead>
-          <tbody>
-            <tr><th>Eligible assets</th><td>Order reverts unless both legs are on the list, each with a designated price feed</td><td class="num em">USDC, EURC</td></tr>
-            <tr><th>Maximum order size</th><td>Notional valued at the oracle price before execution<small>Rounded up, so dust cannot understate it</small></td><td class="num em">$25.00</td></tr>
-            <tr><th>Execution tolerance</th><td>Measured fill compared against the oracle price; the protocol caps this at 10%<small>The binding limit is the lower of this and the agent's own minimum</small></td><td class="num em">1.00%</td></tr>
-            <tr><th>Drawdown floor</th><td>Equity re-valued after every order; breach reverts the order<small>Baseline rescales on deposit and withdrawal, so cash movements never register as loss</small></td><td class="num em">−10.00%</td></tr>
-            <tr><th>Expiry</th><td>Trading stops at the timestamp; the owner's rights are unaffected</td><td class="num em">30 days</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="hint">Price data is rejected past a configurable staleness bound. Chainlink's Arc feeds publish on a 0.5% deviation threshold with a 24-hour heartbeat.</p>
-    </div>
-  </section>
-
-  <!-- EXECUTION -->
-  <section id="execution">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="lbl">Order path</span>
-          <h2>Every order is validated before and after execution.</h2>
-        </div>
-        <p>Pre-trade checks bound what may be attempted. Post-trade checks bound what actually happened, measured from the contract's own balances rather than the venue's return value. Any failure reverts the transaction in full.</p>
-      </div>
-
-      <div class="seq">
-        <div class="steps">
-          <div class="step"><span class="n">01</span><span><b>Authorisation</b><small>Caller is the current agent; mandate is neither frozen nor expired</small></span><span class="v">revert</span></div>
-          <div class="step"><span class="n">02</span><span><b>Eligibility</b><small>Both legs on the asset list, and not the same asset</small></span><span class="v">revert</span></div>
-          <div class="step"><span class="n">03</span><span><b>Notional</b><small>Order valued at the oracle price against the size limit</small></span><span class="v">revert</span></div>
-          <div class="step"><span class="n">04</span><span><b>Price integrity</b><small>Feed answer positive and within the staleness bound</small></span><span class="v">revert</span></div>
-          <div class="step"><span class="n">05</span><span><b>Execution</b><small>Routed to the venue fixed at issuance; approval set and cleared in the same call</small></span><span class="v">—</span></div>
-          <div class="step"><span class="n">06</span><span><b>Settlement check</b><small>Balances measured directly; received amount compared to the oracle floor</small></span><span class="v">revert</span></div>
-          <div class="step ok"><span class="n">07</span><span><b>Drawdown check</b><small>Portfolio re-valued; order reverts if equity falls below the floor</small></span><span class="v">commit</span></div>
-        </div>
-
-        <div>
-          <div class="term">
-            <div class="bar"><span>Refusal returned to the agent</span><span>MCP</span></div>
-<pre><code>{ <span class="k">"ok"</span>: false,
-  <span class="k">"rule"</span>: <span class="r">"TradeTooLarge"</span>,
-  <span class="k">"reason"</span>: <span class="d">"the trade is larger than the</span>
-             <span class="d">mandate's per-trade limit"</span> }</code></pre>
-          </div>
-          <p style="margin-top:18px;color:var(--ink-2);font-size:14.5px">Refusals name the constraint that rejected the order and state plainly why, so the agent can resize or wait rather than retry blindly. The same reasons are exposed through the JavaScript SDK.</p>
-
-          <div class="term" style="margin-top:22px">
-            <div class="bar"><span>Owner rights</span><span>always available</span></div>
-<pre><code><span class="g">withdraw</span>      any asset, any amount, any time
-<span class="g">withdrawAll</span>   full exit, agent revoked in the same call
-<span class="g">setAgent</span>      replace or revoke; effective next block
-<span class="g">removeAsset</span>   drop an asset with a dead feed
-<span class="d">Withdrawal never depends on a healthy oracle.</span></code></pre>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- EVIDENCE -->
-  <section id="evidence">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="lbl">Evidence</span>
-          <h2>Executed against Arc mainnet state.</h2>
-        </div>
-        <p>A single <span class="num">eth_call</span> against live mainnet with a state override: the contracts are instantiated inside the call, funded, and an agent trades USDC into EURC and back through the production Uniswap v4 pool, validated against the production Chainlink feed. Nothing is broadcast, so the result is reproducible by anyone at no cost.</p>
-      </div>
-
-      <div class="seq">
-        <div class="term">
-          <div class="bar"><span>npm run sim:mainnet -- 10</span><span>Arc · chain 5042</span></div>
-<pre><code><span class="d">Mandate × Uniswap v4 on Arc mainnet (simulated)</span>
-
-deposited            $20.0000
-Chainlink EURC/USD   $1.1379
-bought               8.7808 EURC for $10.00
-                     fill $1.1388 per EURC
-                     <span class="g">0.081% vs oracle</span>
-equity after buy     $19.9919
-sold back for        $9.9900
-equity at the end    $19.9900
-                     <span class="d">round trip cost $0.0100</span></code></pre>
-        </div>
-
-        <div>
-          <div class="tw">
-            <table>
-              <thead><tr><th>Order</th><th>Fill vs oracle</th><th>Round trip cost</th></tr></thead>
-              <tbody>
-                <tr><th class="num">$10</th><td class="num em">0.081%</td><td class="num">$0.0100</td></tr>
-                <tr><th class="num">$100</th><td class="num em">0.082%</td><td class="num">$0.1000</td></tr>
-                <tr><th class="num">$400</th><td class="num em">0.085%</td><td class="num">$0.3999</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="hint">A 40× increase in order size moves execution by four basis points. Cost is the pool's 5 bp fee on each leg.</p>
-
-          <div class="tw" style="margin-top:26px">
-            <table>
-              <thead><tr><th>Review finding</th><th>Severity</th><th>Disposition</th></tr></thead>
-              <tbody>
-                <tr><th>Dead feed blocks partial withdrawal</th><td><span class="st soon">High</span></td><td class="em">Fixed — withdrawal values unusable feeds at zero</td></tr>
-                <tr><th>Stop-loss callable mid-swap</th><td><span class="st soon">Medium</span></td><td class="em">Fixed — reentrancy guard extended</td></tr>
-                <tr><th>Rounding loosens limits on dust</th><td><span class="st soon">Low</span></td><td class="em">Fixed — protective bounds round toward the owner</td></tr>
-                <tr><th>Critical severity</th><td><span class="st live">None</span></td><td class="em">Core invariants held under review</td></tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="hint">Each finding has a regression test reproducing the original attack. An independent review and 239 tests do not constitute a formal audit.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- INTEGRATE -->
-  <section id="integrate">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="lbl">Integration</span>
-          <h2>Three tools. No custody to arrange.</h2>
-        </div>
-        <p>The agent connects over MCP and receives its position, the prices its orders will be judged against, and the ability to trade. Its authority is the mandate's terms — nothing is configured client-side, so a compromised agent process cannot widen them.</p>
-      </div>
-
-      <div class="seq">
-        <div class="tw">
-          <table>
-            <thead><tr><th>Tool</th><th>Returns</th></tr></thead>
-            <tbody>
-              <tr><th class="num">mandate_status</th><td>Equity, holdings, the constraints in force, and remaining drawdown headroom</td></tr>
-              <tr><th class="num">mandate_price</th><td>The oracle price and its timestamp, as the contract will read it</td></tr>
-              <tr><th class="num">mandate_trade</th><td>Execution result, or the constraint that rejected the order</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="term">
-          <div class="bar"><span>claude_desktop_config.json</span><span>stdio</span></div>
-<pre><code>{ <span class="k">"mcpServers"</span>: {
-    <span class="k">"mandate"</span>: {
-      <span class="k">"command"</span>: <span class="d">"node"</span>,
-      <span class="k">"args"</span>: [<span class="d">"mandate/mcp-server.js"</span>],
-      <span class="k">"env"</span>: {
-        <span class="k">"MANDATE_ADDRESS"</span>: <span class="d">"0x…"</span>,
-        <span class="k">"MANDATE_AGENT_KEY"</span>: <span class="d">"0x…"</span>
-      } } } }</code></pre>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- STATUS -->
-  <section id="status">
-    <div class="wrap">
-      <div class="head">
-        <div>
-          <span class="lbl">Status</span>
-          <h2>Where this actually stands.</h2>
-        </div>
-        <p>Written plainly, because the distinction between working and deployed is the one that matters. Nothing below is aspirational.</p>
-      </div>
-
-      <div class="tw">
-        <table>
-          <thead><tr><th>Component</th><th>State</th><th>Detail</th></tr></thead>
-          <tbody>
-            <tr><th>Mandate contract and factory</th><td><span class="st ready">Complete</span></td><td>Reviewed, findings remediated, 239 tests passing</td></tr>
-            <tr><th>Uniswap v4 execution adapter</th><td><span class="st ready">Complete</span></td><td>Verified against mainnet state; routes immutable per pair</td></tr>
-            <tr><th>MCP server and SDK</th><td><span class="st ready">Complete</span></td><td>Exercised over stdio and in-process</td></tr>
-            <tr><th>Arena</th><td><span class="st ready">Complete</span></td><td>Leaderboard and per-agent history, derived from chain events only</td></tr>
-            <tr><th>Mainnet deployment</th><td><span class="st soon">Pending</span></td><td>Gas estimated at $0.10; awaiting funding of the deployer</td></tr>
-            <tr><th>Model-driven agent</th><td><span class="st soon">Pending</span></td><td>Reference strategy is deterministic; LLM integration not yet wired</td></tr>
-            <tr><th>Formal audit</th><td><span class="st soon">Not started</span></td><td>One independent adversarial review completed</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="cols" style="margin-top:40px">
-        <div>
-          <span class="lbl">Venue</span>
-          <p style="margin-top:12px">Arc, Circle's settlement layer, where USDC is the native gas asset and fees are approximately one cent. Chainlink publishes 32 feeds on Arc mainnet; Uniswap v4 is deployed there.</p>
-        </div>
-        <div>
-          <span class="lbl">Current market</span>
-          <p style="margin-top:12px">USDC/EURC is the only pool on Arc with meaningful depth today, so the reference mandate is a currency strategy. Additional assets require liquidity, not new code.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<footer>
+<section id="rules">
   <div class="wrap">
-    <span>Mandate — capital controls for autonomous agents.</span>
-    <span class="mono">Arc mainnet · chain 5042 · settled in USDC</span>
+    <span class="label">How it holds</span>
+    <h2>A stop-loss written into the contract, not promised in a footer.</h2>
+    <p class="say">
+      A broker's limits are instructions someone honours later. Here they are
+      conditions checked before any money moves. A trade that breaks one
+      reverts, and nothing happens.
+    </p>
+
+    <div class="cols">
+      <div class="col">
+        <span class="label">Set once</span>
+        <h3>The rules cannot be edited</h3>
+        <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable afterwards.</p>
+      </div>
+      <div class="col">
+        <span class="label">Always</span>
+        <h3>You can leave mid-strategy</h3>
+        <p>Withdraw everything at any moment without asking the agent, even while it holds a position. It cannot object.</p>
+      </div>
+      <div class="col">
+        <span class="label">Anyone</span>
+        <h3>The stop-loss is public</h3>
+        <p>If a mandate falls through its floor, any stranger can freeze it. You do not have to be awake, and neither do we.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="label">A mandate, in the owner's words</span>
+      <dl>
+        <dt>Funded</dt><dd><b>$2,000</b> in USDC</dd>
+        <dt>May trade</dt><dd>SPYx and NVDAx, nothing else</dd>
+        <dt>Per trade</dt><dd>at most <b>$200</b></dd>
+        <dt>Stop at</dt><dd><b>&minus;10%</b>, then freeze</dd>
+        <dt>Prices</dt><dd>within 1% of the oracle, refused if stale</dd>
+        <dt>Expires</dt><dd>in 90 days</dd>
+      </dl>
+      <p class="seal">
+        Six lines a person can say out loud, compiled to
+        <span class="mono">maxTradeValue</span>, <span class="mono">maxDrawdownBps</span>,
+        <span class="mono">maxSlippageBps</span>, <span class="mono">maxPriceAge</span>
+        and <span class="mono">expiresAt</span>.
+      </p>
+    </div>
   </div>
+</section>
+
+<section id="mandate">
+  <div class="wrap">
+    <span class="label">Arc testnet &middot; mandate 0x991b…D632</span>
+    <h2>The first one, and everything it was stopped from doing.</h2>
+    <p class="say">
+      Each refusal below was broadcast on purpose rather than simulated, so it
+      exists as a transaction anyone can open. A mandate that only refuses in
+      private proves nothing.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>What was tried</th>
+            <th>What happened</th>
+            <th class="r">Rule</th>
+            <th class="r">Transaction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Buy $0.50 of euros</td>
+            <td>Filled 0.437411 at $1.143090 — <span class="mono">0.454% from the oracle</span></td>
+            <td class="r"><span class="pill live">Allowed</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td>
+          </tr>
+          <tr>
+            <td>Trade $2.50, over the size limit</td>
+            <td>Refused on-chain</td>
+            <td class="r"><span class="rule">TradeTooLarge</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td>
+          </tr>
+          <tr>
+            <td>A trade too big for the pool to price fairly</td>
+            <td>The exchange could not beat the oracle floor</td>
+            <td class="r"><span class="rule">InsufficientOutput</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td>
+          </tr>
+          <tr>
+            <td>Buy an asset the mandate never allowed</td>
+            <td>Refused on-chain</td>
+            <td class="r"><span class="rule">AssetNotAllowed</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td>
+          </tr>
+          <tr>
+            <td>A stranger's key signs a trade</td>
+            <td>Refused on-chain</td>
+            <td class="r"><span class="rule">NotAgent</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">0x48b35a90… ↗</a></td>
+          </tr>
+          <tr>
+            <td>The euro falls 50%, a stranger calls the stop-loss</td>
+            <td>Frozen at $1.7489 against a $1.80 floor, by someone who owns none of it</td>
+            <td class="r"><span class="pill stop">Frozen</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">0x3cafe35c… ↗</a></td>
+          </tr>
+          <tr>
+            <td>The agent tries again while frozen</td>
+            <td>Refused on-chain</td>
+            <td class="r"><span class="rule">IsFrozen</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f">0xddad294e… ↗</a></td>
+          </tr>
+          <tr>
+            <td>The owner withdraws mid-strategy</td>
+            <td>Paid out, without the agent's permission</td>
+            <td class="r"><span class="pill live">Owner</span></td>
+            <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5">0x0c437da1… ↗</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="figures">
+      <div><b>252</b><span class="label">Tests passing</span></div>
+      <div><b>0.454%</b><span class="label">Fill vs oracle</span></div>
+      <div><b>~$0.01</b><span class="label">Cost of a trade</span></div>
+      <div><b>$0.00</b><span class="label">We can ever touch</span></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="label">Where this goes</span>
+    <h2>Stocks are arriving on Arc. The rails are already here.</h2>
+    <p class="say">
+      Circle named xStocks and Dinari among the issuers bringing tokenized
+      products to Arc, on a chain whose validators include BlackRock, DTCC and
+      the NYSE's parent. A trade costs about a cent, which is what finally makes
+      daily averaging and real stop-losses worth running on a small account.
+    </p>
+
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Piece</th><th>State</th><th class="r">&nbsp;</th></tr></thead>
+        <tbody>
+          <tr><td>The contract that holds money under rules</td><td>Reviewed, 252 tests, live on testnet</td><td class="r"><span class="pill live">Done</span></td></tr>
+          <tr><td>Holding transfer-restricted securities</td><td>Tokenized shares carry allowlists; it handles them</td><td class="r"><span class="pill live">Done</span></td></tr>
+          <tr><td>A leaderboard read from chain state alone</td><td>No database, nothing we could fake</td><td class="r"><span class="pill live">Done</span></td></tr>
+          <tr><td>Following someone else's strategy</td><td>Your rules bind on top of theirs</td><td class="r"><span class="pill soon">Building</span></td></tr>
+          <tr><td>Equity price feeds on Arc</td><td>32 Chainlink feeds live, none for stocks yet</td><td class="r"><span class="pill soon">Waiting</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span class="label">Reins &middot; every figure above read from Arc testnet</span>
+  <span class="label">Not investment advice</span>
 </footer>
