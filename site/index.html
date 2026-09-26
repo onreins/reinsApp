@@ -19,6 +19,7 @@
     --white: #ffffff;
     --up: #12b380;
     --down: #e0503c;
+    --gut: clamp(14px, 2vw, 22px);
     --sans: "Figtree", "Helvetica Neue", Arial, sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   }
@@ -122,12 +123,15 @@
     grid-auto-columns: min(86%, 940px);
     gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
-    padding: 0 clamp(14px, 2vw, 22px) 8px;
+    padding-block: 0 8px;
+    /* left edge sits on the 80rem shell; the track bleeds off the right */
+    padding-inline: max(var(--gut), calc(50% - 40rem + var(--gut))) var(--gut);
+    scroll-padding-inline-start: max(var(--gut), calc(50% - 40rem + var(--gut)));
     scrollbar-width: none;
   }
   .carousel::-webkit-scrollbar { display: none; }
   .card {
-    scroll-snap-align: center; position: relative; overflow: hidden;
+    scroll-snap-align: start; position: relative; overflow: hidden;
     border-radius: 30px; min-height: clamp(430px, 58vw, 540px);
     padding: clamp(28px, 4vw, 46px);
     display: flex; flex-direction: column;
@@ -198,7 +202,7 @@
   .closing .pillbtn:hover { background: #1c2152; }
 
   /* Phantom constrains the whole page to a max-w-7xl shell. */
-  nav, .hero-shell, .statement, .carousel, .closing, footer {
+  nav, .hero-shell, .statement, .closing, footer {
     max-width: 80rem; margin-inline: auto;
   }
 
