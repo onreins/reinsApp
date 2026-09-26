@@ -64,7 +64,8 @@
   .hero {
     position: relative; overflow: hidden; border-radius: 30px;
     background: var(--navy);
-    min-height: clamp(480px, 74vh, 660px);
+    height: calc(100vh - 90px);
+    height: max(520px, min(calc(100svh - 90px), 880px));
     display: grid; place-items: center; text-align: center;
     padding: clamp(48px, 7vw, 90px) 22px;
   }
@@ -194,6 +195,40 @@
   .closing h2 em { font-style: normal; color: var(--blue); }
   .closing .pillbtn { margin-top: 32px; height: 54px; padding-inline: 28px; font-size: 16px; background: var(--navy); color: #fff; }
   .closing .pillbtn:hover { background: #1c2152; }
+
+  /* Phantom constrains the whole page to a max-w-7xl shell. */
+  nav, .hero-shell, .statement, .carousel, .group-label-row, .closing, footer {
+    max-width: 80rem; margin-inline: auto;
+  }
+  .group-label-row { display: block; }
+
+  /* ------------------------------------------------------------- motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero::before { animation: drift 15s ease-in-out infinite alternate; }
+    @keyframes drift {
+      from { transform: translateX(-56%) scale(1); }
+      to   { transform: translateX(-44%) scale(1.14); }
+    }
+    .hero .kicker, .hero h1, .hero .pillbtn, .hero .fine {
+      animation: rise .85s cubic-bezier(.2,.7,.2,1) backwards;
+    }
+    .hero h1 { animation-delay: .07s; }
+    .hero .pillbtn { animation-delay: .16s; }
+    .hero .fine { animation-delay: .24s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(28px); } }
+
+    @media (hover: hover) {
+      .card { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
+      .card:hover { transform: translateY(-6px); }
+    }
+  }
+  /* Scroll reveals: the hidden state is only ever applied by script, so the
+     page is complete at rest without it. */
+  .pre { opacity: 0; transform: translateY(34px); }
+  .in {
+    opacity: 1; transform: none;
+    transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1);
+  }
 
   footer { padding: 0 clamp(16px, 2.4vw, 26px) 44px; }
   footer hr { border: 0; border-top: 1px solid rgba(20,23,58,.1); margin: 0 0 22px; }
@@ -391,3 +426,37 @@
   <p>Reins is software. Funds placed under a mandate sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The mandate shown in product panels is an example &mdash; tokenized equities such as SPYx are not yet issued on Arc. Every transaction under &ldquo;Broadcast, not promised&rdquo; is real and links to the Arc testnet explorer.</p>
   <p>Nothing on this page is investment advice or an offer of securities. Automated strategies can lose money up to the loss limit their mandate sets. Figures dated above were read from Arc testnet chain state.</p>
 </footer>
+
+<script>
+(function () {
+  "use strict";
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!("IntersectionObserver" in window)) return;
+
+  var els = Array.prototype.slice.call(
+    document.querySelectorAll(".statement, .card, .group-label, .closing")
+  );
+
+  // Cards inside the same carousel reveal with a small stagger.
+  document.querySelectorAll(".carousel").forEach(function (row) {
+    Array.prototype.forEach.call(row.children, function (card, i) {
+      card.style.transitionDelay = Math.min(i * 70, 280) + "ms";
+    });
+  });
+
+  els.forEach(function (el) { el.classList.add("pre"); });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in");
+        io.unobserve(entry.target);
+        // Drop the stagger once revealed, so hover responds instantly.
+        setTimeout(function () { entry.target.style.transitionDelay = ""; }, 1100);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
+
+  els.forEach(function (el) { io.observe(el); });
+})();
+</script>
