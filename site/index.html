@@ -282,7 +282,7 @@
   }
 
   /* carousel prev/next controls */
-  .car-nav { display: flex; gap: 10px; max-width: 80rem; margin: 16px auto 0; padding-inline: var(--gut); }
+  .car-nav { display: flex; justify-content: flex-end; gap: 10px; max-width: 80rem; margin: 0 auto 14px; padding-inline: var(--gut); }
   .car-btn {
     width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(20,23,58,.12);
     background: var(--white); color: var(--ink); cursor: pointer;
@@ -654,7 +654,7 @@
     next.innerHTML = ARROWS.next;
     nav.appendChild(prev);
     nav.appendChild(next);
-    car.after(nav);
+    car.before(nav);
 
     var step = function () {
       var first = car.children[0];
