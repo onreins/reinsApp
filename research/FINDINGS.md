@@ -227,3 +227,46 @@ behind the existing `IPriceFeed` interface.
 - **Not offered or marketed in the United States.** That is a restriction on
   the issuer, not a transfer restriction, but it shapes who we can point this
   at and needs a real answer before we build on it.
+
+## Measured on-chain, 2026-09-26: the EVM equity market is not tradeable
+
+The lead above said xStocks are "also on EVM". That is true and useless. Read
+directly from Ethereum, Arbitrum and Base:
+
+| token | chain | total supply | AMM depth |
+|---|---|---|---|
+| SPYx (`0x90a2…dd48`) | Ethereum | **30.15 shares** | one v3 pool, holding 0.00 SPYx + $21.71 |
+| SPYx | Arbitrum | **29.05 shares** | no v3 pool at any fee tier |
+| SPYx | Base | no contract | — |
+| TSLAon (`0xf6b1…103f`) | Ethereum | 19,667.76 shares | **61 shares + $19.6k USDC ≈ $40k across three v3 pools** |
+
+SPYx is the single largest tokenized equity by volume, and its entire Ethereum
+supply is thirty shares of the S&P 500. The EVM deployments are formalities.
+
+Ondo is the real one — several million dollars of tokenized Tesla genuinely
+exists on Ethereum — but almost none of it sits in an AMM. Ondo's model is mint
+and redeem through their own platform, not pool trading. About $40k of depth
+means a $2,000 order moves the price by several percent: the same wall we hit
+with the thin pool we seeded on Arc testnet, for the same reason.
+
+A Mandate has to swap through a venue. On EVM, for equities, there is no venue
+with depth.
+
+## The go/no-go
+
+| | EVM (our stack) | Solana |
+|---|---|---|
+| Tokenized equities exist | yes | yes, $502M |
+| Traded on an AMM | **~$40k of depth** | **$2.3B/quarter on Raydium** |
+| Oracle | Pyth (pull adapter needed) | Pyth, native |
+| Our code | reusable as-is | **rewrite in Rust/Anchor** |
+
+Building a tokenized-equity agent means Solana, and Solana means rewriting
+`Mandate.sol` as an Anchor program, replacing the Uniswap v4 adapter with
+Raydium or Jupiter, handling SPL Token-2022, and rebuilding the SDK and the 249
+tests. That is weeks, not days, and it abandons the Arc premise the company was
+founded on.
+
+The Solidity work is not wasted either way: if EVM equity liquidity deepens,
+the existing Mandate holds those assets with a config change and one small Pyth
+adapter behind `IPriceFeed`. We hold an option on that market developing.
