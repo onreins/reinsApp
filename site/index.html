@@ -217,6 +217,12 @@
     .hero .fine { animation-delay: .24s; }
     @keyframes rise { from { opacity: 0; transform: translateY(28px); } }
 
+    .hero { transform-origin: 50% 0; }
+    .hero > div, .statement h2, .closing h2 { will-change: opacity, transform; }
+    /* The UI panel inside a card rises a beat after the card itself. */
+    .card.in .ui { animation: uiRise .75s .12s cubic-bezier(.2,.7,.2,1) backwards; }
+    @keyframes uiRise { from { opacity: 0; transform: translateY(46px); } }
+
     @media (hover: hover) {
       .card { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
       .card:hover { transform: translateY(-6px); }
@@ -431,32 +437,62 @@
 (function () {
   "use strict";
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  if (!("IntersectionObserver" in window)) return;
 
-  var els = Array.prototype.slice.call(
-    document.querySelectorAll(".statement, .card, .group-label, .closing")
-  );
-
-  // Cards inside the same carousel reveal with a small stagger.
-  document.querySelectorAll(".carousel").forEach(function (row) {
-    Array.prototype.forEach.call(row.children, function (card, i) {
-      card.style.transitionDelay = Math.min(i * 70, 280) + "ms";
+  // One-shot reveals: cards and group labels, staggered along each carousel.
+  if ("IntersectionObserver" in window) {
+    var els = Array.prototype.slice.call(document.querySelectorAll(".card, .group-label"));
+    document.querySelectorAll(".carousel").forEach(function (row) {
+      Array.prototype.forEach.call(row.children, function (card, i) {
+        card.style.transitionDelay = Math.min(i * 70, 280) + "ms";
+      });
     });
-  });
+    els.forEach(function (el) { el.classList.add("pre"); });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+          // Drop the stagger once revealed, so hover responds instantly.
+          setTimeout(function () { entry.target.style.transitionDelay = ""; }, 1100);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
+    els.forEach(function (el) { io.observe(el); });
+  }
 
-  els.forEach(function (el) { el.classList.add("pre"); });
+  // Scroll-driven motion, reversible: the hero settles away as you leave it,
+  // and the big statements grow into place with scroll position.
+  var hero = document.querySelector(".hero");
+  var heroInner = hero ? hero.querySelector("div") : null;
+  var grow = Array.prototype.slice.call(document.querySelectorAll(".statement h2, .closing h2"));
+  var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
+  var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
+  var ticking = false;
 
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("in");
-        io.unobserve(entry.target);
-        // Drop the stagger once revealed, so hover responds instantly.
-        setTimeout(function () { entry.target.style.transitionDelay = ""; }, 1100);
+  function frame() {
+    ticking = false;
+    var vh = innerHeight;
+    if (hero) {
+      var hp = clamp01(scrollY / (hero.offsetHeight * 0.9));
+      hero.style.transform = "scale(" + (1 - 0.05 * hp).toFixed(4) + ")";
+      hero.style.borderRadius = (30 + 26 * hp).toFixed(1) + "px";
+      if (heroInner) {
+        heroInner.style.opacity = (1 - 0.85 * hp).toFixed(3);
+        heroInner.style.transform = "translateY(" + (hp * 46).toFixed(1) + "px)";
       }
+    }
+    grow.forEach(function (el) {
+      var r = el.getBoundingClientRect();
+      if (r.top > vh + 80 || r.bottom < -80) return;
+      var gp = easeOut(clamp01((vh - r.top) / (vh * 0.55)));
+      el.style.opacity = (0.25 + 0.75 * gp).toFixed(3);
+      el.style.transform =
+        "translateY(" + ((1 - gp) * 42).toFixed(1) + "px) scale(" + (0.94 + 0.06 * gp).toFixed(4) + ")";
     });
-  }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
-
-  els.forEach(function (el) { io.observe(el); });
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+  addEventListener("scroll", onScroll, { passive: true });
+  addEventListener("resize", onScroll, { passive: true });
+  frame();
 })();
 </script>
