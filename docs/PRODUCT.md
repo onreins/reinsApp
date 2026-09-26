@@ -182,6 +182,52 @@ jurisdictions **even with no custody**. Not holding the assets lowers the risk;
 it does not automatically exempt us. This needs one conversation with a lawyer
 before anything ships described as managed.
 
+### How do the existing vaults get away with it? They do not
+
+Worth knowing, because the obvious move is to copy them and it does not work
+for us.
+
+- **Hyperliquid geofences the United States entirely.** US persons are
+  Restricted Persons, enforced by geoblocking, with VPN workarounds forbidden
+  in the terms. Its own user vaults are described as actively managed funds
+  with **no regulatory wrapper**.
+- **The liability is pushed down onto managers.** The protocol's posture is
+  "we are neutral software, the manager is the regulated party" — and nobody
+  checks whether the manager is registered. One analysis states outright that a
+  trader in New York or London running a public pool on dHEDGE is likely
+  committing a criminal offence by providing unauthorised financial services.
+
+So the playbook is: incorporate offshore, geoblock the US, call yourself a
+protocol, and let unregistered managers carry a risk they mostly do not know
+they are carrying.
+
+**That cover does not extend to our asset class.** The grey zone exists because
+the status of crypto assets is unsettled. A tokenized Apple share is not
+unsettled: it is a security, its issuer is regulated, and managing it for other
+people is investment advice with no argument available.
+
+Which is exactly why this is an opening rather than an obstacle. Every
+incumbent in on-chain asset management is structurally locked out of regulated
+assets — their design assumes the grey zone. The SEC opened a compliant lane in
+September 2026 (Tokenized Securities Venues trading through permissioned AMMs),
+and Arc's validators are DTCC, BlackRock and the NYSE's parent. Building a
+grey-zone product on the most institutionally validated chain in existence
+would be a contradiction.
+
+**The compliance lane is the moat, not the tax.** It is the thing dHEDGE and
+Hyperliquid cannot follow us into.
+
+Practical consequences:
+
+1. Tiers 1 and 2 are genuinely not what they do. They have managers exercising
+   discretion over pooled funds; we have users configuring rules over their own
+   segregated assets — closer to a limit order than to a fund. Defend that
+   distinction in the design instead of blurring it.
+2. Tier 3 works because the manager brings a licence we can actually verify,
+   which is a selling point to regulated managers rather than a burden.
+3. The US geoblock is not our decision anyway: xStocks are already not offered
+   to US persons. The issuer imposes it on everyone.
+
 ### Regardless of tiering: run our own strategy, publicly
 
 We should operate a strategy in the arena with our own money from day one. It
