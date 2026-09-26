@@ -110,13 +110,6 @@
   .see:hover { transform: scale(1.04); }
 
   /* --------------------------------------------------------- carousels */
-  .group-label {
-    display: flex; align-items: center; gap: 8px;
-    max-width: 80rem; margin: 0 auto 14px;
-    padding-inline: clamp(14px, 2vw, 22px);
-    font: 500 12px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
-  }
-  .group-label::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: var(--blue); }
 
   .carousel {
     display: grid; grid-auto-flow: column;
@@ -288,6 +281,18 @@
     @keyframes tape { to { transform: translateX(-50%); } }
   }
 
+  /* carousel prev/next controls */
+  .car-nav { display: flex; gap: 10px; max-width: 80rem; margin: 16px auto 0; padding-inline: var(--gut); }
+  .car-btn {
+    width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(20,23,58,.12);
+    background: var(--white); color: var(--ink); cursor: pointer;
+    display: grid; place-items: center;
+    box-shadow: 0 6px 16px rgba(16,20,60,.08);
+    transition: transform .16s ease, opacity .16s ease;
+  }
+  .car-btn:hover:not(:disabled) { transform: scale(1.07); }
+  .car-btn:disabled { opacity: .32; cursor: default; }
+
   .closing { position: relative; }
   .closing .disc { z-index: 0; }
 
@@ -357,7 +362,6 @@
   <a class="see" href="#proof">See them refuse <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
 </section>
 
-<p class="group-label">Your rules</p>
 <div class="carousel">
   <div class="card c-blue">
     <h3>Cap every trade. Anything over it reverts.</h3>
@@ -426,7 +430,6 @@
   <a class="see" href="#proof">Why records can&rsquo;t be faked <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
 </section>
 
-<p class="group-label">Follow</p>
 <div class="carousel">
   <div class="card c-navy">
     <h3>Track records that cannot be faked.</h3>
@@ -476,7 +479,6 @@
   <a class="see" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632">All 8 transactions <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
 </section>
 
-<p class="group-label">Real refusals &middot; Arc testnet</p>
 <div class="carousel">
   <div class="card c-navy">
     <p class="rulename">TradeTooLarge</p>
@@ -529,7 +531,7 @@
 
   // One-shot reveals: cards and group labels, staggered along each carousel.
   if ("IntersectionObserver" in window) {
-    var els = Array.prototype.slice.call(document.querySelectorAll(".card, .group-label"));
+    var els = Array.prototype.slice.call(document.querySelectorAll(".card"));
     document.querySelectorAll(".carousel").forEach(function (row) {
       Array.prototype.forEach.call(row.children, function (card, i) {
         card.style.transitionDelay = Math.min(i * 70, 280) + "ms";
@@ -629,5 +631,45 @@
       });
     })(0);
   }
+})();
+
+// Carousel controls run for everyone, reduced motion included.
+(function () {
+  "use strict";
+  var smooth = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  var ARROWS = {
+    prev: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3 5 7.5 9.5 12"/></svg>',
+    next: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3 10 7.5 5.5 12"/></svg>'
+  };
+  document.querySelectorAll(".carousel").forEach(function (car) {
+    var nav = document.createElement("div");
+    nav.className = "car-nav";
+    var prev = document.createElement("button");
+    var next = document.createElement("button");
+    prev.type = next.type = "button";
+    prev.className = next.className = "car-btn";
+    prev.setAttribute("aria-label", "Previous card");
+    next.setAttribute("aria-label", "Next card");
+    prev.innerHTML = ARROWS.prev;
+    next.innerHTML = ARROWS.next;
+    nav.appendChild(prev);
+    nav.appendChild(next);
+    car.after(nav);
+
+    var step = function () {
+      var first = car.children[0];
+      return first ? first.getBoundingClientRect().width + 14 : 400;
+    };
+    prev.addEventListener("click", function () { car.scrollBy({ left: -step(), behavior: smooth }); });
+    next.addEventListener("click", function () { car.scrollBy({ left: step(), behavior: smooth }); });
+
+    var sync = function () {
+      prev.disabled = car.scrollLeft < 10;
+      next.disabled = car.scrollLeft > car.scrollWidth - car.clientWidth - 10;
+    };
+    car.addEventListener("scroll", sync, { passive: true });
+    addEventListener("resize", sync, { passive: true });
+    sync();
+  });
 })();
 </script>
