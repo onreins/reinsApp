@@ -139,6 +139,56 @@ the allowed-asset list — the five rules the contract already enforces.
 - **Follow a strategy.** Point your mandate at an operator. Your limits still
   bind. Revoke instantly.
 
+## Three tiers, and the line that must not be crossed
+
+The open model is the trust story. Most people will not write their own rules,
+so there has to be a way in that feels managed. There are three versions of
+that and only two of them are available to us.
+
+| | who decides a trade | who holds the assets | what we are | licence |
+|---|---|---|---|---|
+| **1. Open** | the user's own rule or agent | the user | software | no |
+| **2. Autopilot** | the user's configured template | the user | software | no |
+| **3. A manager** | a third party, licensed | the user | a venue | **theirs** |
+| ~~4. We manage it~~ | **us** | **us** | an asset manager | **ours — no** |
+
+**Tier 1 — Open.** You write the rules, you hold the tokens, any agent runs
+inside them. Built.
+
+**Tier 2 — Autopilot.** Preset strategies as configurable templates: dollar-cost
+average, rebalance to target weights, trailing stop. The user picks and sets the
+parameters; our software executes that instruction deterministically. It feels
+managed — you stop thinking about it — but **we exercise no discretion** and
+never hold the assets. This is also where a clean subscription fee lives,
+instead of a performance fee on somebody else's money.
+
+**Tier 3 — Licensed managers as the supply side.** Rather than us getting
+registered, regulated managers run strategies on our rails. They bring the
+licence; we bring segregated mandates and an unfakeable record. It removes
+*their* custody risk too, which makes it an easy pitch. We take a platform cut
+and remain software.
+
+**Tier 4 is the trap.** Taking custody and making the decisions for a fee makes
+us a discretionary asset manager: a licence in nearly every jurisdiction, the
+one constraint the company was founded to avoid, and the end of the sentence
+"nobody can take your money" — because we could.
+
+### The grey area, stated honestly
+
+The line between tier 2 and tier 3 is whether **we** decide or **the user's
+configured rule** decides. Pointing an agent we control at a user's mandate and
+letting it choose trades is plausibly discretionary management in several
+jurisdictions **even with no custody**. Not holding the assets lowers the risk;
+it does not automatically exempt us. This needs one conversation with a lawyer
+before anything ships described as managed.
+
+### Regardless of tiering: run our own strategy, publicly
+
+We should operate a strategy in the arena with our own money from day one. It
+solves the empty-leaderboard problem, and it is not managing anyone's money —
+it is a public track record, which is the most credible marketing this product
+can have.
+
 ## What already exists
 
 | piece | state |
