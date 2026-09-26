@@ -169,7 +169,7 @@ contract Mandate {
     // ------------------------------------------------------------------ owner
 
     function deposit(uint256 amount) external onlyOwner nonReentrant {
-        if (!base.transferFrom(msg.sender, address(this), amount)) revert TransferFailed();
+        _pull(address(base), msg.sender, address(this), amount);
         baseline += amount;
         emit Deposited(amount, baseline);
     }
@@ -182,7 +182,7 @@ contract Mandate {
     /// never depend on an oracle being healthy.
     function withdraw(address token, uint256 amount) external onlyOwner nonReentrant {
         uint256 before = _equity(false);
-        if (!IMandateToken(token).transfer(owner, amount)) revert TransferFailed();
+        _send(token, owner, amount);
         uint256 afterEq = _equity(false);
         baseline = before == 0 ? 0 : (baseline * afterEq) / before;
         emit Withdrawn(token, amount, baseline);
@@ -203,7 +203,7 @@ contract Mandate {
                 break;
             }
         }
-        if (bal != 0 && !IMandateToken(token).transfer(owner, bal)) revert TransferFailed();
+        if (bal != 0) _send(token, owner, bal);
         uint256 afterEq = _equity(false);
         baseline = before == 0 ? 0 : (baseline * afterEq) / before;
         emit AssetRemoved(token, bal, baseline);
@@ -262,9 +262,9 @@ contract Mandate {
         uint256 inBefore = IMandateToken(tokenIn).balanceOf(address(this));
         uint256 outBefore = IMandateToken(tokenOut).balanceOf(address(this));
 
-        if (!IMandateToken(tokenIn).approve(address(venue), amountIn)) revert TransferFailed();
+        _allow(tokenIn, address(venue), amountIn);
         venue.swap(tokenIn, tokenOut, amountIn, minEffective, address(this));
-        if (!IMandateToken(tokenIn).approve(address(venue), 0)) revert TransferFailed();
+        _allow(tokenIn, address(venue), 0);
 
         // Measure, don't trust: what actually left and what actually arrived.
         if (inBefore - IMandateToken(tokenIn).balanceOf(address(this)) > amountIn) revert OverSpent();
@@ -379,9 +379,42 @@ contract Mandate {
         if (roundUp && mulmod(a, b, d) != 0) r += 1;
     }
 
+    // ------------------------------------------------------------- token calls
+
+    /**
+     * ERC-20s in the wild disagree about return values. Most return a bool;
+     * USDT and a number of tokenized securities return nothing at all, and
+     * decoding a bool from an empty return reverts. So decode only when there
+     * is something to decode.
+     *
+     * A token that reverts — an allowlist refusing this contract, say — has its
+     * own reason bubbled up, because that reason is the useful one.
+     */
+    function _call(address token, bytes memory data) private {
+        (bool ok, bytes memory ret) = token.call(data);
+        if (!ok) {
+            assembly {
+                revert(add(ret, 32), mload(ret))
+            }
+        }
+        if (ret.length != 0 && !abi.decode(ret, (bool))) revert TransferFailed();
+    }
+
+    function _send(address token, address to, uint256 amount) private {
+        _call(token, abi.encodeCall(IMandateToken.transfer, (to, amount)));
+    }
+
+    function _pull(address token, address from, address to, uint256 amount) private {
+        _call(token, abi.encodeCall(IMandateToken.transferFrom, (from, to, amount)));
+    }
+
+    function _allow(address token, address spender, uint256 amount) private {
+        _call(token, abi.encodeCall(IMandateToken.approve, (spender, amount)));
+    }
+
     function _sweep(address token) private {
         uint256 bal = IMandateToken(token).balanceOf(address(this));
-        if (bal != 0 && !IMandateToken(token).transfer(owner, bal)) revert TransferFailed();
+        if (bal != 0) _send(token, owner, bal);
     }
 }
 

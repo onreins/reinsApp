@@ -56,6 +56,26 @@ abstains rather than guessing when it cannot verify.
 | Payments | Settled end to end. Across two runs an agent bought 6 sandbox runs over x402 through Circle Gateway on Arc testnet; the buyer's Gateway balance went $1.0000 → $0.9918 and the seller's rose to exactly $0.0082 once Circle's batch cycle completed (checked 2026-09-25) |
 | Website | `site/index.html`, published as a private claude.ai artifact. Rewritten for Mandate 2026-09-25 in an institutional register — hairline rules, tabular numerals, no rounded corners, one accent. `arena/public/index.html` matches it. Missing: contact email, repo link |
 
+## Open bug: `npm run sim:mainnet` reverts (found 2026-09-26)
+
+The headline mainnet proof, which the README quotes, currently fails with
+`Execution reverted for an unknown reason` and no revert data. Established so
+far:
+
+- **Not caused by the safe-transfer change** — it fails identically with that
+  change stashed.
+- State overrides still work on the Arc RPC: a balance override funds the
+  harness with 1,000 USDC and a code override executes, both verified directly.
+- Not staleness (the sim allows a 2-day price age; the feed is 20h old) and not
+  slippage (the pool sits 2bp from the oracle against a 100bp band).
+- Size-independent: $1, $10 and $100 all revert the same way.
+- The pool is alive: fee-500 USDC/EURC, liquidity 14578331842890.
+
+So something inside `MandateSim.run` reverts with empty data. Next step is a
+`diagnose()` entry point on the harness that runs each stage in its own
+try/catch and returns the index of the one that fails. Until then the README's
+simulation figures are from an earlier run and should not be quoted as current.
+
 ## Decisions and why
 
 - **The FX trading agent does not work, and we measured that rather than

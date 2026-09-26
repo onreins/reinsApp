@@ -181,3 +181,99 @@ contract StingyVenue is ISwapVenue {
         revert InsufficientOutput(0, minOut);
     }
 }
+
+/**
+ * An ERC-20 that returns no data from transfer, transferFrom and approve, the
+ * way USDT does. Any caller that insists on decoding a bool reverts against it.
+ */
+contract NoReturnToken {
+    string public symbol;
+    uint8 public immutable decimals;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    constructor(string memory symbol_, uint8 decimals_) {
+        symbol = symbol_;
+        decimals = decimals_;
+    }
+
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    function approve(address spender, uint256 amount) external {
+        allowance[msg.sender][spender] = amount;
+    }
+
+    function transfer(address to, uint256 amount) external {
+        _move(msg.sender, to, amount);
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external {
+        uint256 a = allowance[from][msg.sender];
+        require(a >= amount, "NoReturnToken: allowance");
+        if (a != type(uint256).max) allowance[from][msg.sender] = a - amount;
+        _move(from, to, amount);
+    }
+
+    function _move(address from, address to, uint256 amount) private {
+        require(balanceOf[from] >= amount, "NoReturnToken: balance");
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+    }
+}
+
+/**
+ * A transfer-restricted share, in the shape tokenized equities take: an
+ * allowlist decides who may hold it, and a transfer touching anyone else
+ * reverts. The issuer can revoke a holder at any time.
+ */
+contract RestrictedToken {
+    string public symbol;
+    uint8 public immutable decimals;
+    address public immutable issuer;
+    mapping(address => bool) public allowed;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    constructor(string memory symbol_, uint8 decimals_) {
+        symbol = symbol_;
+        decimals = decimals_;
+        issuer = msg.sender;
+    }
+
+    function setAllowed(address who, bool ok) external {
+        require(msg.sender == issuer, "RestrictedToken: not issuer");
+        allowed[who] = ok;
+    }
+
+    function mint(address to, uint256 amount) external {
+        require(allowed[to], "RestrictedToken: not allowed");
+        balanceOf[to] += amount;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        return true;
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        _move(msg.sender, to, amount);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        uint256 a = allowance[from][msg.sender];
+        require(a >= amount, "RestrictedToken: allowance");
+        if (a != type(uint256).max) allowance[from][msg.sender] = a - amount;
+        _move(from, to, amount);
+        return true;
+    }
+
+    function _move(address from, address to, uint256 amount) private {
+        require(allowed[from] && allowed[to], "RestrictedToken: not allowed");
+        require(balanceOf[from] >= amount, "RestrictedToken: balance");
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+    }
+}
