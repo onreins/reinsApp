@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reins — Strategies</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/app.css">
+
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/">reins<b>.</b></a>
+    <div class="nav-links">
+      <a href="/" aria-current="page">Strategies</a>
+      <a href="/create.html">Create</a>
+    </div>
+    <div class="nav-right">
+      <span class="net" id="net"><i></i>connecting…</span>
+      <a class="btn" href="/create.html" style="height:38px">New mandate</a>
+    </div>
+  </nav>
+
+  <div class="page-head">
+    <h1>Strategies</h1>
+    <p class="sub">Every figure on this page is read from chain state. There is no database, and nothing here can be faked — open any row and check it against the explorer.</p>
+  </div>
+
+  <div class="card">
+    <div class="scroll pad" id="board">
+      <p class="empty">Reading the chain…</p>
+    </div>
+  </div>
+
+  <footer>
+    <span id="foot">Reins</span>
+    <span>Not investment advice</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+
+  var money = function (n) {
+    return n === null || n === undefined
+      ? "—"
+      : "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var FLAT = 0.005; // under half a basis point is rounding, not a move
+  var pct = function (n) {
+    if (n === null || n === undefined) return "—";
+    if (Math.abs(n) < FLAT) return "0.00%";
+    return (n > 0 ? "+" : "−") + Math.abs(n).toFixed(2) + "%";
+  };
+  var short = function (a) { return a.slice(0, 6) + "…" + a.slice(-4); };
+  var esc = function (s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  };
+
+  function stateOf(r) {
+    if (r.closed) return ["closed", "Closed"];
+    if (r.frozen) return ["frozen", "Frozen"];
+    if (r.expired) return ["expired", "Expired"];
+    return ["live", "Live"];
+  }
+
+  function render(data) {
+    var rows = data.mandates || [];
+    $("foot").textContent = "Reins · " + data.network + " · block " + data.block;
+    if (!rows.length) {
+      $("board").innerHTML =
+        '<p class="empty"><b>No mandates yet.</b><br>The first one appears here the moment it is created on-chain.</p>';
+      return;
+    }
+    var html =
+      "<table><thead><tr>" +
+      "<th></th><th>Strategy</th><th>Holds</th>" +
+      '<th class="r">Funded</th><th class="r">Equity</th><th class="r">Return</th><th class="r">State</th>' +
+      "</tr></thead><tbody>";
+    rows.forEach(function (r, i) {
+      var st = stateOf(r);
+      var dir = r.returnPct === null || Math.abs(r.returnPct) < FLAT ? "flat" : r.returnPct > 0 ? "up" : "down";
+      var holds =
+        (r.holdings || [])
+          .filter(function (h) { return h.amount > 0; })
+          .map(function (h) { return h.amount.toFixed(2) + " " + esc(h.symbol); })
+          .join(" · ") || "—";
+      html +=
+        '<tr class="rowlink' + (r.closed ? " done" : "") + '" data-a="' + esc(r.address) + '">' +
+        '<td class="dim mono">' + String(i + 1).padStart(2, "0") + "</td>" +
+        '<td class="name"><b>' + esc(r.name || "unnamed") + "</b><small>" + short(r.address) + "</small></td>" +
+        '<td class="mono dim">' + holds + "</td>" +
+        '<td class="r">' + money(r.baselineUsd) + "</td>" +
+        '<td class="r">' + money(r.equityUsd) + "</td>" +
+        '<td class="r ret ' + dir + '">' + pct(r.returnPct) + "</td>" +
+        '<td class="r"><span class="pill ' + st[0] + '">' + st[1] + "</span></td>" +
+        "</tr>";
+    });
+    html += "</tbody></table>";
+    $("board").innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll("tr.rowlink"), function (tr) {
+      tr.addEventListener("click", function () {
+        location.href = "/mandate.html?a=" + tr.getAttribute("data-a");
+      });
+    });
+  }
+
+  function tick() {
+    fetch("/api/leaderboard")
+      .then(function (r) {
+        if (!r.ok) throw new Error("chain read failed");
+        return r.json();
+      })
+      .then(function (d) {
+        if (!d || !Array.isArray(d.mandates)) throw new Error("bad payload");
+        render(d);
+      })
+      .catch(function () {
+        $("board").innerHTML = '<p class="empty">Couldn&rsquo;t reach the chain just now — retrying.</p>';
+      });
+  }
+
+  fetch("/api/config")
+    .then(function (r) { return r.json(); })
+    .then(function (c) { $("net").innerHTML = "<i></i>Arc " + esc(c.network); })
+    .catch(function () { $("net").textContent = "offline"; });
+
+  tick();
+  setInterval(tick, 15000);
+})();
+</script>
+</html>

@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reins — Create a mandate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/app.css">
+
+<div class="wrap">
+  <nav>
+    <a class="brand" href="/">reins<b>.</b></a>
+    <div class="nav-links">
+      <a href="/">Strategies</a>
+      <a href="/create.html" aria-current="page">Create</a>
+    </div>
+    <div class="nav-right">
+      <span class="net" id="net"><i></i>connecting…</span>
+      <button class="btn quiet" id="connect" type="button" style="height:38px">Connect wallet</button>
+    </div>
+  </nav>
+
+  <div class="page-head">
+    <h1>Create a mandate</h1>
+    <p class="sub">Say the rules in your own numbers. They compile into the contract, and after that nobody can change them — not the agent, not us, not you.</p>
+  </div>
+
+  <div class="grid two">
+    <form class="card pad" id="form">
+      <div class="field">
+        <label for="f-name">Name<small>public, shown on the leaderboard</small></label>
+        <input id="f-name" type="text" maxlength="64" value="my first mandate" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="f-agent">Agent address<small>the key that will trade — it can never withdraw</small></label>
+        <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="f-deposit">Fund with<small>USDC, deposited after creation</small></label>
+          <input id="f-deposit" type="number" min="0" step="0.01" value="5">
+        </div>
+        <div class="field">
+          <label for="f-trade">Per-trade cap<small>a single trade may never exceed this</small></label>
+          <input id="f-trade" type="number" min="0" step="0.01" value="2">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="f-loss">Loss limit %<small>fall this far and it freezes</small></label>
+          <input id="f-loss" type="number" min="0.01" max="100" step="0.5" value="10">
+        </div>
+        <div class="field">
+          <label for="f-slip">Price band %<small>fills worse than this vs the oracle revert</small></label>
+          <input id="f-slip" type="number" min="0" max="10" step="0.1" value="1">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="f-age">Max price age, hours<small>refuse to trade on anything staler</small></label>
+          <input id="f-age" type="number" min="1" max="168" step="1" value="24">
+        </div>
+        <div class="field">
+          <label for="f-days">Runs for, days<small>expires by itself after this</small></label>
+          <input id="f-days" type="number" min="1" max="3650" step="1" value="30">
+        </div>
+      </div>
+
+      <div class="notice" id="notice" hidden></div>
+      <div style="margin-top:16px">
+        <button class="btn" id="go" type="submit" disabled>Connect a wallet first</button>
+      </div>
+    </form>
+
+    <div class="grid">
+      <div class="card">
+        <div class="head">Compiles to <span>what the contract will hold</span></div>
+        <div class="pad compiled" id="compiled"></div>
+      </div>
+      <div class="card">
+        <div class="head">Progress <span>every step is a transaction</span></div>
+        <div class="pad steps" id="steps">Waiting to start.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Reins · your wallet signs everything; this page never sees a key</span>
+    <span>Not investment advice</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var cfg = null, account = null, busy = false;
+  var eth = window.ethereum;
+
+  var esc = function (s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  };
+
+  function readForm() {
+    return {
+      name: $("f-name").value.trim(),
+      agent: $("f-agent").value.trim(),
+      deposit: Number($("f-deposit").value),
+      rules: {
+        maxTradeUsd: Number($("f-trade").value),
+        maxLossPercent: Number($("f-loss").value),
+        maxSlippagePercent: Number($("f-slip").value),
+        maxPriceAgeSeconds: Math.round(Number($("f-age").value) * 3600),
+        expiryDays: Number($("f-days").value),
+      },
+    };
+  }
+
+  function compilePreview() {
+    var r = readForm().rules;
+    var expires = new Date(Date.now() + r.expiryDays * 86400000);
+    $("compiled").innerHTML =
+      '<span class="k">maxTradeValue</span>  <b>' + Math.round(r.maxTradeUsd * 1e6).toLocaleString("en-US") + "</b> · $" + r.maxTradeUsd + " in 6-decimal units<br>" +
+      '<span class="k">maxDrawdownBps</span> <b>' + Math.round(r.maxLossPercent * 100) + "</b> · freeze at −" + r.maxLossPercent + "%<br>" +
+      '<span class="k">maxSlippageBps</span> <b>' + Math.round(r.maxSlippagePercent * 100) + "</b> · refuse fills beyond " + r.maxSlippagePercent + "%<br>" +
+      '<span class="k">maxPriceAge</span>    <b>' + r.maxPriceAgeSeconds.toLocaleString("en-US") + "</b> s · no stale prices<br>" +
+      '<span class="k">expiresAt</span>      <b>' + Math.floor(expires.getTime() / 1000) + "</b> · " + expires.toLocaleDateString() + "<br>" +
+      '<span class="k">withdraw()</span>     <b>owner only</b> · the agent has no such function';
+  }
+
+  function step(html, cls) {
+    var div = document.createElement("div");
+    if (cls) div.className = cls;
+    div.innerHTML = html;
+    if ($("steps").textContent === "Waiting to start.") $("steps").textContent = "";
+    $("steps").appendChild(div);
+  }
+  function notice(msg, warn) {
+    $("notice").hidden = false;
+    $("notice").className = "notice" + (warn ? " warn" : "");
+    $("notice").textContent = msg;
+  }
+
+  var link = function (h) {
+    return '<a href="' + cfg.explorer + "/tx/" + h + '" target="_blank" rel="noopener">' + h.slice(0, 10) + "…</a>";
+  };
+
+  async function ensureChain() {
+    var hex = "0x" + cfg.chainId.toString(16);
+    try {
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hex }] });
+    } catch (err) {
+      if (err && err.code === 4902) {
+        await eth.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: hex,
+            chainName: "Arc " + (cfg.network === "testnet" ? "Testnet" : "Mainnet"),
+            nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
+            rpcUrls: [cfg.network === "testnet" ? "https://rpc.testnet.arc.network" : "https://rpc.mainnet.arc.io"],
+            blockExplorerUrls: [cfg.explorer],
+          }],
+        });
+      } else { throw err; }
+    }
+  }
+
+  async function post(path, body) {
+    var res = await fetch(path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    var out = await res.json();
+    if (!res.ok) throw new Error(out.error || "the server refused that");
+    return out;
+  }
+
+  async function send(tx) {
+    return eth.request({ method: "eth_sendTransaction", params: [{ from: account, to: tx.to, data: tx.data }] });
+  }
+
+  async function waitCreated(hash) {
+    for (var i = 0; i < 60; i++) {
+      var res = await fetch("/api/tx/created?hash=" + hash).then(function (r) { return r.json(); });
+      if (res.status === "success") return res.mandate;
+      if (res.status === "reverted") throw new Error("the create transaction reverted");
+      await new Promise(function (r) { setTimeout(r, 2000); });
+    }
+    throw new Error("timed out waiting for the transaction");
+  }
+
+  async function connect() {
+    if (!eth) { notice("No wallet found. Install a browser wallet, then reload.", true); return; }
+    var accounts = await eth.request({ method: "eth_requestAccounts" });
+    account = accounts[0];
+    $("connect").textContent = account.slice(0, 6) + "…" + account.slice(-4);
+    $("go").disabled = false;
+    $("go").textContent = "Create the mandate";
+  }
+
+  async function create(ev) {
+    ev.preventDefault();
+    if (busy || !account) return;
+    var f = readForm();
+    if (!/^0x[0-9a-fA-F]{40}$/.test(f.agent)) {
+      notice("The agent must be a full 0x address — it's the key your bot will trade with.", true);
+      return;
+    }
+    if (f.agent.toLowerCase() === account.toLowerCase()) {
+      notice("The agent can't be your own wallet — the contract refuses owner-as-agent, so use a separate key.", true);
+      return;
+    }
+
+    busy = true;
+    $("go").disabled = true;
+    $("notice").hidden = true;
+    try {
+      $("go").textContent = "Check your wallet…";
+      await ensureChain();
+
+      var createTx = await post("/api/tx/create", { name: f.name, agent: f.agent, rules: f.rules });
+      var h1 = await send(createTx);
+      step("create sent · " + link(h1));
+      var mandate = await waitCreated(h1);
+      step("mandate is live at " + mandate.slice(0, 10) + "…", "ok");
+
+      if (f.deposit > 0) {
+        var dep = await post("/api/tx/deposit", { mandate: mandate, amountUsd: f.deposit });
+        for (var i = 0; i < dep.txs.length; i++) {
+          $("go").textContent = dep.txs[i].label + " — check your wallet…";
+          var h = await send(dep.txs[i]);
+          step(esc(dep.txs[i].label) + " · " + link(h));
+        }
+        step("funded with $" + f.deposit, "ok");
+      }
+
+      step("done — opening your mandate", "ok");
+      location.href = "/mandate.html?a=" + mandate;
+    } catch (err) {
+      var msg = err && err.message ? err.message : "something went wrong";
+      if (err && err.code === 4001) msg = "you declined in the wallet — nothing was sent";
+      step(esc(msg), "err");
+      notice(msg, true);
+      $("go").disabled = false;
+      $("go").textContent = "Create the mandate";
+    } finally {
+      busy = false;
+    }
+  }
+
+  ["f-name", "f-agent", "f-deposit", "f-trade", "f-loss", "f-slip", "f-age", "f-days"].forEach(function (id) {
+    $(id).addEventListener("input", compilePreview);
+  });
+  $("connect").addEventListener("click", function () { connect().catch(function (e) { notice(e.message, true); }); });
+  $("form").addEventListener("submit", create);
+
+  fetch("/api/config")
+    .then(function (r) { return r.json(); })
+    .then(function (c) {
+      cfg = c;
+      $("net").innerHTML = "<i></i>Arc " + esc(c.network);
+      if (!eth) notice("No wallet detected. You can still explore the strategies list; creating needs a browser wallet.", true);
+    });
+  compilePreview();
+})();
+</script>
+</html>
