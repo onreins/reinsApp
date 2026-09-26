@@ -1,50 +1,31 @@
 <title>Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
   :root {
-    color-scheme: light;
-    --paper: #ffffff;
-    --wash: #f4f6fb;
-    --line: #e3e7f0;
-    --line-2: #eef1f7;
-    --ink: #0a1122;
-    --ink-2: #545d70;
-    --ink-3: #8790a3;
-    --blue: #1a4ef0;
-    --blue-ink: #1540c4;
-    --blue-soft: #e7edfe;
-    --tile: #0a1226;
-    --tile-2: #141d36;
-    --up: #0a8f63;
-    --down: #d2473a;
-    --serif: "Source Serif 4", Georgia, serif;
-    --sans: "Archivo", "Helvetica Neue", Arial, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --paper: #080d18; --wash: #0d1526; --line: #1d2740; --line-2: #161e33;
-      --ink: #eef2fa; --ink-2: #a3adc2; --ink-3: #78829a;
-      --blue: #6c8dff; --blue-ink: #9db4ff; --blue-soft: #16224a;
-      --tile: #0d1526; --tile-2: #16203a;
-      --up: #3fc08c; --down: #f0776a;
-    }
-  }
-  :root[data-theme="dark"] {
     color-scheme: dark;
-    --paper: #080d18; --wash: #0d1526; --line: #1d2740; --line-2: #161e33;
-    --ink: #eef2fa; --ink-2: #a3adc2; --ink-3: #78829a;
-    --blue: #6c8dff; --blue-ink: #9db4ff; --blue-soft: #16224a;
-    --tile: #0d1526; --tile-2: #16203a;
-    --up: #3fc08c; --down: #f0776a;
+    --bg: #0c0d11;
+    --card: #06070a;
+    --raise: #14161c;
+    --raise-2: #1b1e26;
+    --line: #23262f;
+    --line-2: #191c23;
+    --ink: #f4f6fa;
+    --ink-2: #9aa2b3;
+    --ink-3: #6b7383;
+    --blue: #4c7dff;
+    --blue-2: #7a9dff;
+    --blue-soft: rgba(76,125,255,.14);
+    --up: #2fbf84;
+    --down: #f0604d;
+    --sans: "Manrope", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
   }
 
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--paper); color: var(--ink);
+    margin: 0; background: var(--bg); color: var(--ink);
     font: 400 16px/1.55 var(--sans);
     -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
   }
@@ -52,208 +33,261 @@
   h1, h2, h3 { margin: 0; text-wrap: balance; }
   :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 
-  .wrap { width: 100%; max-width: 1140px; margin: 0 auto; padding-inline: 24px; }
+  .wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding-inline: 24px; }
   @media (max-width: 640px) { .wrap { padding-inline: 16px; } }
-  .eyebrow {
-    font: 500 12px var(--mono); text-transform: uppercase;
-    letter-spacing: .1em; color: var(--blue-ink);
+  .eyebrow { font: 500 12px var(--mono); text-transform: uppercase; letter-spacing: .12em; color: var(--ink-3); }
+
+  /* ------------------------------------------------ nav: Phantom's floating pill */
+  .nav { display: flex; align-items: center; gap: 16px; padding-block: 18px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 18px; letter-spacing: -.02em; text-decoration: none; }
+  .capsule {
+    margin: 0 auto; display: flex; gap: 4px; padding: 5px;
+    background: var(--raise); border: 1px solid var(--line-2); border-radius: 999px;
   }
-
-  /* ------------------------------------------------------------------- nav */
-  nav { border-bottom: 1px solid var(--line-2); }
-  .nav-in { display: flex; align-items: center; gap: 28px; padding-block: 16px; }
-  .brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 17px; text-decoration: none; letter-spacing: -.01em; }
-  .brand svg { display: block; }
-  .nav-links { display: flex; gap: 24px; margin-left: 12px; font-size: 14px; color: var(--ink-2); }
-  .nav-links a { text-decoration: none; }
-  .nav-links a:hover { color: var(--ink); }
-  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
-  @media (max-width: 780px) { .nav-links { display: none; } }
-
-  .btn {
+  .capsule a { padding: 7px 15px; border-radius: 999px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
+  .capsule a:hover { background: var(--raise-2); color: var(--ink); }
+  @media (max-width: 900px) { .capsule { display: none; } }
+  .pill-btn {
     display: inline-flex; align-items: center; justify-content: center;
-    height: 42px; padding-inline: 20px; border-radius: 999px;
-    font: 500 15px var(--sans); text-decoration: none; white-space: nowrap;
-    background: var(--blue); color: #fff; border: 1px solid transparent;
+    height: 38px; padding-inline: 18px; border-radius: 999px;
+    background: var(--blue); color: #fff; font: 600 14px var(--sans); text-decoration: none;
   }
-  .btn:hover { background: var(--blue-ink); }
-  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-  .btn.ghost:hover { background: var(--wash); }
-  .btn.sm { height: 36px; padding-inline: 16px; font-size: 14px; }
+  .pill-btn:hover { background: var(--blue-2); color: #0c0d11; }
+  .pill-btn.quiet { background: var(--raise); color: var(--ink); border: 1px solid var(--line); }
+  .pill-btn.quiet:hover { background: var(--raise-2); color: var(--ink); }
 
-  /* ------------------------------------------------------------------ hero */
-  .hero { display: grid; grid-template-columns: 1fr 1.02fr; gap: 56px; align-items: center; padding-block: clamp(40px, 6vw, 76px); }
-  @media (max-width: 940px) { .hero { grid-template-columns: 1fr; gap: 40px; } }
+  /* ------------------------------------------- hero: centred, glow from the floor */
+  /* Bottom padding kept short so the dashboard peeks above the fold. */
+  .hero { position: relative; overflow: hidden; text-align: center; padding-block: clamp(54px, 8vw, 104px) clamp(70px, 9vw, 116px); }
+  .hero::after {
+    content: ""; position: absolute; left: 50%; bottom: -60%;
+    width: min(1100px, 130%); aspect-ratio: 1.55 / 1; transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 100%, rgba(76,125,255,.42), rgba(76,125,255,.12) 42%, transparent 68%);
+    pointer-events: none;
+  }
+  .hero .wrap { position: relative; }
   h1 {
-    font: 600 clamp(38px, 5vw, 58px)/1.06 var(--serif);
-    letter-spacing: -.02em; max-width: 13ch;
+    font: 800 clamp(40px, 7.4vw, 82px)/1.03 var(--sans);
+    letter-spacing: -.035em; max-width: 16ch; margin-inline: auto;
   }
-  .hero p { margin: 20px 0 0; font-size: 17px; color: var(--ink-2); max-width: 46ch; }
-  .hero .row { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 10px; }
-  .trust { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 8px 22px; font: 400 13px var(--mono); color: var(--ink-3); }
-  .trust b { font-weight: 400; color: var(--ink-2); }
+  h1 span { color: var(--blue-2); }
+  .hero p { margin: 24px auto 0; max-width: 50ch; font-size: 17px; color: var(--ink-2); }
+  .hero .btns { margin-top: 34px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .hero .btns .pill-btn { height: 46px; padding-inline: 26px; font-size: 15px; }
 
-  /* --------------------------------------------- the product, in a dark tile */
-  .tile { background: var(--tile); border-radius: 20px; padding: 26px; }
-  .tile-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-  .tile-head span { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: #7f8cab; }
-  .app {
-    background: #fff; color: #0a1122; border-radius: 13px; overflow: hidden;
-    box-shadow: 0 18px 40px rgba(0,0,0,.34);
+  /* ------------------------------------------- product: Gemini's portfolio screen */
+  .board { display: grid; grid-template-columns: 1.62fr 1fr; gap: 20px; }
+  @media (max-width: 940px) { .board { grid-template-columns: 1fr; } }
+
+  .chart-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px 20px 14px; }
+  .chart-top { display: flex; align-items: center; gap: 10px; }
+  .chart-top b { font-size: 15px; font-weight: 700; }
+  .tag { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; padding: 4px 9px; border-radius: 999px; background: var(--blue-soft); color: var(--blue-2); }
+  .big { margin-top: 10px; font: 800 32px/1 var(--sans); letter-spacing: -.03em; }
+  .delta { margin-top: 8px; font-size: 13px; color: var(--up); }
+  .delta span { color: var(--ink-3); }
+  .plot { margin-top: 14px; position: relative; }
+  .plot svg { display: block; width: 100%; height: auto; }
+  .axis { display: flex; justify-content: space-between; margin-top: 8px; font: 400 11px var(--mono); color: var(--ink-3); }
+  .ranges { display: flex; gap: 6px; margin-top: 14px; }
+  .ranges button {
+    font: 500 11px var(--mono); color: var(--ink-3); background: transparent;
+    border: 0; padding: 6px 12px; border-radius: 999px; cursor: default;
   }
-  .app-top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #eef1f7; }
-  .app-name { font-weight: 600; font-size: 14px; }
-  .app-name small { display: block; font: 400 11px var(--mono); color: #8790a3; margin-top: 2px; }
-  .tag { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .1em; padding: 4px 9px; border-radius: 999px; background: #e6f6ee; color: #0a8f63; }
-  .bal { padding: 20px 16px 16px; text-align: center; background: linear-gradient(180deg, #f7f9ff, #fff); }
-  .bal b { display: block; font: 600 30px/1 var(--sans); letter-spacing: -.02em; }
-  .bal i { display: block; font-style: normal; font-size: 12px; color: #0a8f63; margin-top: 7px; }
-  .chips { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; padding: 0 16px 16px; }
-  .chip { background: #eaf0fe; border-radius: 9px; padding: 9px 6px; text-align: center; }
-  .chip b { display: block; font: 600 12px var(--sans); color: #1540c4; }
-  .chip span { display: block; font: 400 9px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: #7c88a5; margin-top: 3px; }
-  .rows { border-top: 1px solid #eef1f7; }
-  .row-i { display: flex; align-items: center; gap: 11px; padding: 11px 16px; border-bottom: 1px solid #f4f6fb; }
-  .row-i:last-child { border-bottom: 0; }
-  .sym { width: 28px; height: 28px; border-radius: 50%; background: #eaf0fe; color: #1540c4; display: grid; place-items: center; font: 600 10px var(--sans); }
-  .row-i div { flex: 1; min-width: 0; }
-  .row-i b { display: block; font-size: 13px; font-weight: 600; }
-  .row-i small { font: 400 11px var(--mono); color: #8790a3; }
-  .row-i em { font-style: normal; font-size: 13px; font-weight: 600; }
-  .deny { display: flex; align-items: center; gap: 9px; padding: 11px 16px; background: #fdf3f2; border-top: 1px solid #f7e2e0; font-size: 12px; color: #a3372c; }
-  .deny code { font: 500 11px var(--mono); }
-  .deny i { width: 6px; height: 6px; border-radius: 50%; background: #d2473a; font-style: normal; flex: none; }
+  .ranges button[aria-current="true"] { background: var(--raise-2); color: var(--ink); }
 
-  /* --------------------------------------------------------------- sections */
-  .band { background: var(--wash); border-block: 1px solid var(--line-2); }
-  section { padding-block: clamp(46px, 6vw, 76px); }
-  h2 { font: 600 clamp(25px, 3vw, 34px)/1.15 var(--serif); letter-spacing: -.015em; margin-top: 12px; max-width: 28ch; }
-  .say { margin: 14px 0 0; color: var(--ink-2); max-width: 58ch; }
+  .side { display: flex; flex-direction: column; gap: 12px; }
+  .side h3 { font-size: 15px; font-weight: 700; }
+  .snap { background: var(--raise); border: 1px solid var(--line-2); border-radius: 12px; padding: 4px 14px; }
+  .snap div { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding-block: 11px; border-bottom: 1px solid var(--line-2); }
+  .snap div:last-child { border-bottom: 0; }
+  .snap dt { font-size: 13px; color: var(--ink-2); margin: 0; }
+  .snap dd { margin: 0; font-weight: 700; font-size: 14px; }
+  .acts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .act { background: var(--raise); border: 1px solid var(--line-2); border-radius: 12px; padding: 13px 6px; text-align: center; }
+  .act i { display: grid; place-items: center; width: 26px; height: 26px; margin: 0 auto 7px; border-radius: 50%; background: var(--raise-2); color: var(--ink-2); font-style: normal; }
+  .act span { font: 500 10px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); }
+  .floor { background: var(--raise); border: 1px solid var(--line-2); border-radius: 12px; padding: 14px; display: flex; gap: 12px; align-items: center; }
+  .floor b { display: block; font-size: 13.5px; }
+  .floor small { display: block; font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+  .meter { margin-top: 8px; height: 4px; border-radius: 4px; background: var(--raise-2); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 68%; background: var(--up); }
 
-  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
-  @media (max-width: 860px) { .three { grid-template-columns: 1fr; gap: 26px; } }
-  .three h3 { font-size: 16px; font-weight: 600; margin: 14px 0 6px; }
-  .three p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
-  .ico { width: 30px; height: 30px; border-radius: 8px; background: var(--blue-soft); color: var(--blue); display: grid; place-items: center; }
+  .holds { margin-top: 20px; background: var(--raise); border: 1px solid var(--line-2); border-radius: 14px; padding: 6px 18px 10px; }
+  .holds h3 { padding-block: 14px 4px; }
 
-  .scroll { overflow-x: auto; margin-top: 30px; }
-  table { width: 100%; border-collapse: collapse; min-width: 620px; }
-  th {
-    font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em;
-    color: var(--ink-3); text-align: left; padding: 0 18px 10px 0;
-    border-bottom: 1px solid var(--line); white-space: nowrap;
-  }
+  /* ------------------------------------------------------------------- tables */
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th { font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); text-align: left; padding: 10px 18px 10px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
   td { padding: 14px 18px 14px 0; border-bottom: 1px solid var(--line-2); font-size: 15px; vertical-align: baseline; }
+  tr:last-child td { border-bottom: 0; }
   th.r, td.r { text-align: right; padding-right: 0; padding-left: 20px; }
+  .asset { display: flex; align-items: center; gap: 11px; }
+  .sym { width: 30px; height: 30px; border-radius: 50%; background: var(--blue-soft); color: var(--blue-2); display: grid; place-items: center; font: 700 10px var(--sans); flex: none; }
+  .asset b { display: block; font-size: 14px; font-weight: 700; }
+  .asset small { font: 400 11px var(--mono); color: var(--ink-3); }
+  .sub { display: block; font: 400 12px var(--mono); color: var(--ink-3); margin-top: 2px; }
   .code { font: 500 13px var(--mono); color: var(--down); }
   .mono { font: 400 13px var(--mono); color: var(--ink-2); }
   .tx { font: 400 12px var(--mono); color: var(--ink-3); text-decoration: none; white-space: nowrap; }
-  .tx:hover { color: var(--blue); }
+  .tx:hover { color: var(--blue-2); }
   .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font: 500 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
-  .pill.ok { background: var(--blue-soft); color: var(--blue-ink); }
-  .pill.no { background: rgba(210,71,58,.11); color: var(--down); }
-  .pill.wait { background: rgba(135,144,163,.15); color: var(--ink-3); }
+  .pill.ok { background: var(--blue-soft); color: var(--blue-2); }
+  .pill.no { background: rgba(240,96,77,.14); color: var(--down); }
+  .pill.wait { background: rgba(154,162,179,.12); color: var(--ink-3); }
 
-  footer { border-top: 1px solid var(--line-2); padding-block: 28px 48px; display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: space-between; font-size: 13px; color: var(--ink-3); }
+  section { padding-block: clamp(48px, 7vw, 86px); border-top: 1px solid var(--line-2); }
+  h2 { font: 800 clamp(26px, 3.2vw, 38px)/1.12 var(--sans); letter-spacing: -.03em; margin-top: 12px; max-width: 26ch; }
+  .say { margin: 14px 0 0; color: var(--ink-2); max-width: 58ch; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-top: 40px; }
+  @media (max-width: 860px) { .three { grid-template-columns: 1fr; gap: 24px; } }
+  .three h3 { font-size: 16px; font-weight: 700; margin: 14px 0 6px; }
+  .three p { margin: 0; font-size: 14.5px; color: var(--ink-2); }
+  .ico { width: 32px; height: 32px; border-radius: 9px; background: var(--blue-soft); color: var(--blue-2); display: grid; place-items: center; }
+
+  footer { border-top: 1px solid var(--line-2); padding-block: 26px 46px; display: flex; flex-wrap: wrap; gap: 12px 26px; justify-content: space-between; font: 400 12px var(--mono); color: var(--ink-3); }
 </style>
 
-<nav>
-  <div class="wrap nav-in">
-    <a class="brand" href="#top">
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-        <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
-        <path d="M6 13.5c0-4 2-6.5 4.6-6.5 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 2.9-4.4 2.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      </svg>
-      Reins
-    </a>
-    <div class="nav-links">
-      <a href="#rules">How it works</a>
-      <a href="#proof">Proof</a>
-      <a href="#status">Status</a>
-    </div>
-    <div class="nav-right">
-      <a class="btn ghost sm" href="#proof">See the transactions</a>
-      <a class="btn sm" href="#top">Open the app</a>
-    </div>
+<div class="wrap nav">
+  <a class="brand" href="#top">
+    <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="10" cy="10" r="9" fill="none" stroke="var(--blue)" stroke-width="1.7"/>
+      <path d="M6 13.6c0-4 2-6.6 4.6-6.6 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 3-4.4 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>
+    Reins
+  </a>
+  <div class="capsule">
+    <a href="#board">The app</a>
+    <a href="#rules">How it works</a>
+    <a href="#proof">Proof</a>
+    <a href="#status">Status</a>
   </div>
-</nav>
+  <a class="pill-btn" href="#board">Open the app</a>
+</div>
 
-<div class="wrap hero" id="top">
-  <div>
-    <h1>Hand an agent the reins. Never the keys.</h1>
+<header class="hero" id="top">
+  <div class="wrap">
+    <h1>Hand an agent the <span>reins</span>. Never the keys.</h1>
     <p>
       Run an automated strategy on your own money, or follow someone else's.
       Your funds stay in a contract only you can withdraw from, under limits the
-      agent cannot break — and every trade it makes is on-chain.
+      agent cannot break.
     </p>
-    <div class="row">
-      <a class="btn" href="#proof">See the first one running</a>
-      <a class="btn ghost" href="#rules">How the rules work</a>
+    <div class="btns">
+      <a class="pill-btn" href="#board">See it running</a>
+      <a class="pill-btn quiet" href="#proof">Read the transactions</a>
     </div>
-    <div class="trust">
-      <span><b>252</b> tests passing</span>
-      <span><b>~$0.01</b> a trade</span>
-      <span><b>$0.00</b> we can ever touch</span>
+  </div>
+</header>
+
+<div class="wrap" id="board">
+  <div class="board">
+    <div class="chart-card">
+      <div class="chart-top"><b>Momentum, weekly</b><span class="tag">Live</span></div>
+      <div class="big">$2,043.18</div>
+      <div class="delta">▲ $43.18 (2.16%) <span>since funding</span></div>
+
+      <div class="plot">
+        <svg viewBox="0 0 640 190" role="img" aria-label="Equity rising from $2,000 to $2,043 over seven days">
+          <g stroke="#1b1e26" stroke-width="1">
+            <line x1="0" y1="30" x2="640" y2="30"/><line x1="0" y1="75" x2="640" y2="75"/>
+            <line x1="0" y1="120" x2="640" y2="120"/><line x1="0" y1="165" x2="640" y2="165"/>
+          </g>
+          <defs>
+            <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2fbf84" stop-opacity=".26"/>
+              <stop offset="100%" stop-color="#2fbf84" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0 148 L80 141 L160 152 L240 118 L320 126 L400 96 L480 104 L560 72 L640 58 L640 190 L0 190 Z" fill="url(#fade)"/>
+          <path d="M0 148 L80 141 L160 152 L240 118 L320 126 L400 96 L480 104 L560 72 L640 58"
+                fill="none" stroke="#2fbf84" stroke-width="2" stroke-linejoin="round"/>
+          <circle cx="640" cy="58" r="3.5" fill="#2fbf84"/>
+        </svg>
+      </div>
+      <div class="axis"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Mon</span><span>Tue</span></div>
+      <div class="ranges">
+        <button type="button">1D</button>
+        <button type="button" aria-current="true">1W</button>
+        <button type="button">1M</button>
+        <button type="button">3M</button>
+        <button type="button">All</button>
+      </div>
+    </div>
+
+    <div class="side">
+      <h3>The rules it runs under</h3>
+      <dl class="snap">
+        <div><dt>Per trade</dt><dd>at most $200</dd></div>
+        <div><dt>Allowed assets</dt><dd>SPYx, USDC</dd></div>
+        <div><dt>Price bound</dt><dd>within 1% of oracle</dd></div>
+        <div><dt>Expires</dt><dd>in 84 days</dd></div>
+      </dl>
+
+      <div class="acts">
+        <div class="act"><i>+</i><span>Fund</span></div>
+        <div class="act"><i>↑</i><span>Withdraw</span></div>
+        <div class="act"><i>⇄</i><span>Agent</span></div>
+        <div class="act"><i>❚❚</i><span>Freeze</span></div>
+      </div>
+
+      <div class="floor">
+        <div style="flex:1">
+          <b>Loss limit &minus;10%</b>
+          <small>$1,800.00 floor &middot; $243.18 of headroom left</small>
+          <div class="meter"><i></i></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="tile">
-    <div class="tile-head"><span>Example mandate</span><span>Reins</span></div>
-    <div class="app">
-      <div class="app-top">
-        <div class="app-name">Momentum, weekly<small>agent 0xEAcD…416f</small></div>
-        <span class="tag">Live</span>
-      </div>
-      <div class="bal">
-        <b>$2,043.18</b>
-        <i>+$43.18 &middot; +2.16% since funding</i>
-      </div>
-      <div class="chips">
-        <div class="chip"><b>$200</b><span>Per trade</span></div>
-        <div class="chip"><b>&minus;10%</b><span>Stop</span></div>
-        <div class="chip"><b>2</b><span>Assets</span></div>
-        <div class="chip"><b>84d</b><span>Left</span></div>
-      </div>
-      <div class="rows">
-        <div class="row-i">
-          <span class="sym">SPY</span>
-          <div><b>SPYx</b><small>1.842 shares</small></div>
-          <em>$1,204.60</em>
-        </div>
-        <div class="row-i">
-          <span class="sym">USD</span>
-          <div><b>USDC</b><small>838.58</small></div>
-          <em>$838.58</em>
-        </div>
-      </div>
-      <div class="deny"><i></i>Refused 14:02 — <code>TradeTooLarge</code>, $240 over your $200 limit</div>
+  <div class="holds">
+    <h3>Holdings</h3>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Asset</th><th>Balance</th><th>Allocation</th><th class="r">Value</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="asset"><span class="sym">SPY</span><span><b>SPYx</b><small>SP500 xStock</small></span></span></td>
+            <td>1.842 <span class="sub">shares</span></td>
+            <td>58.96%</td>
+            <td class="r">$1,204.60</td>
+          </tr>
+          <tr>
+            <td><span class="asset"><span class="sym">USD</span><span><b>USDC</b><small>US Dollar Coin</small></span></span></td>
+            <td>838.58 <span class="sub">USDC</span></td>
+            <td>41.04%</td>
+            <td class="r">$838.58</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+  <p class="eyebrow" style="margin-top:14px">Example mandate &middot; SPYx is not on Arc yet</p>
 </div>
 
-<div class="band">
-  <section class="wrap">
-    <span class="eyebrow">Why it holds</span>
-    <h2>Limits enforced by the contract, not promised in a footer.</h2>
-    <div class="three" style="margin-top:36px">
-      <div>
-        <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>
-        <h3>The rules can't be edited</h3>
-        <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable after that — by us or by anyone.</p>
-      </div>
-      <div>
-        <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3h3v10h-3"/><path d="M8 8H2m0 0 2.5-2.5M2 8l2.5 2.5"/></svg></span>
-        <h3>You can leave mid-strategy</h3>
-        <p>Withdraw everything at any moment without asking the agent, even while it holds a position. There is no function that lets it object.</p>
-      </div>
-      <div>
-        <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5 13.5 5v3.5c0 3-2.4 4.6-5.5 5.5-3.1-.9-5.5-2.5-5.5-5.5V5z"/></svg></span>
-        <h3>The stop-loss is public</h3>
-        <p>If a mandate falls through its floor, any stranger can freeze it. You don't have to be awake for your loss limit to work, and neither do we.</p>
-      </div>
+<section class="wrap" id="rules">
+  <span class="eyebrow">Why it holds</span>
+  <h2>Limits enforced by the contract, not promised in a footer.</h2>
+  <div class="three">
+    <div>
+      <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="7" width="10" height="7" rx="1.6"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg></span>
+      <h3>The rules can't be edited</h3>
+      <p>Size limit, loss limit, which assets, when it expires. Fixed when the mandate is created and immutable after that — by us or by anyone.</p>
     </div>
-  </section>
-</div>
+    <div>
+      <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3h3v10h-3"/><path d="M8 8H2m0 0 2.5-2.5M2 8l2.5 2.5"/></svg></span>
+      <h3>You can leave mid-strategy</h3>
+      <p>Withdraw everything at any moment without asking the agent, even while it holds a position. There is no function that lets it object.</p>
+    </div>
+    <div>
+      <span class="ico"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2.5 13.5 5v3.5c0 3-2.4 4.6-5.5 5.5-3.1-.9-5.5-2.5-5.5-5.5V5z"/></svg></span>
+      <h3>The stop-loss is public</h3>
+      <p>If a mandate falls through its floor, any stranger can freeze it. You don't have to be awake for your loss limit to work, and neither do we.</p>
+    </div>
+  </div>
+</section>
 
 <section class="wrap" id="proof">
   <span class="eyebrow">Arc testnet &middot; mandate 0x991b…D632</span>
@@ -263,91 +297,45 @@
     exists as a transaction you can open. A mandate that only refuses in private
     proves nothing.
   </p>
-
-  <div class="scroll">
+  <div class="scroll" style="margin-top:26px">
     <table>
-      <thead>
-        <tr><th>What was tried</th><th>What happened</th><th class="r">Rule</th><th class="r">Transaction</th></tr>
-      </thead>
+      <thead><tr><th>What was tried</th><th>What happened</th><th class="r">Rule</th><th class="r">Transaction</th></tr></thead>
       <tbody>
-        <tr>
-          <td>Buy $0.50 of euros</td>
-          <td>Filled at $1.143090 — <span class="mono">0.454% from the oracle</span></td>
-          <td class="r"><span class="pill ok">Allowed</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td>
-        </tr>
-        <tr>
-          <td>Trade $2.50, over the size limit</td>
-          <td>Refused on-chain</td>
-          <td class="r"><span class="code">TradeTooLarge</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td>
-        </tr>
-        <tr>
-          <td>A trade too big for the pool to price fairly</td>
-          <td>The exchange couldn't beat the oracle floor</td>
-          <td class="r"><span class="code">InsufficientOutput</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td>
-        </tr>
-        <tr>
-          <td>Buy an asset the mandate never allowed</td>
-          <td>Refused on-chain</td>
-          <td class="r"><span class="code">AssetNotAllowed</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td>
-        </tr>
-        <tr>
-          <td>A stranger's key signs a trade</td>
-          <td>Refused on-chain</td>
-          <td class="r"><span class="code">NotAgent</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">0x48b35a90… ↗</a></td>
-        </tr>
-        <tr>
-          <td>The euro falls 50%, a stranger calls the stop-loss</td>
-          <td>Frozen at $1.7489 against a $1.80 floor, by someone who owns none of it</td>
-          <td class="r"><span class="pill no">Frozen</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">0x3cafe35c… ↗</a></td>
-        </tr>
-        <tr>
-          <td>The agent tries again while frozen</td>
-          <td>Refused on-chain</td>
-          <td class="r"><span class="code">IsFrozen</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f">0xddad294e… ↗</a></td>
-        </tr>
-        <tr>
-          <td>The owner withdraws mid-strategy</td>
-          <td>Paid out, without the agent's permission</td>
-          <td class="r"><span class="pill ok">Owner</span></td>
-          <td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5">0x0c437da1… ↗</a></td>
-        </tr>
+        <tr><td>Buy $0.50 of euros</td><td>Filled at $1.143090 — <span class="mono">0.454% from the oracle</span></td><td class="r"><span class="pill ok">Allowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec">0xe95e9c7d… ↗</a></td></tr>
+        <tr><td>Trade $2.50, over the size limit</td><td>Refused on-chain</td><td class="r"><span class="code">TradeTooLarge</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">0x685d4a90… ↗</a></td></tr>
+        <tr><td>A trade too big for the pool to price fairly</td><td>The exchange couldn't beat the oracle floor</td><td class="r"><span class="code">InsufficientOutput</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0ae7cd48e39945f69f843857e053de0380ea8626b965633a767acb86fb00e6fa">0x0ae7cd48… ↗</a></td></tr>
+        <tr><td>Buy an asset the mandate never allowed</td><td>Refused on-chain</td><td class="r"><span class="code">AssetNotAllowed</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">0x5c50decb… ↗</a></td></tr>
+        <tr><td>A stranger's key signs a trade</td><td>Refused on-chain</td><td class="r"><span class="code">NotAgent</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">0x48b35a90… ↗</a></td></tr>
+        <tr><td>The euro falls 50%, a stranger calls the stop-loss</td><td>Frozen at $1.7489 against a $1.80 floor, by someone who owns none of it</td><td class="r"><span class="pill no">Frozen</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">0x3cafe35c… ↗</a></td></tr>
+        <tr><td>The agent tries again while frozen</td><td>Refused on-chain</td><td class="r"><span class="code">IsFrozen</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0xddad294e5abc6b6c75ab72c951c43dc56c9889796abec695942071af5090944f">0xddad294e… ↗</a></td></tr>
+        <tr><td>The owner withdraws mid-strategy</td><td>Paid out, without the agent's permission</td><td class="r"><span class="pill ok">Owner</span></td><td class="r"><a class="tx" href="https://explorer.testnet.arc.io/tx/0x0c437da13266ecb46aca336076f6149359312ae85ca079f1735feeefb7e0c2e5">0x0c437da1… ↗</a></td></tr>
       </tbody>
     </table>
   </div>
 </section>
 
-<div class="band">
-  <section class="wrap" id="status">
-    <span class="eyebrow">Where this goes</span>
-    <h2>Stocks are arriving on Arc. The rails are already here.</h2>
-    <p class="say">
-      Circle named xStocks and Dinari among the issuers bringing tokenized
-      products to Arc, a chain whose validators include BlackRock, DTCC and the
-      NYSE's parent. A trade there costs about a cent, which is what finally
-      makes daily averaging and real stop-losses worth running on a small account.
-    </p>
-
-    <div class="scroll">
-      <table>
-        <thead><tr><th>Piece</th><th>State</th><th class="r">&nbsp;</th></tr></thead>
-        <tbody>
-          <tr><td>The contract that holds money under rules</td><td>Reviewed, 252 tests, live on testnet</td><td class="r"><span class="pill ok">Done</span></td></tr>
-          <tr><td>Holding transfer-restricted securities</td><td>Tokenized shares carry allowlists; it handles them</td><td class="r"><span class="pill ok">Done</span></td></tr>
-          <tr><td>A leaderboard read from chain state alone</td><td>No database, nothing we could fake</td><td class="r"><span class="pill ok">Done</span></td></tr>
-          <tr><td>Following someone else's strategy</td><td>Your rules bind on top of theirs</td><td class="r"><span class="pill wait">Building</span></td></tr>
-          <tr><td>Equity price feeds on Arc</td><td>32 Chainlink feeds live, none for stocks yet</td><td class="r"><span class="pill wait">Waiting</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-</div>
+<section class="wrap" id="status">
+  <span class="eyebrow">Where this goes</span>
+  <h2>Stocks are arriving on Arc. The rails are already here.</h2>
+  <p class="say">
+    Circle named xStocks and Dinari among the issuers bringing tokenized products
+    to Arc, a chain whose validators include BlackRock, DTCC and the NYSE's
+    parent. A trade there costs about a cent, which is what finally makes daily
+    averaging and real stop-losses worth running on a small account.
+  </p>
+  <div class="scroll" style="margin-top:26px">
+    <table>
+      <thead><tr><th>Piece</th><th>State</th><th class="r">&nbsp;</th></tr></thead>
+      <tbody>
+        <tr><td>The contract that holds money under rules</td><td>Reviewed, 252 tests, live on testnet</td><td class="r"><span class="pill ok">Done</span></td></tr>
+        <tr><td>Holding transfer-restricted securities</td><td>Tokenized shares carry allowlists; it handles them</td><td class="r"><span class="pill ok">Done</span></td></tr>
+        <tr><td>A leaderboard read from chain state alone</td><td>No database, nothing we could fake</td><td class="r"><span class="pill ok">Done</span></td></tr>
+        <tr><td>Following someone else's strategy</td><td>Your rules bind on top of theirs</td><td class="r"><span class="pill wait">Building</span></td></tr>
+        <tr><td>Equity price feeds on Arc</td><td>32 Chainlink feeds live, none for stocks yet</td><td class="r"><span class="pill wait">Waiting</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <footer class="wrap">
   <span>Reins &middot; figures read from Arc testnet, 26 September 2026</span>
