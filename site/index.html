@@ -1,317 +1,372 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..800;1,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <style>
-  :root {
-    --page: #eef1fb;
-    --ink: #14173a;
-    --ink-2: #5b6180;
-    --ink-3: #8d92ad;
-    --pill: #c9d7ff;
-    --pill-ink: #1d2c6b;
-    --blue: #3d6bf3;
-    --blue-deep: #2246c7;
-    --navy: #111433;
-    --navy-2: #191d45;
-    --sky: #aac4ff;
-    --green: #0f9f77;
-    --white: #ffffff;
-    --up: #12b380;
-    --down: #e0503c;
-    --gut: clamp(14px, 2vw, 22px);
-    --sans: "Figtree", "Helvetica Neue", Arial, sans-serif;
-    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
-  }
+/* Reins home, laid out on Chamber's home page (chamberfi.com): split sections
+   of headline + a recessed "product vignette" that plays a small piece of the
+   product, then a centred trust statement, ecosystem cards and a column
+   footer. Dressed in the app's own system (Family-style characters, Inter
+   Tight, blue) so the site and the app read as one product.
+   Deliberately a single light theme: background and every colour are set. */
+:root {
+  color-scheme: light;
+  --page: #ffffff;
+  --card: #fbfaf9;
+  --well: #f6f4ef;
+  --well-edge: #efece6;
+  --sand: #f6f4ef;
+  --ink: #343433;
+  --ink-2: #474645;
+  --ink-3: #6f6e6c;
+  --btn-dark: #2a2a29;
+  --blue: #1e9bff;
+  --blue-ink: #0b6fc2;
+  --blue-soft: #e6f4ff;
+  --green: #0a7d3e;
+  --green-soft: #e3f7ea;
+  --red: #c2350f;
+  --red-soft: #ffe9e2;
+  --sans: "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --display: "Inter Tight", "Inter", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 400 16px/1.55 var(--sans); -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+a { color: inherit; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 10px; }
+.wrap { max-width: 1280px; margin-inline: auto; padding-inline: clamp(16px, 7vw, 104px); }
 
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    margin: 0; background: var(--page); color: var(--ink);
-    font: 500 16px/1.55 var(--sans);
-    -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums;
-  }
-  a { color: inherit; }
-  h1, h2, h3, p { margin: 0; }
-  :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 6px; }
+/* ---------------------------------------------------------------- top bar */
+.top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; padding-block: 18px; }
+.wordmark { display: inline-flex; align-items: center; gap: 8px; font: 600 21px/1 var(--display); letter-spacing: -0.02em; text-decoration: none; justify-self: start; }
+.wordmark svg { display: block; }
+.pills { display: flex; gap: 4px; padding: 5px; border-radius: 999px; background: var(--sand); }
+.pills a { display: inline-flex; align-items: center; min-height: 38px; padding: 0 16px; border-radius: 999px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; transition: background-color 140ms, color 140ms; }
+.pills a:hover { background: #fff; color: #121212; }
+.top-r { justify-self: end; }
+@media (max-width: 760px) { .top { grid-template-columns: 1fr auto; } .pills { display: none; } }
 
-  .gutter { padding-inline: clamp(14px, 2vw, 22px); }
-  .center { text-align: center; }
+/* ---------------------------------------------------------------- buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 20px;
+  border-radius: 32px; border: 0; background: var(--sand); color: #121212; font: 500 15px var(--sans); letter-spacing: -0.01em;
+  text-decoration: none; cursor: pointer; white-space: nowrap; transition: transform 140ms var(--ease), background-color 140ms;
+}
+.btn:hover { transform: translateY(-1px); background: #ece8df; }
+.btn:active { transform: scale(0.96); }
+.btn.dark { background: var(--btn-dark); color: #fff; }
+.btn.dark:hover { background: #121212; }
+.link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 8px; font-size: 15px; font-weight: 500; text-decoration: none; color: var(--ink-2); }
+.link:hover { color: #121212; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 26px; }
 
-  /* ---------------------------------------------------------------- nav */
-  nav { display: flex; align-items: center; justify-content: space-between; padding: 14px clamp(16px, 2.4vw, 26px); }
-  .brand { font-weight: 800; font-size: 21px; letter-spacing: -.04em; text-decoration: none; }
-  .brand b { color: var(--blue); }
-  .nav-r { display: flex; align-items: center; gap: 10px; }
-  .pillbtn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    height: 46px; padding-inline: 22px; border-radius: 999px; border: 0; cursor: pointer;
-    background: var(--pill); color: var(--pill-ink);
-    font: 700 15px var(--sans); letter-spacing: -.01em; text-decoration: none;
-    transition: transform .16s ease, background .16s ease;
-  }
-  .pillbtn:hover { background: #bccdfd; transform: scale(1.03); }
-  .pillbtn.on-dark { background: var(--white); color: var(--ink); }
-  .pillbtn.on-dark:hover { background: #e9edfb; }
-  .roundbtn {
-    width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
-    background: var(--white); color: var(--ink); text-decoration: none;
-    transition: transform .16s ease;
-  }
-  .roundbtn:hover { transform: scale(1.06); }
+/* ------------------------------------------------------------------ hero */
+/* The original hero, kept as it was: a navy inset panel with flowing rein
+   ribbons, floating token discs, and the on-chain ticker tape beneath. */
+.hero-shell { max-width: 80rem; margin-inline: auto; padding: 4px clamp(14px, 2vw, 22px) 0; }
+.hero {
+  position: relative; overflow: hidden; border-radius: 30px; background: #111433;
+  height: max(520px, min(calc(100svh - 90px), 880px));
+  display: grid; place-items: center; text-align: center; padding: clamp(48px, 7vw, 90px) 22px;
+}
+.hero::before {
+  content: ""; position: absolute; left: 50%; bottom: -70%; width: 130%; aspect-ratio: 1.3/1; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(closest-side, rgba(88,131,255,.55), rgba(61,107,243,.16) 48%, transparent 74%);
+}
+.hero::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.hero > div { position: relative; z-index: 2; }
+.hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hero .kicker { font: 600 15px var(--sans); color: #aab7e8; }
+.hero h1 { margin: 14px auto 0; color: #fff; font: 700 clamp(42px, 7.4vw, 88px)/1.0 var(--display); letter-spacing: -.045em; max-width: 14ch; }
+.hero h1 em { font-style: normal; color: #aac4ff; }
+.hero .pillbtn {
+  display: inline-flex; align-items: center; justify-content: center; margin-top: 34px; height: 54px; padding-inline: 28px; border-radius: 999px;
+  background: #fff; color: #14173a; font: 700 16px var(--sans); text-decoration: none; transition: transform .16s ease, background .16s ease;
+}
+.hero .pillbtn:hover { background: #e9edfb; transform: scale(1.03); }
+.hero .fine { margin-top: 18px; font: 400 12px var(--mono); color: #7d89bd; letter-spacing: .04em; }
+.disc {
+  position: absolute; display: grid; place-items: center; border-radius: 50%; color: #fff; font: 800 13px var(--sans); letter-spacing: .02em;
+  background: radial-gradient(circle at 32% 28%, #7da2ff, #2f57d9 62%, #1b3798); border: 1px solid rgba(255,255,255,.35); z-index: 0;
+  box-shadow: inset 0 -8px 18px rgba(10,16,60,.5), inset 0 3px 8px rgba(255,255,255,.35), 0 18px 34px rgba(8,12,46,.45);
+}
+.disc.s { width: 62px; height: 62px; font-size: 11px; }
+.disc.m { width: 80px; height: 80px; font-size: 12px; }
+.disc.l { width: 96px; height: 96px; font-size: 15px; }
+.disc.green { background: radial-gradient(circle at 32% 28%, #4fd6a4, #0f9f77 62%, #0a6a50); }
+.disc.navy { background: radial-gradient(circle at 32% 28%, #3d4c8f, #181f52 62%, #0e1233); }
+@media (max-width: 760px) {
+  .disc.hide-sm { display: none; }
+  /* On a phone the headline fills the width: keep the coins in the corners. */
+  .disc.l { top: 5% !important; left: 5% !important; width: 68px; height: 68px; font-size: 12px; }
+  .disc.s.green { bottom: 6% !important; }
+}
+.tape { overflow: hidden; border-block: 1px solid rgba(20,23,58,.09); margin-top: clamp(40px, 6vw, 72px); padding-block: 15px; }
+.tape-in { display: flex; width: max-content; }
+.tape-run { display: flex; font: 500 12.5px var(--mono); color: var(--ink-2); white-space: nowrap; }
+.tape-run span { padding-inline: 26px; position: relative; }
+.tape-run span::after { content: "◆"; position: absolute; right: -6px; top: 50%; translate: 0 -50%; font-size: 7px; color: #3d6bf3; }
+.tape-run b { font-weight: 500; color: #c2350f; }
+.tape-run i { font-style: normal; color: #0a7d3e; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero::before { animation: drift 15s ease-in-out infinite alternate; }
+  .hero .kicker, .hero h1, .hero .pillbtn, .hero .fine { animation: rise .85s cubic-bezier(.2,.7,.2,1) backwards; }
+  .hero h1 { animation-delay: .07s; }
+  .hero .pillbtn { animation-delay: .16s; }
+  .hero .fine { animation-delay: .24s; }
+  .hero { transform-origin: 50% 0; }
+  .disc { animation: bob 6.5s ease-in-out infinite alternate; }
+  .disc:nth-of-type(2) { animation-duration: 7.8s; animation-delay: .8s; }
+  .disc:nth-of-type(3) { animation-duration: 5.9s; animation-delay: 1.5s; }
+  .disc:nth-of-type(4) { animation-duration: 8.6s; animation-delay: .4s; }
+  .tape-in { animation: tape 42s linear infinite; }
+}
+@keyframes drift { from { transform: translateX(-56%) scale(1); } to { transform: translateX(-44%) scale(1.14); } }
+@keyframes rise { from { opacity: 0; transform: translateY(28px); } }
+@keyframes bob { from { transform: translateY(-9px) rotate(-4deg); } to { transform: translateY(11px) rotate(5deg); } }
+@keyframes tape { to { transform: translateX(-50%); } }
 
-  /* ---------------------------------------------------------------- hero */
-  .hero-shell { padding: 4px clamp(14px, 2vw, 22px) 0; }
-  .hero {
-    position: relative; overflow: hidden; border-radius: 30px;
-    background: var(--navy);
-    height: calc(100vh - 90px);
-    height: max(520px, min(calc(100svh - 90px), 880px));
-    display: grid; place-items: center; text-align: center;
-    padding: clamp(48px, 7vw, 90px) 22px;
-  }
-  .hero::before {
-    content: ""; position: absolute; left: 50%; bottom: -70%;
-    width: 130%; aspect-ratio: 1.3/1; transform: translateX(-50%); pointer-events: none;
-    background: radial-gradient(closest-side, rgba(88,131,255,.55), rgba(61,107,243,.16) 48%, transparent 74%);
-  }
-  .hero::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .06;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-  .hero > div { position: relative; z-index: 2; }
-  .kicker { font: 600 15px var(--sans); color: #aab7e8; }
-  h1 {
-    margin: 14px auto 0; color: var(--white);
-    font-size: clamp(42px, 7.4vw, 88px); line-height: 1.0; font-weight: 700;
-    letter-spacing: -.045em; text-wrap: balance; max-width: 14ch;
-  }
-  h1 em { font-style: normal; color: var(--sky); }
-  .hero .pillbtn { margin-top: 34px; height: 54px; padding-inline: 28px; font-size: 16px; }
-  .hero .fine { margin-top: 18px; font: 400 12px var(--mono); color: #7d89bd; letter-spacing: .04em; }
+/* ---------------------------------------------------------------- sections */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: center; padding-block: 64px; }
+.split.flip .copy { order: 2; }
+.copy h1 { font: 600 clamp(44px, 6vw, 68px)/1.06 var(--display); letter-spacing: -0.035em; max-width: 12ch; }
+.copy h2 { font: 600 clamp(34px, 4.2vw, 48px)/1.1 var(--display); letter-spacing: -0.03em; max-width: 14ch; }
+.copy p { margin-top: 16px; font-size: 18px; color: var(--ink-2); max-width: 44ch; letter-spacing: -0.01em; }
+@media (max-width: 900px) {
+  .split { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 44px; }
+  .split.flip .copy { order: 0; }
+}
 
-  /* ------------------------------------------------------- statements */
-  .statement { padding: clamp(72px, 11vw, 140px) 22px clamp(34px, 5vw, 56px); }
-  .statement h2 {
-    font-size: clamp(34px, 5.8vw, 68px); line-height: 1.04; font-weight: 700;
-    letter-spacing: -.04em; text-wrap: balance; max-width: 18ch; margin-inline: auto;
-  }
-  .glyph {
-    display: inline-grid; place-items: center; vertical-align: -.08em;
-    width: .92em; height: .92em; border-radius: .26em; background: var(--blue); color: #fff;
-  }
-  .glyph svg { width: 62%; height: 62%; }
-  .see {
-    display: inline-flex; align-items: center; gap: 7px; margin-top: 26px;
-    height: 44px; padding-inline: 20px; border-radius: 999px;
-    background: var(--pill); color: var(--pill-ink); text-decoration: none;
-    font: 700 14px var(--sans); transition: transform .16s ease;
-  }
-  .see:hover { transform: scale(1.04); }
+/* The recessed panel every vignette sits in, as Chamber's. */
+.well { position: relative; min-height: 340px; border-radius: 22px; background: var(--well); border: 1px solid var(--well-edge); overflow: hidden; display: grid; place-items: center; padding: 28px; }
 
-  /* --------------------------------------------------------- carousels */
+/* Timeline: a vignette plays its steps in order, then loops. Without JS, or
+   with reduced motion, every step simply shows. */
+.anim [data-step] { transition: opacity 420ms var(--ease), transform 520ms var(--spring); }
+.anim [data-step]:not(.on) { opacity: 0; transform: translateY(8px) scale(0.96); }
+.anim path.draw { stroke-dasharray: var(--len); transition: stroke-dashoffset 700ms var(--ease); }
+.anim path.draw:not(.on) { stroke-dashoffset: var(--len); opacity: 1; transform: none; }
+.anim path.draw.on { stroke-dashoffset: 0; }
+.shake.on { animation: shake 520ms var(--ease) 200ms; }
 
-  .carousel {
-    display: grid; grid-auto-flow: column;
-    grid-auto-columns: min(86%, 940px);
-    gap: 14px; overflow-x: auto; overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    padding-block: 0 8px;
-    /* left edge sits on the 80rem shell; the track bleeds off the right */
-    padding-inline: max(var(--gut), calc(50% - 40rem + var(--gut))) var(--gut);
-    scroll-padding-inline-start: max(var(--gut), calc(50% - 40rem + var(--gut)));
-    scrollbar-width: none;
-  }
-  .carousel::-webkit-scrollbar { display: none; }
-  .card {
-    scroll-snap-align: start; position: relative; overflow: hidden;
-    border-radius: 30px; min-height: clamp(430px, 58vw, 540px);
-    padding: clamp(28px, 4vw, 46px);
-    display: flex; flex-direction: column;
-  }
-  .card h3 {
-    font-size: clamp(27px, 3.8vw, 46px); line-height: 1.05; font-weight: 700;
-    letter-spacing: -.035em; text-wrap: balance; max-width: 17ch;
-  }
-  .card .note { margin-top: 14px; font-size: 15.5px; max-width: 42ch; opacity: .82; }
-  .card.c-blue { background: var(--blue); color: #fff; }
-  .card.c-navy { background: var(--navy); color: #fff; }
-  .card.c-sky { background: var(--sky); color: var(--ink); }
-  .card.c-green { background: var(--green); color: #fff; }
-  .card.c-deep { background: var(--blue-deep); color: #fff; }
+/* ------------------------------------------------------------ hero: flow */
+.flow { position: relative; width: 100%; max-width: 540px; aspect-ratio: 540 / 330; }
+.flow svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.node { position: absolute; display: grid; gap: 2px; font-size: 13px; line-height: 1.3; }
+.node b { font-weight: 600; font-size: 13.5px; }
+.node small { color: var(--ink-3); font-size: 12px; }
+.chip-card { background: #fff; border-radius: 14px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(52, 52, 51, 0.06), 0 6px 18px rgba(52, 52, 51, 0.06); display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.chip-card .ico { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; flex: none; color: #fff; font-weight: 700; }
+.usdc { background: #2775ca; }
+.chip-card .okc { background: var(--green-soft); color: var(--green); }
+.chip-card .noc { background: var(--red-soft); color: var(--red); }
+.vault { width: 31%; left: 32%; top: 26%; background: #fff; border-radius: 18px; padding: 12px; box-shadow: 0 1px 2px rgba(52, 52, 51, 0.06), 0 10px 26px rgba(52, 52, 51, 0.08); }
+.vault .t { display: flex; justify-content: space-between; align-items: center; font: 600 13px var(--display); letter-spacing: 0.04em; }
+.vault .rule { margin-top: 7px; display: flex; justify-content: space-between; gap: 6px; font-size: 11.5px; color: var(--ink-2); padding: 5px 8px; border-radius: 8px; background: var(--well); }
+.vault .rule span:last-child { font-weight: 600; color: var(--ink); }
+.agent { width: 16%; left: 42%; top: -3%; }
+.agent small { position: absolute; left: 100%; top: 34%; white-space: nowrap; font-size: 11.5px; color: var(--ink-3); margin-left: 6px; }
+.out-ok { right: 0; top: 16%; }
+.out-no { right: 0; top: 64%; }
+/* Phones: the diagram becomes a vertical story instead of a squeezed map. */
+@media (max-width: 600px) {
+  .flow { aspect-ratio: auto; display: grid; justify-items: center; gap: 12px; }
+  .flow svg.wires { display: none; }
+  .flow .node { position: static; }
+  .flow .vault { width: min(100%, 250px); order: 2; }
+  .flow .agent { width: 64px; order: 1; }
+  .flow .agent small { position: static; display: block; text-align: center; margin: 2px 0 0; }
+  .flow .out-ok { order: 3; }
+  .flow .out-no { order: 4; }
+  .flow .node:not(.agent)::before { content: "↓"; display: block; text-align: center; color: var(--ink-3); margin-bottom: 6px; }
+  .flow .node:first-of-type::before { content: none; }
+}
 
-  /* the UI panel that bleeds off each card's bottom, like their phones */
-  .ui {
-    margin: auto auto -1px; width: min(430px, 92%);
-    background: var(--white); color: var(--ink);
-    border-radius: 22px 22px 0 0; padding: 18px 18px 26px;
-    box-shadow: 0 -18px 50px rgba(10, 14, 50, .28);
-    translate: 0 clamp(10px, 2vw, 22px);
-  }
-  .ui.dark { background: #0d1027; color: #eef1fb; }
-  .ui .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
-  .ui .head b { font-size: 14px; font-weight: 700; }
-  .ui .head span { font: 400 10.5px var(--mono); color: var(--ink-3); }
-  .ui.dark .head span { color: #6e77a3; }
+/* ------------------------------------------------------------ strategy card */
+.scard { width: min(100%, 330px); background: #fff; border-radius: 20px; padding: 16px 18px 18px; box-shadow: 0 1px 2px rgba(52, 52, 51, 0.06), 0 12px 30px rgba(52, 52, 51, 0.07); display: grid; gap: 10px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; background: var(--sand); }
+.chip.b { background: var(--blue-soft); color: var(--blue-ink); }
+.chip.g { background: var(--green-soft); color: var(--green); }
+.scard svg.area { display: block; width: 100%; height: 120px; }
+.who { display: flex; align-items: center; gap: 10px; }
+.who .t { flex: 1; min-width: 0; }
+.who b { display: block; font-weight: 500; font-size: 15px; }
+.who small { color: var(--ink-3); font-size: 13px; }
+.mini-feed { display: grid; gap: 6px; border-top: 1px solid var(--well-edge); padding-top: 10px; }
+.mini-feed div { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+.mini-feed span:first-child { color: var(--ink-2); }
+.mini-feed .tx { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
 
-  .mrow { display: flex; align-items: baseline; gap: 10px; padding-block: 8px; font: 400 12.5px var(--mono); border-top: 1px solid rgba(20,23,58,.08); }
-  .ui.dark .mrow { border-top-color: rgba(255,255,255,.08); }
-  .mrow:first-of-type { border-top: 0; }
-  .mrow time { color: var(--ink-3); }
-  .ui.dark .mrow time { color: #6e77a3; }
-  .mrow .grow { flex: 1; }
-  .chip { font: 700 10px var(--mono); letter-spacing: .1em; padding: 3px 8px; border-radius: 6px; }
-  .chip.no { color: var(--down); background: rgba(224,80,60,.12); }
-  .chip.ok { color: var(--up); background: rgba(18,179,128,.12); }
+/* ---------------------------------------------------------------- AI chat */
+.chat { width: min(100%, 440px); display: grid; gap: 10px; }
+.bubble { max-width: 88%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; }
+.bubble.me { justify-self: end; background: var(--btn-dark); color: #fff; border-bottom-right-radius: 6px; }
+.bubble.ai { background: #fff; box-shadow: 0 1px 2px rgba(52, 52, 51, 0.06); border-bottom-left-radius: 6px; }
+.tool { display: flex; align-items: center; gap: 8px; font: 400 12px var(--mono); padding: 6px 10px; border-radius: 10px; }
+.tool.ok { background: var(--green-soft); color: var(--green); }
+.tool.no { background: var(--red-soft); color: var(--red); }
+.prompt { display: flex; align-items: center; gap: 10px; background: #fff; border-radius: 14px; padding: 12px 14px; font-size: 14px; color: var(--ink); box-shadow: 0 1px 2px rgba(52, 52, 51, 0.06); min-height: 46px; }
+.prompt .caret { width: 2px; height: 18px; background: var(--blue); animation: blink 1s steps(1) infinite; }
+.prompt svg { color: var(--ink-3); flex: none; }
 
-  .rules-list div { display: flex; justify-content: space-between; gap: 12px; padding-block: 9px; border-top: 1px solid rgba(20,23,58,.08); font-size: 13.5px; }
-  .rules-list div:first-child { border-top: 0; }
-  .rules-list dt { color: var(--ink-2); }
-  .rules-list dd { margin: 0; font-weight: 700; }
+/* ---------------------------------------------------------------- rules */
+.rules { width: min(100%, 420px); display: grid; gap: 8px; }
+.rules h3 { text-align: center; font: 500 15px var(--sans); color: var(--ink-2); margin-bottom: 6px; }
+.rrow { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto 16px; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 10px 14px; box-shadow: 0 1px 2px rgba(52, 52, 51, 0.05); font-size: 14px; }
+.rrow .ico { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue-ink); font-weight: 600; }
+.rrow b { display: block; font-weight: 500; }
+.rrow small { display: block; color: var(--ink-3); font-size: 12px; }
+.rrow .v { font-weight: 600; white-space: nowrap; }
+.rrow svg { color: var(--ink-3); display: block; }
+.toast { justify-self: center; margin-top: 6px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--red-soft); color: var(--red); font-size: 13px; font-weight: 500; }
 
-  .bal-line { font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
-  .bal-sub { font-size: 12px; color: var(--up); font-weight: 700; margin-top: 3px; }
-  .spark { margin-top: 10px; }
-  .spark svg { display: block; width: 100%; height: auto; }
+/* ------------------------------------------------------------ trust + eco */
+.center { text-align: center; padding-block: 72px 40px; }
+.center h2 { font: 600 clamp(30px, 3.6vw, 40px)/1.15 var(--display); letter-spacing: -0.025em; }
+.center p { margin: 14px auto 0; max-width: 60ch; color: var(--ink-2); font-size: 17px; }
+.center .actions { justify-content: center; }
+.eco-title { text-align: center; font: 600 clamp(30px, 3.6vw, 40px)/1.15 var(--display); letter-spacing: -0.025em; margin: 72px 0 28px; }
+.eco { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1000px) { .eco { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .eco { grid-template-columns: minmax(0, 1fr); } }
+.eco article { background: var(--card); border-radius: 20px; padding: 22px; display: grid; gap: 6px; align-content: start; transition: transform 220ms var(--spring); }
+.eco article:hover { transform: translateY(-3px); }
+.eco .mark { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font: 700 20px var(--display); color: #fff; margin-bottom: 10px; }
+.eco b { font: 600 18px var(--display); letter-spacing: -0.01em; }
+.eco .sub { font-size: 13.5px; font-weight: 600; color: var(--ink-2); }
+.eco p { font-size: 14px; color: var(--ink-3); }
+.eco .dashed { background: transparent; border: 2px dashed var(--well-edge); }
+.community { text-align: center; padding-block: 88px 24px; }
+.community h2 { font: 600 clamp(30px, 3.6vw, 40px)/1.15 var(--display); letter-spacing: -0.025em; max-width: 22ch; margin: 14px auto 0; }
+.community .actions { justify-content: center; }
 
-  .meter-wrap small { display: block; font-size: 12px; color: var(--ink-2); margin-top: 4px; }
-  .meter { margin-top: 10px; height: 7px; border-radius: 99px; background: rgba(20,23,58,.1); overflow: hidden; }
-  .meter i { display: block; height: 100%; width: 60%; border-radius: 99px; background: var(--up); }
+/* ---------------------------------------------------------------- mascots */
+.mascot { display: block; width: 100%; height: auto; overflow: visible; }
+.m-inline { width: 44px; height: 44px; flex: none; }
+.float { animation: float 5.5s ease-in-out infinite; }
 
-  .txlink { font: 500 11.5px var(--mono); color: inherit; opacity: .75; text-decoration: none; }
-  .txlink:hover { opacity: 1; }
-  .rulename { font: 700 clamp(21px, 2.6vw, 30px) var(--mono); letter-spacing: -.02em; color: var(--sky); }
-  .card .stamp { margin-top: auto; padding-top: 26px; font: 400 11.5px var(--mono); opacity: .62; letter-spacing: .05em; }
+/* ---------------------------------------------------------------- footer */
+footer { margin-top: 96px; padding-block: 40px 48px; border-top: 1px solid var(--well-edge); display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 28px; }
+footer h4 { margin: 0 0 12px; font: 600 15px var(--display); }
+footer ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+footer li, footer a { font-size: 14px; color: var(--ink-3); text-decoration: none; }
+footer a:hover { color: #121212; }
+footer .fine { margin-top: 14px; font-size: 13px; color: var(--ink-3); max-width: 34ch; }
+@media (max-width: 760px) { footer { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
-  /* ------------------------------------------------------------ closing */
-  .closing { padding: clamp(90px, 13vw, 170px) 22px; }
-  .closing .small { font-size: 15px; color: var(--ink-2); max-width: 46ch; margin-inline: auto; }
-  .closing h2 {
-    margin-top: 16px; font-size: clamp(40px, 6.6vw, 82px); line-height: 1.02;
-    font-weight: 700; letter-spacing: -.045em; text-wrap: balance; max-width: 14ch; margin-inline: auto;
-  }
-  .closing h2 em { font-style: normal; color: var(--blue); }
-  .closing .pillbtn { margin-top: 32px; height: 54px; padding-inline: 28px; font-size: 16px; background: var(--navy); color: #fff; }
-  .closing .pillbtn:hover { background: #1c2152; }
 
-  /* Phantom constrains the whole page to a max-w-7xl shell. */
-  nav, .hero-shell, .statement, .closing, footer {
-    max-width: 80rem; margin-inline: auto;
-  }
+/* ------------------------------------------------------ the colour cards */
+/* The original card carousels: the track's left edge sits on the content
+   column and it bleeds off the right edge; arrows sit at the top right. */
+.statement { padding: clamp(64px, 9vw, 110px) 0 clamp(28px, 4vw, 44px); text-align: center; }
+.statement h2 { font: 700 clamp(34px, 5.4vw, 64px)/1.04 var(--display); letter-spacing: -.04em; max-width: 18ch; margin-inline: auto; }
+.glyph { display: inline-grid; place-items: center; vertical-align: -.08em; width: .92em; height: .92em; border-radius: .26em; background: #3d6bf3; color: #fff; }
+.glyph svg { width: 62%; height: 62%; }
+.see { display: inline-flex; align-items: center; gap: 7px; margin-top: 24px; height: 44px; padding-inline: 20px; border-radius: 999px; background: #c9d7ff; color: #1d2c6b; text-decoration: none; font: 700 14px var(--sans); transition: transform .16s ease; }
+.see:hover { transform: scale(1.04); }
+.carousel {
+  --pad: clamp(16px, 7vw, 104px);
+  display: grid; grid-auto-flow: column; grid-auto-columns: min(86%, 940px); gap: 14px;
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding-block: 0 8px;
+  padding-inline: calc(max(0px, (100% - 80rem) / 2) + var(--pad)) clamp(14px, 2vw, 22px);
+  scroll-padding-inline-start: calc(max(0px, (100% - 80rem) / 2) + var(--pad));
+  scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none; }
+.carousel .card {
+  scroll-snap-align: start; position: relative; overflow: hidden; border-radius: 30px;
+  min-height: clamp(430px, 58vw, 540px); padding: clamp(28px, 4vw, 46px); display: flex; flex-direction: column;
+}
+.carousel .card h3 { font: 700 clamp(27px, 3.8vw, 46px)/1.05 var(--display); letter-spacing: -.035em; max-width: 17ch; }
+.carousel .card .note { margin-top: 14px; font-size: 15.5px; max-width: 42ch; opacity: .85; }
+.card.c-blue { background: #3d6bf3; color: #fff; }
+.card.c-navy { background: #111433; color: #fff; }
+.card.c-sky { background: #aac4ff; color: #14173a; }
+.card.c-green { background: #0f9f77; color: #fff; }
+.card.c-deep { background: #2246c7; color: #fff; }
+.carousel .card::after {
+  content: ""; position: absolute; right: -70px; bottom: -80px; width: 320px; height: 320px; pointer-events: none;
+  background: rgba(255,255,255,.07); transform: rotate(-12deg);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.carousel .card.c-sky::after { background: rgba(20,23,58,.06); }
+.card h3, .card .note, .card .stamp, .card .rulename, .card .ui { position: relative; z-index: 1; }
+.ui { margin: auto auto -1px; width: min(430px, 92%); background: #fff; color: #14173a; border-radius: 22px 22px 0 0; padding: 18px 18px 26px; box-shadow: 0 -18px 50px rgba(10, 14, 50, .28); translate: 0 clamp(10px, 2vw, 22px); }
+.ui .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.ui .head b { font-size: 14px; font-weight: 700; }
+.ui .head span { font: 400 10.5px var(--mono); color: #6f6e6c; }
+.mrow { display: flex; align-items: baseline; gap: 10px; padding-block: 8px; font: 400 12.5px var(--mono); border-top: 1px solid rgba(20,23,58,.08); }
+.mrow:first-of-type { border-top: 0; }
+.mrow time { color: #6f6e6c; }
+.mrow .grow { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .mrow { flex-wrap: wrap; row-gap: 4px; } .mrow .grow { flex-basis: 100%; } .ui { padding: 14px 14px 22px; } }
+.ctag { font: 700 10px var(--mono); letter-spacing: .1em; padding: 3px 8px; border-radius: 6px; }
+.ctag.no { color: #c2350f; background: rgba(224,80,60,.12); }
+.ctag.ok { color: #0a7d3e; background: rgba(18,179,128,.14); }
+.rules-list div { display: flex; justify-content: space-between; gap: 12px; padding-block: 9px; border-top: 1px solid rgba(20,23,58,.08); font-size: 13.5px; }
+.rules-list div:first-child { border-top: 0; }
+.rules-list dt { color: #474645; }
+.rules-list dd { margin: 0; font-weight: 700; }
+.bal-line { font-size: 26px; font-weight: 800; letter-spacing: -.03em; }
+.bal-sub { font-size: 12px; color: #0a7d3e; font-weight: 700; margin-top: 3px; }
+.spark { margin-top: 10px; }
+.spark svg { display: block; width: 100%; height: auto; }
+.meter-wrap small { display: block; font-size: 12px; color: #474645; margin-top: 4px; }
+.meter { margin-top: 10px; height: 7px; border-radius: 99px; background: rgba(20,23,58,.1); overflow: hidden; }
+.meter i { display: block; height: 100%; width: 60%; border-radius: 99px; background: #12b380; }
+.txlink { font: 500 11.5px var(--mono); color: inherit; opacity: .8; text-decoration: none; }
+.txlink:hover { opacity: 1; }
+.rulename { font: 700 clamp(21px, 2.6vw, 30px) var(--mono); letter-spacing: -.02em; color: #aac4ff; }
+.card .stamp { margin-top: auto; padding-top: 26px; font: 400 11.5px var(--mono); opacity: .7; letter-spacing: .05em; }
+.car-nav { display: flex; justify-content: flex-end; gap: 10px; max-width: 80rem; margin: 0 auto 14px; padding-inline: clamp(16px, 7vw, 104px); }
+.car-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(20,23,58,.12); background: #fff; color: #14173a; cursor: pointer; display: grid; place-items: center; box-shadow: 0 6px 16px rgba(16,20,60,.08); transition: transform .16s ease, opacity .16s ease; }
+.car-btn:hover:not(:disabled) { transform: scale(1.07); }
+.car-btn:disabled { opacity: .32; cursor: default; }
+.carousel .card.pre { opacity: 0; transform: translateY(34px); }
+.carousel .card.in { opacity: 1; transform: none; transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.carousel .card.in .ui { animation: uiRise .75s .12s cubic-bezier(.2,.7,.2,1) backwards; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) { .carousel .card.in:hover { transform: translateY(-6px); } }
+@keyframes uiRise { from { opacity: 0; transform: translateY(46px); } }
+footer .legal { grid-column: 1 / -1; border-top: 1px solid var(--well-edge); padding-top: 20px; }
+footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-width: 96ch; margin: 0 0 8px; }
 
-  /* ------------------------------------------------------------- motion */
-  @media (prefers-reduced-motion: no-preference) {
-    .hero::before { animation: drift 15s ease-in-out infinite alternate; }
-    @keyframes drift {
-      from { transform: translateX(-56%) scale(1); }
-      to   { transform: translateX(-44%) scale(1.14); }
-    }
-    .hero .kicker, .hero h1, .hero .pillbtn, .hero .fine {
-      animation: rise .85s cubic-bezier(.2,.7,.2,1) backwards;
-    }
-    .hero h1 { animation-delay: .07s; }
-    .hero .pillbtn { animation-delay: .16s; }
-    .hero .fine { animation-delay: .24s; }
-    @keyframes rise { from { opacity: 0; transform: translateY(28px); } }
-
-    .hero { transform-origin: 50% 0; }
-    .hero > div, .statement h2, .closing h2 { will-change: opacity, transform; }
-    /* The UI panel inside a card rises a beat after the card itself. */
-    .card.in .ui { animation: uiRise .75s .12s cubic-bezier(.2,.7,.2,1) backwards; }
-    @keyframes uiRise { from { opacity: 0; transform: translateY(46px); } }
-
-    @media (hover: hover) {
-      .card { transition: transform .4s cubic-bezier(.2,.7,.2,1); }
-      .card:hover { transform: translateY(-6px); }
-    }
-  }
-  /* Scroll reveals: the hidden state is only ever applied by script, so the
-     page is complete at rest without it. */
-  .pre { opacity: 0; transform: translateY(34px); }
-  .in {
-    opacity: 1; transform: none;
-    transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1);
-  }
-
-  /* --------------------------------------------------------------- decor */
-  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .disc {
-    position: absolute; display: grid; place-items: center; border-radius: 50%;
-    color: #fff; font: 800 13px var(--sans); letter-spacing: .02em;
-    background: radial-gradient(circle at 32% 28%, #7da2ff, #2f57d9 62%, #1b3798);
-    border: 1px solid rgba(255,255,255,.35);
-    box-shadow: inset 0 -8px 18px rgba(10,16,60,.5), inset 0 3px 8px rgba(255,255,255,.35), 0 18px 34px rgba(8,12,46,.45);
-    z-index: 0;
-  }
-  .disc.s { width: 62px; height: 62px; font-size: 11px; }
-  .disc.m { width: 80px; height: 80px; font-size: 12px; }
-  .disc.l { width: 96px; height: 96px; font-size: 15px; }
-  .disc.green { background: radial-gradient(circle at 32% 28%, #4fd6a4, #0f9f77 62%, #0a6a50); }
-  .disc.navy { background: radial-gradient(circle at 32% 28%, #3d4c8f, #181f52 62%, #0e1233); }
-  @media (max-width: 760px) { .disc.hide-sm { display: none; } }
-  @media (prefers-reduced-motion: no-preference) {
-    .disc { animation: bob 6.5s ease-in-out infinite alternate; }
-    .disc:nth-of-type(2) { animation-duration: 7.8s; animation-delay: .8s; }
-    .disc:nth-of-type(3) { animation-duration: 5.9s; animation-delay: 1.5s; }
-    .disc:nth-of-type(4) { animation-duration: 8.6s; animation-delay: .4s; }
-    @keyframes bob { from { transform: translateY(-9px) rotate(-4deg); } to { transform: translateY(11px) rotate(5deg); } }
-  }
-
-  /* our loop glyph, oversized, as a watermark in each card's corner */
-  .card::after {
-    content: ""; position: absolute; right: -70px; bottom: -80px;
-    width: 320px; height: 320px; pointer-events: none;
-    background: rgba(255,255,255,.07); transform: rotate(-12deg);
-    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
-    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
-  }
-  .card.c-sky::after { background: rgba(20,23,58,.06); }
-  .card h3, .card .note, .card .stamp, .card .rulename, .card .ui { position: relative; z-index: 1; }
-
-  /* the on-chain ticker tape */
-  .tape { overflow: hidden; border-block: 1px solid rgba(20,23,58,.09); margin-top: clamp(40px, 6vw, 72px); padding-block: 15px; }
-  .tape-in { display: flex; width: max-content; }
-  .tape-run { display: flex; font: 500 12.5px var(--mono); color: var(--ink-2); white-space: nowrap; }
-  .tape-run span { padding-inline: 26px; position: relative; }
-  .tape-run span::after { content: "◆"; position: absolute; right: -6px; top: 50%; translate: 0 -50%; font-size: 7px; color: var(--blue); }
-  .tape-run b { font-weight: 500; color: var(--down); }
-  .tape-run i { font-style: normal; color: var(--up); }
-  @media (prefers-reduced-motion: no-preference) {
-    .tape-in { animation: tape 42s linear infinite; }
-    @keyframes tape { to { transform: translateX(-50%); } }
-  }
-
-  /* carousel prev/next controls */
-  .car-nav { display: flex; justify-content: flex-end; gap: 10px; max-width: 80rem; margin: 0 auto 14px; padding-inline: var(--gut); }
-  .car-btn {
-    width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(20,23,58,.12);
-    background: var(--white); color: var(--ink); cursor: pointer;
-    display: grid; place-items: center;
-    box-shadow: 0 6px 16px rgba(16,20,60,.08);
-    transition: transform .16s ease, opacity .16s ease;
-  }
-  .car-btn:hover:not(:disabled) { transform: scale(1.07); }
-  .car-btn:disabled { opacity: .32; cursor: default; }
-
-  .closing { position: relative; }
-  .closing .disc { z-index: 0; }
-
-  footer { padding: 0 clamp(16px, 2.4vw, 26px) 44px; }
-  footer hr { border: 0; border-top: 1px solid rgba(20,23,58,.1); margin: 0 0 22px; }
-  footer p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-width: 88ch; margin-bottom: 10px; font-weight: 400; }
-  footer .row { display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+@keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(-3deg); } }
+@keyframes blink { 50% { opacity: 0; } }
+@keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
 </style>
 
-<nav>
-  <a class="brand" href="#top">reins<b>.</b></a>
-  <div class="nav-r">
-    <a class="pillbtn" href="#proof">See the proof</a>
-    <a class="roundbtn" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" aria-label="The first mandate on the Arc explorer">
-      <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg>
+<div class="wrap">
+  <header class="top">
+    <a class="wordmark" href="#top" aria-label="Reins home">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="8" fill="#1e9bff"/><ellipse cx="10" cy="12" rx="2" ry="2.7" fill="#2a2a29"/><ellipse cx="16" cy="12" rx="2" ry="2.7" fill="#2a2a29"/><path d="M10 17q3 2.5 6 0" fill="none" stroke="#2a2a29" stroke-width="1.8" stroke-linecap="round"/></svg>
+      Reins
     </a>
-  </div>
-</nav>
+    <nav class="pills" aria-label="Sections">
+      <a href="#see">Strategies</a>
+      <a href="#ai">For AI</a>
+      <a href="#rules">Rules</a>
+      <a href="#built">Built on</a>
+    </nav>
+    <div class="top-r"><a class="btn dark" href="http://localhost:4100/">Launch app</a></div>
+  </header>
+</div>
 
+<!-- -------------------------------------------------------------- hero -->
 <div class="hero-shell" id="top">
   <header class="hero">
     <canvas id="rib" aria-hidden="true"></canvas>
@@ -322,8 +377,8 @@
     <div>
       <p class="kicker">Where agents trade under rules</p>
       <h1>Hand an agent the <em>reins</em>, never the keys</h1>
-      <a class="pillbtn on-dark" href="#rules">See how it holds</a>
-      <p class="fine">Live on Arc testnet &middot; 252 tests &middot; ~$0.01 a trade</p>
+      <a class="pillbtn" href="#cards">See how it holds</a>
+      <p class="fine">Live on Arc testnet &middot; 271 tests &middot; ~$0.01 a trade</p>
     </div>
   </header>
 </div>
@@ -339,7 +394,7 @@
       <span>withdraw() &mdash; <i>no permission needed</i></span>
       <span>every position visible <i>on-chain</i></span>
       <span><b>IsFrozen</b> &mdash; refused on-chain</span>
-      <span>252 tests passing</span>
+      <span>271 tests passing</span>
       <span>a trade costs ~$0.01 on Arc</span>
     </div>
     <div class="tape-run">
@@ -351,18 +406,21 @@
       <span>withdraw() &mdash; <i>no permission needed</i></span>
       <span>every position visible <i>on-chain</i></span>
       <span><b>IsFrozen</b> &mdash; refused on-chain</span>
-      <span>252 tests passing</span>
+      <span>271 tests passing</span>
       <span>a trade costs ~$0.01 on Arc</span>
     </div>
   </div>
 </div>
 
-<section class="statement center" id="rules">
+<main>
+<div class="wrap">
+<section class="statement center" id="cards">
   <h2>Rules an agent
     <span class="glyph" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2"/></svg></span>
     can&rsquo;t break</h2>
-  <a class="see" href="#proof">See them refuse <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
+  <a class="see" href="#how">See one refused <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
 </section>
+</div>
 
 <div class="carousel">
   <div class="card c-blue">
@@ -370,9 +428,9 @@
     <p class="note">The cap is set when the mandate is created and can never be edited &mdash; not by the agent, not by us.</p>
     <div class="ui">
       <div class="head"><b>Activity</b><span>mandate 0x991b&hellip;D632</span></div>
-      <div class="mrow"><time>14:02:11</time><span class="chip no">Refused</span><span class="grow">TradeTooLarge &mdash; $240 over the $200 cap</span></div>
-      <div class="mrow"><time>13:47:03</time><span class="chip ok">Filled</span><span class="grow">Buy 0.306 SPYx @ $653.90</span></div>
-      <div class="mrow"><time>11:20:44</time><span class="chip ok">Filled</span><span class="grow">Buy 0.301 SPYx @ $652.71</span></div>
+      <div class="mrow"><time>14:02:11</time><span class="ctag no">Refused</span><span class="grow">TradeTooLarge &mdash; $240 over the $200 cap</span></div>
+      <div class="mrow"><time>13:47:03</time><span class="ctag ok">Filled</span><span class="grow">Buy 0.306 SPYx @ $653.90</span></div>
+      <div class="mrow"><time>11:20:44</time><span class="ctag ok">Filled</span><span class="grow">Buy 0.301 SPYx @ $652.71</span></div>
     </div>
   </div>
 
@@ -411,7 +469,7 @@
       <div class="head"><b>Last fill</b><span>vs Chainlink</span></div>
       <div class="bal-line">0.454%</div>
       <small style="font-size:12px;color:var(--ink-2)">from the oracle price &middot; inside the 1% band</small>
-      <div class="mrow" style="margin-top:12px"><time>12:58:20</time><span class="chip ok">Filled</span><span class="grow">$1.143090 per EURC</span></div>
+      <div class="mrow" style="margin-top:12px"><time>12:58:20</time><span class="ctag ok">Filled</span><span class="grow">$1.143090 per EURC</span></div>
     </div>
   </div>
 
@@ -422,220 +480,262 @@
       <div class="head"><b>Withdraw</b><span>owner only</span></div>
       <div class="bal-line">$2,041.83</div>
       <small style="font-size:12px;color:var(--ink-2)">available now &mdash; no notice period, no permission</small>
-      <div class="mrow" style="margin-top:12px"><time>15:11:02</time><span class="chip ok">Paid out</span><span class="grow">withdraw() &rarr; your wallet</span></div>
+      <div class="mrow" style="margin-top:12px"><time>15:11:02</time><span class="ctag ok">Paid out</span><span class="grow">withdraw() &rarr; your wallet</span></div>
     </div>
   </div>
 </div>
 
-<section class="statement center">
-  <h2>Run your strategy, or follow someone else&rsquo;s</h2>
-  <a class="see" href="#proof">Why records can&rsquo;t be faked <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
-</section>
-
-<div class="carousel">
-  <div class="card c-deep">
-    <h3>No black box. Your money never leaves your sight.</h3>
-    <p class="note">Most pools can&rsquo;t show you how they trade or where your funds sit. A mandate can&rsquo;t hide either one &mdash; every position and every trade is public the moment it exists.</p>
-    <div class="ui">
-      <div class="head"><b>Where your money is, right now</b><span>live on-chain</span></div>
-      <dl class="rules-list">
-        <div><dt>SPYx</dt><dd>1.842 sh &middot; $1,204.66</dd></div>
-        <div><dt>USDC</dt><dd>$837.17</dd></div>
-        <div><dt>Last trade</dt><dd>public in the same second</dd></div>
-        <div><dt>Address</dt><dd>yours, openable by anyone</dd></div>
-      </dl>
-    </div>
-  </div>
-
-  <div class="card c-navy">
-    <h3>Track records that cannot be faked.</h3>
-    <p class="note">Every trade every strategy has ever made is a public transaction. No backtests, no screenshots, no trust.</p>
-    <div class="ui">
-      <div class="head"><b>Momentum, weekly</b><span>since funding</span></div>
-      <div class="bal-line">$2,041.83</div>
-      <div class="bal-sub">&#9650; $41.83 (2.09%)</div>
-      <div class="spark">
-        <svg viewBox="0 0 380 90" role="img" aria-label="Equity curve rising from 2,000 to 2,041 dollars">
-          <path d="M0 66 L24 60 L48 64 L72 52 L96 56 L120 44 L144 49 L168 38 L192 44 L216 30 L240 36 L264 24 L288 30 L312 18 L336 24 L360 12 L380 16 L380 90 L0 90 Z" fill="rgba(18,179,128,.14)"/>
-          <path d="M0 66 L24 60 L48 64 L72 52 L96 56 L120 44 L144 49 L168 38 L192 44 L216 30 L240 36 L264 24 L288 30 L312 18 L336 24 L360 12 L380 16" fill="none" stroke="#12b380" stroke-width="2" stroke-linejoin="round"/>
-          <line x1="0" y1="70" x2="380" y2="70" stroke="rgba(20,23,58,.18)" stroke-dasharray="3 5"/>
-          <circle cx="380" cy="16" r="3.5" fill="#12b380"/>
-        </svg>
+<div class="wrap">
+    <!-- ------------------------------------------------- how it holds -->
+    <section class="split" id="how">
+      <div class="copy">
+        <h2>Your money stays in your contract</h2>
+        <p>An agent can trade it inside rules you set, and nothing else. Every move is on-chain.</p>
+        <div class="actions">
+          <a class="btn dark" href="http://localhost:4100/create.html">Create a mandate</a>
+          <a class="link" href="http://localhost:4100/">Explore strategies →</a>
+        </div>
       </div>
-    </div>
-  </div>
+      <div class="well" role="img" aria-label="How a mandate works: you deposit USDC into your own contract, an agent trades inside its rules, and a trade that breaks a rule is refused.">
+        <div class="flow" id="flow">
+          <svg class="wires" viewBox="0 0 540 330" aria-hidden="true">
+            <path class="draw" data-step="2" d="M112 170 H172" fill="none" stroke="#1fb45a" stroke-width="2" stroke-linecap="round" style="--len:70"/>
+            <path class="draw" data-step="5" d="M342 150 C372 150 372 86 400 86" fill="none" stroke="#1fb45a" stroke-width="2" stroke-linecap="round" style="--len:110"/>
+            <path class="draw" data-step="7" d="M342 206 C372 206 372 244 400 244" fill="none" stroke="#ef4a3c" stroke-width="2" stroke-linecap="round" style="--len:90"/>
+          </svg>
+          <div class="node" data-step="1" style="left:0;top:42%">
+            <div class="chip-card"><span class="ico usdc" aria-hidden="true">$</span><span><b>USDC</b><br><small>Deposit</small></span></div>
+          </div>
+          <div class="node vault" data-step="3">
+            <div class="t"><span>MANDATE</span><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="6" width="9" height="6.5" rx="1.5" fill="none" stroke="#6f6e6c" stroke-width="1.4"/><path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" fill="none" stroke="#6f6e6c" stroke-width="1.4"/></svg></div>
+            <div class="rule"><span>Per trade</span><span>≤ $2</span></div>
+            <div class="rule"><span>Loss limit</span><span>−10%</span></div>
+            <div class="rule"><span>Price band</span><span>±1%</span></div>
+          </div>
+          <div class="node agent" data-step="4" id="flow-agent"><small>the agent</small></div>
+          <div class="node out-ok" data-step="6">
+            <div class="chip-card"><span class="ico okc" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 7.5 5.8 10 11 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span><b>$2 → EURC</b><br><small>Traded on Uniswap</small></span></div>
+          </div>
+          <div class="node out-no shake" data-step="8">
+            <div class="chip-card"><span class="ico noc" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span><b>$50 trade</b><br><small>Refused: over $2</small></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <div class="card c-blue">
-    <h3>Their strategy. Your limits, on top.</h3>
-    <p class="note">Following someone never pools your money with theirs. It stays in your contract, and your rules outrank their calls.</p>
-    <div class="ui">
-      <div class="head"><b>Following</b><span>your mandate, their agent</span></div>
-      <dl class="rules-list">
-        <div><dt>Strategy</dt><dd>Momentum, weekly</dd></div>
-        <div><dt>Can trade</dt><dd>inside your limits</dd></div>
-        <div><dt>Can withdraw</dt><dd>never &mdash; no such function</dd></div>
-        <div><dt>Your exit</dt><dd>instant, unilateral</dd></div>
-      </dl>
-    </div>
-  </div>
+    <!-- ----------------------------------------------------------- rules -->
+    <section class="split flip" id="rules">
+      <div class="copy">
+        <h2>Rules nobody can change</h2>
+        <p>Per-trade cap, loss limit, price band, allowed assets. Set once when the mandate is created. Not the agent, not us, not even you can loosen them later. You can always withdraw.</p>
+      </div>
+      <div class="well" role="img" aria-label="A mandate's rules, each locked: at most $2 per trade, freeze at minus 10 percent, fills within 1 percent of the oracle, trades only USDC and EURC. An attempt to raise the cap fails because the contract has no function for it.">
+        <div class="rules" id="rulesv">
+          <h3 data-step="1">Locked when the mandate was created</h3>
+          <div class="rrow" data-step="2"><span class="ico" aria-hidden="true">$</span><span><b>Per trade</b><small>No single trade above this</small></span><span class="v">$2.00</span><span class="lk"></span></div>
+          <div class="rrow" data-step="3"><span class="ico" aria-hidden="true">↘</span><span><b>Loss limit</b><small>Fall this far and anyone can freeze it</small></span><span class="v">−10%</span><span class="lk"></span></div>
+          <div class="rrow" data-step="4"><span class="ico" aria-hidden="true">±</span><span><b>Price band</b><small>Fills checked against the oracle</small></span><span class="v">1%</span><span class="lk"></span></div>
+          <div class="rrow" data-step="5"><span class="ico" aria-hidden="true">◎</span><span><b>May trade</b><small>Everything else is refused</small></span><span class="v">USDC, EURC</span><span class="lk"></span></div>
+          <div class="toast shake" data-step="6">✕ setRules($50): the contract has no such function</div>
+        </div>
+      </div>
+    </section>
 
-  <div class="card c-sky">
-    <h3>Fire the agent in one block.</h3>
-    <p class="note">Revoke its key and it stops next block. Or swap it for a better one without moving a cent.</p>
-    <div class="ui">
-      <div class="head"><b>Agent</b><span>owner controls</span></div>
-      <div class="mrow"><time>16:40:15</time><span class="chip no">Revoked</span><span class="grow">agent 0xEAcD&hellip;416f removed</span></div>
-      <div class="mrow"><time>16:40:15</time><span class="chip ok">Holds</span><span class="grow">funds untouched &mdash; $2,041.83</span></div>
+    <!-- -------------------------------------------------- see the money -->
+    <section class="split flip" id="see">
+      <div class="copy">
+        <h2>See exactly where the money goes</h2>
+        <p>Most pools don’t show you how they trade. Every Reins strategy shows its holdings, its trades and its rules, read straight from the chain.</p>
+        <div class="actions">
+          <a class="btn dark" href="http://localhost:4100/">Explore strategies</a>
+          <a class="link" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">Check one on the explorer ↗</a>
+        </div>
+      </div>
+      <div class="well" role="img" aria-label="A live strategy card from Arc testnet: $1.75 held, up 0.04 percent, risk 2 of 5, with its latest trade and deposit.">
+        <div class="scard" id="card">
+          <div class="chips" data-step="1"><span class="chip b">$1.75</span><span class="chip g">↗ +0.04%</span><span class="chip">Risk 2 / 5</span></div>
+          <svg class="area" viewBox="0 0 300 120" preserveAspectRatio="none" aria-hidden="true">
+            <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e9bff" stop-opacity=".28"/><stop offset="1" stop-color="#1e9bff" stop-opacity="0"/></linearGradient></defs>
+            <path data-step="3" d="M0 78 C30 70 44 88 70 80 S110 52 140 58 186 84 214 66 262 30 300 26 V120 H0 Z" fill="url(#ag)"/>
+            <path class="draw" data-step="2" d="M0 78 C30 70 44 88 70 80 S110 52 140 58 186 84 214 66 262 30 300 26" fill="none" stroke="#1e9bff" stroke-width="2.2" stroke-linecap="round" style="--len:340"/>
+          </svg>
+          <div class="who" data-step="4"><span class="m-inline" id="card-mascot"></span><span class="t"><b>fx reversion</b><small>by 0x817B…BE38</small></span><span class="chip">Live</span></div>
+          <div class="mini-feed" data-step="5">
+            <div><span>Traded 0.50 USDC for 0.4374 EURC</span><span class="tx">0x3cafe3…</span></div>
+            <div><span>Owner added 2 USDC</span><span class="tx">0x5c50de…</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------- AI -->
+    <section class="split" id="ai">
+      <div class="copy">
+        <h2>Safe rails for AI trading</h2>
+        <p>Give Claude, or any agent, a budget it can’t run off with. When it asks for something the rules forbid, the contract says no, in plain words, and the agent adjusts.</p>
+        <div class="actions">
+          <a class="btn dark" href="http://localhost:4100/create.html">Create a mandate</a>
+          <a class="link" href="#rules">How the rules work →</a>
+        </div>
+      </div>
+      <div class="well" role="img" aria-label="A chat with an AI agent: asked to buy $2 of EURC it trades inside the rules; asked for a $50 trade the contract refuses because the per-trade cap is $2, and the agent explains.">
+        <div class="chat" id="chat">
+          <div class="bubble me" data-step="1">Buy $2 of EURC</div>
+          <div class="tool ok" data-step="2">✓ mandate_trade: 2 USDC → EURC</div>
+          <div class="bubble me" data-step="3">Now put everything in, $50</div>
+          <div class="tool no shake" data-step="4">✕ refused: a single trade can’t exceed $2</div>
+          <div class="bubble ai" data-step="5">That’s over the $2 cap you set, so I can’t. I’ll keep each trade at $2 or less.</div>
+          <div class="prompt" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 16 16"><rect x="5.5" y="1.5" width="5" height="8" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3 8a5 5 0 0 0 10 0M8 13v2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <span id="typed">Ask your agent…</span><span class="caret"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----------------------------------------------------------- trust -->
+    <section class="center">
+      <h2>No custody. No database. No trust required.</h2>
+      <p>Your funds never touch Reins. Our pages read the chain directly, so anyone can check every number against the explorer, including the trades an agent tried and was refused.</p>
+      <div class="actions">
+        <a class="btn" href="http://localhost:4100/">See live strategies</a>
+        <a class="link" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">Open the explorer ↗</a>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------- ecosystem -->
+    <h2 class="eco-title" id="built">Built on open rails</h2>
+    <div class="eco">
+      <article><span class="mark" style="background:#1e9bff" aria-hidden="true">A</span><b>Arc</b><span class="sub">Circle’s stablecoin chain</span><p>Mandates live on Arc, where gas is paid in USDC and tokenized stocks are on the way.</p></article>
+      <article><span class="mark" style="background:#ff4a1c" aria-hidden="true">U</span><b>Uniswap v4</b><span class="sub">Where trades fill</span><p>An agent’s trades route through Uniswap pools, and every fill is checked against the price band.</p></article>
+      <article><span class="mark" style="background:#1fc46b" aria-hidden="true">C</span><b>Chainlink</b><span class="sub">The price referee</span><p>Oracle prices decide what a fair fill is and when a loss limit is hit. Stale prices stop trading.</p></article>
+      <article class="dashed"><span class="mark" style="background:#ffc53d;color:#2a2a29" aria-hidden="true">+</span><b>Build with Reins</b><span class="sub">MCP server and SDK</span><p>Plug any AI agent or bot into a mandate. It gets status, prices and trades, and nothing more.</p></article>
     </div>
-  </div>
+
+    <!-- ------------------------------------------------------- community -->
+    <section class="community">
+      <span id="cta-mascots" style="display:inline-flex;gap:10px" aria-hidden="true"></span>
+      <h2>Be first in line when tokenized stocks land on Arc</h2>
+      <div class="actions"><a class="btn dark" href="https://x.com/onreins" target="_blank" rel="noopener">Follow @onreins</a><a class="link" href="http://localhost:4100/">Try it on testnet →</a></div>
+    </section>
 </div>
+</main>
 
-<section class="statement center" id="proof">
-  <h2>Broadcast, not promised</h2>
-  <a class="see" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632">All 8 transactions <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
-</section>
-
-<div class="carousel">
-  <div class="card c-navy">
-    <p class="rulename">TradeTooLarge</p>
-    <h3 style="margin-top:10px">It tried to trade $2.50 over a $2 cap.</h3>
-    <p class="note">Refused on-chain. We broadcast the refusals on purpose &mdash; a mandate that only refuses in private proves nothing.</p>
-    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e">tx 0x685d4a90&hellip; &nearr;</a></p>
-  </div>
-  <div class="card c-navy">
-    <p class="rulename">AssetNotAllowed</p>
-    <h3 style="margin-top:10px">It tried to buy an asset it was never given.</h3>
-    <p class="note">The allowed list is part of the contract. Everything outside it refuses on contact.</p>
-    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d">tx 0x5c50decb&hellip; &nearr;</a></p>
-  </div>
-  <div class="card c-navy">
-    <p class="rulename">NotAgent</p>
-    <h3 style="margin-top:10px">A stranger&rsquo;s key tried to trade.</h3>
-    <p class="note">Only the one key you appointed can trade, and it can do nothing else.</p>
-    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752">tx 0x48b35a90&hellip; &nearr;</a></p>
-  </div>
-  <div class="card c-deep">
-    <p class="rulename" style="color:#fff">Frozen</p>
-    <h3 style="margin-top:10px">The euro fell 50%. A stranger pulled the brake.</h3>
-    <p class="note">Frozen at $1.7489 against a $1.80 floor by someone who owns none of it. That is the public stop-loss working.</p>
-    <p class="stamp"><a class="txlink" href="https://explorer.testnet.arc.io/tx/0x3cafe35c4cd93779ad751c050431e97ed771e5b196c1838d2ebc0d5ee8c5dcba">tx 0x3cafe35c&hellip; &nearr;</a></p>
-  </div>
+<div class="wrap">
+  <footer>
+    <div>
+      <a class="wordmark" href="#top">
+        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="8" fill="#1e9bff"/><ellipse cx="10" cy="12" rx="2" ry="2.7" fill="#2a2a29"/><ellipse cx="16" cy="12" rx="2" ry="2.7" fill="#2a2a29"/><path d="M10 17q3 2.5 6 0" fill="none" stroke="#2a2a29" stroke-width="1.8" stroke-linecap="round"/></svg>Reins
+      </a>
+      <p class="fine">Running on Arc testnet. Not investment advice.</p>
+    </div>
+    <div><h4>Product</h4><ul><li><a href="http://localhost:4100/">Explore</a></li><li><a href="http://localhost:4100/create.html">Create a mandate</a></li></ul></div>
+    <div><h4>Build</h4><ul><li>MCP server</li><li>SDK</li><li><a href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">First mandate ↗</a></li></ul></div>
+    <div><h4>Connect</h4><ul><li><a href="https://x.com/onreins" target="_blank" rel="noopener">X @onreins</a></li></ul></div>
+    <div class="legal">
+      <p>Reins is software. Funds placed under a mandate sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The mandates shown in the product panels are examples: tokenized equities such as SPYx are not yet issued on Arc.</p>
+      <p>Nothing on this page is investment advice or an offer of securities. Automated strategies can lose money up to the loss limit their mandate sets.</p>
+    </div>
+  </footer>
 </div>
-
-<section class="closing center">
-  <span class="disc m hide-sm" style="left:12%;top:30%" aria-hidden="true">SPYx</span>
-  <span class="disc s green hide-sm" style="right:13%;bottom:26%" aria-hidden="true">USDC</span>
-  <p class="small">One mandate live on Arc testnet. Stocks are next &mdash; Circle has named xStocks and Dinari among the issuers coming to Arc.</p>
-  <h2>Get started. Hold the <em>reins</em>.</h2>
-  <a class="pillbtn" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632">Watch the first mandate</a>
-</section>
-
-<footer>
-  <hr>
-  <div class="row">
-    <a class="brand" href="#top" style="font-size:16px">reins<b>.</b></a>
-    <span style="font:400 11.5px var(--mono);color:var(--ink-3)">Arc testnet &middot; 26 Sep 2026</span>
-  </div>
-  <p>Reins is software. Funds placed under a mandate sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The mandate shown in product panels is an example &mdash; tokenized equities such as SPYx are not yet issued on Arc. Every transaction under &ldquo;Broadcast, not promised&rdquo; is real and links to the Arc testnet explorer.</p>
-  <p>Nothing on this page is investment advice or an offer of securities. Automated strategies can lose money up to the loss limit their mandate sets. Figures dated above were read from Arc testnet chain state.</p>
-</footer>
 
 <script>
 (function () {
   "use strict";
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-  // One-shot reveals: cards and group labels, staggered along each carousel.
-  if ("IntersectionObserver" in window) {
-    var els = Array.prototype.slice.call(document.querySelectorAll(".card"));
-    document.querySelectorAll(".carousel").forEach(function (row) {
-      Array.prototype.forEach.call(row.children, function (card, i) {
-        card.style.transitionDelay = Math.min(i * 70, 280) + "ms";
-      });
-    });
-    els.forEach(function (el) { el.classList.add("pre"); });
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("in");
-          io.unobserve(entry.target);
-          // Drop the stagger once revealed, so hover responds instantly.
-          setTimeout(function () { entry.target.style.transitionDelay = ""; }, 1100);
-        }
-      });
-    }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
-    els.forEach(function (el) { io.observe(el); });
+  // ------------------------------------------------ characters (as in the app)
+  var INK = "#2a2a29";
+  var SHAPES = [
+    function (c) { var p = ""; for (var k = 0; k < 8; k++) { var a = (k / 8) * Math.PI * 2; p += '<circle cx="' + (50 + 27 * Math.cos(a)).toFixed(1) + '" cy="' + (48 + 27 * Math.sin(a)).toFixed(1) + '" r="17" fill="' + c + '"/>'; } return p + '<circle cx="50" cy="48" r="30" fill="' + c + '"/>'; },
+    function (c) { return '<path d="M50 14c24-2 38 14 37 36s-16 38-39 36-36-16-35-38 15-32 37-34z" fill="' + c + '"/>'; },
+    function (c) { return '<rect x="18" y="16" width="64" height="64" rx="17" fill="' + c + '" transform="rotate(-7 50 48)"/>'; },
+    function (c) { return '<path d="M50 12c6 0 9 4 13 11l24 46c5 10-1 17-11 17H24c-10 0-16-7-11-17l24-46c4-7 7-11 13-11z" fill="' + c + '"/>'; },
+  ];
+  function mascot(shape, color, mood) {
+    var s = 'fill="none" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"';
+    var dots = '<ellipse cx="41" cy="46" rx="4" ry="5.5" fill="' + INK + '"/><ellipse cx="59" cy="46" rx="4" ry="5.5" fill="' + INK + '"/>';
+    var face = mood === "happy" ? '<path d="M35 47q6-7 12 0M53 47q6-7 12 0" ' + s + '/><path d="M41 58q9 9 18 0" ' + s + "/>"
+      : dots + '<path d="M43 59q7 6 14 0" ' + s + "/>";
+    return '<svg class="mascot" viewBox="0 0 100 100" aria-hidden="true"><path d="M40 84l-4 12M60 84l4 12" fill="none" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' +
+      SHAPES[shape](color) + '<ellipse cx="36" cy="30" rx="8" ry="5" fill="#fff" opacity=".28" transform="rotate(-30 36 30)"/>' + face + "</svg>";
   }
+  var LOCK = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="2.5" y="6" width="9" height="6.5" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 6V4.5a2.5 2.5 0 0 1 5 0V6" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>';
+  document.querySelectorAll(".lk").forEach(function (el) { el.innerHTML = LOCK; });
+  document.getElementById("flow-agent").insertAdjacentHTML("afterbegin", '<span class="float" style="display:block">' + mascot(2, "#1e9bff", "happy") + "</span>");
+  document.getElementById("card-mascot").innerHTML = mascot(3, "#1fc46b", "happy");
+  document.getElementById("cta-mascots").innerHTML = [[0, "#ff4a1c", "happy"], [1, "#ffc53d", "content"], [2, "#1e9bff", "happy"]]
+    .map(function (m, i) { return '<span class="float" style="display:block;width:56px;animation-delay:-' + (i * 1.3) + 's">' + mascot(m[0], m[1], m[2]) + "</span>"; }).join("");
 
-  // Scroll-driven motion, reversible: the hero settles away as you leave it,
-  // and the big statements grow into place with scroll position.
+  // ------------------------------------------------------- card carousels
+  // Prev/next arrows at the top right run for everyone, reduced motion too.
+  var smooth = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  var ARROW = function (d) { return '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + d + '"/></svg>'; };
+  document.querySelectorAll(".carousel").forEach(function (car) {
+    var nav = document.createElement("div");
+    nav.className = "car-nav";
+    nav.innerHTML = '<button class="car-btn" type="button" aria-label="Previous card">' + ARROW("M9.5 3 5 7.5 9.5 12") + "</button>" +
+      '<button class="car-btn" type="button" aria-label="Next card">' + ARROW("M5.5 3 10 7.5 5.5 12") + "</button>";
+    car.before(nav);
+    var prev = nav.children[0], next = nav.children[1];
+    var step = function () { var f = car.children[0]; return f ? f.getBoundingClientRect().width + 14 : 400; };
+    prev.addEventListener("click", function () { car.scrollBy({ left: -step(), behavior: smooth }); });
+    next.addEventListener("click", function () { car.scrollBy({ left: step(), behavior: smooth }); });
+    var sync = function () {
+      prev.disabled = car.scrollLeft < 10;
+      next.disabled = car.scrollLeft > car.scrollWidth - car.clientWidth - 10;
+    };
+    car.addEventListener("scroll", sync, { passive: true });
+    addEventListener("resize", sync, { passive: true });
+    sync();
+  });
+
+  var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still) return;
+
+  // ------------------------------------------------------------ hero motion
+  // As before: the hero settles away as you scroll past it, and slow rein
+  // ribbons flow across it.
   var hero = document.querySelector(".hero");
-  var heroInner = hero ? hero.querySelector("div") : null;
-  var grow = Array.prototype.slice.call(document.querySelectorAll(".statement h2, .closing h2"));
+  var heroInner = hero.querySelector("div");
   var clamp01 = function (v) { return v < 0 ? 0 : v > 1 ? 1 : v; };
-  var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
   var ticking = false;
-
   function frame() {
     ticking = false;
-    var vh = innerHeight;
-    if (hero) {
-      var hp = clamp01(scrollY / (hero.offsetHeight * 0.9));
-      hero.style.transform = "scale(" + (1 - 0.05 * hp).toFixed(4) + ")";
-      hero.style.borderRadius = (30 + 26 * hp).toFixed(1) + "px";
-      if (heroInner) {
-        heroInner.style.opacity = (1 - 0.85 * hp).toFixed(3);
-        heroInner.style.transform = "translateY(" + (hp * 46).toFixed(1) + "px)";
-      }
-    }
-    grow.forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.top > vh + 80 || r.bottom < -80) return;
-      var gp = easeOut(clamp01((vh - r.top) / (vh * 0.55)));
-      el.style.opacity = (0.25 + 0.75 * gp).toFixed(3);
-      el.style.transform =
-        "translateY(" + ((1 - gp) * 42).toFixed(1) + "px) scale(" + (0.94 + 0.06 * gp).toFixed(4) + ")";
-    });
+    var hp = clamp01(scrollY / (hero.offsetHeight * 0.9));
+    hero.style.transform = "scale(" + (1 - 0.05 * hp).toFixed(4) + ")";
+    hero.style.borderRadius = (30 + 26 * hp).toFixed(1) + "px";
+    heroInner.style.opacity = (1 - 0.85 * hp).toFixed(3);
+    heroInner.style.transform = "translateY(" + (hp * 46).toFixed(1) + "px)";
   }
-  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
-  addEventListener("scroll", onScroll, { passive: true });
-  addEventListener("resize", onScroll, { passive: true });
+  addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }, { passive: true });
   frame();
 
-  // Ribbons: slow-flowing rein lines drawn across the hero. Our own motif.
   var cv = document.getElementById("rib");
-  if (cv && cv.getContext) {
-    var ctx = cv.getContext("2d");
-    var W = 0, Hh = 0, running = true;
+  if (cv.getContext) {
+    var ctx = cv.getContext("2d"), W = 0, Hh = 0, ribsOn = true;
     var fit = function () {
-      var r = cv.parentElement.getBoundingClientRect();
-      var d = Math.min(devicePixelRatio || 1, 2);
+      var r = cv.parentElement.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
       W = cv.width = Math.round(r.width * d);
       Hh = cv.height = Math.round(r.height * d);
     };
     fit();
     addEventListener("resize", fit, { passive: true });
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (e) { running = e[0].isIntersecting; }).observe(cv);
-    }
+    if ("IntersectionObserver" in window) new IntersectionObserver(function (e) { ribsOn = e[0].isIntersecting; }).observe(cv);
     var RIBS = [
       { y: .74, amp: .050, sp: .00020, ph: 0.0, c: "112,150,255" },
       { y: .82, amp: .065, sp: .00015, ph: 2.1, c: "77,125,247" },
-      { y: .66, amp: .040, sp: .00026, ph: 4.4, c: "168,196,255" }
+      { y: .66, amp: .040, sp: .00026, ph: 4.4, c: "168,196,255" },
     ];
     (function loop(ts) {
       requestAnimationFrame(loop);
-      if (!running) return;
+      if (!ribsOn) return;
       ctx.clearRect(0, 0, W, Hh);
       RIBS.forEach(function (rb) {
         ctx.beginPath();
-        var steps = 64;
-        for (var i = 0; i <= steps; i++) {
-          var x = (i / steps) * W;
-          var y = Hh * rb.y +
-            Math.sin((i / steps) * 4.2 + ts * rb.sp + rb.ph) * Hh * rb.amp +
-            Math.sin((i / steps) * 9.1 + ts * rb.sp * 1.7 + rb.ph) * Hh * rb.amp * .35;
-          if (i === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
+        for (var i = 0; i <= 64; i++) {
+          var x = (i / 64) * W;
+          var y = Hh * rb.y + Math.sin((i / 64) * 4.2 + ts * rb.sp + rb.ph) * Hh * rb.amp + Math.sin((i / 64) * 9.1 + ts * rb.sp * 1.7 + rb.ph) * Hh * rb.amp * .35;
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
         }
         var g = ctx.createLinearGradient(0, 0, W, 0);
         g.addColorStop(0, "rgba(" + rb.c + ",0)");
@@ -647,45 +747,73 @@
       });
     })(0);
   }
-})();
 
-// Carousel controls run for everyone, reduced motion included.
-(function () {
-  "use strict";
-  var smooth = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
-  var ARROWS = {
-    prev: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3 5 7.5 9.5 12"/></svg>',
-    next: '<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3 10 7.5 5.5 12"/></svg>'
-  };
-  document.querySelectorAll(".carousel").forEach(function (car) {
-    var nav = document.createElement("div");
-    nav.className = "car-nav";
-    var prev = document.createElement("button");
-    var next = document.createElement("button");
-    prev.type = next.type = "button";
-    prev.className = next.className = "car-btn";
-    prev.setAttribute("aria-label", "Previous card");
-    next.setAttribute("aria-label", "Next card");
-    prev.innerHTML = ARROWS.prev;
-    next.innerHTML = ARROWS.next;
-    nav.appendChild(prev);
-    nav.appendChild(next);
-    car.before(nav);
+  // Cards rise in as they arrive, staggered along each track.
+  if ("IntersectionObserver" in window) {
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".carousel .card"));
+    document.querySelectorAll(".carousel").forEach(function (row) {
+      Array.prototype.forEach.call(row.children, function (c, i) { c.style.transitionDelay = Math.min(i * 70, 280) + "ms"; });
+    });
+    cards.forEach(function (c) { c.classList.add("pre"); });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add("in");
+        io.unobserve(e.target);
+        setTimeout(function () { e.target.style.transitionDelay = ""; }, 1100);
+      });
+    }, { threshold: 0.1, rootMargin: "0px 0px -6% 0px" });
+    cards.forEach(function (c) { io.observe(c); });
+  }
 
-    var step = function () {
-      var first = car.children[0];
-      return first ? first.getBoundingClientRect().width + 14 : 400;
-    };
-    prev.addEventListener("click", function () { car.scrollBy({ left: -step(), behavior: smooth }); });
-    next.addEventListener("click", function () { car.scrollBy({ left: step(), behavior: smooth }); });
+  // ------------------------------------------------------------- timelines
+  // Each vignette shows complete at rest (no JS, reduced motion, thumbnails).
+  // In view, it plays its steps in order, holds, and loops.
+  if (!("IntersectionObserver" in window)) return;
 
-    var sync = function () {
-      prev.disabled = car.scrollLeft < 10;
-      next.disabled = car.scrollLeft > car.scrollWidth - car.clientWidth - 10;
-    };
-    car.addEventListener("scroll", sync, { passive: true });
-    addEventListener("resize", sync, { passive: true });
-    sync();
+  var STEP = 720, HOLD = 3800;
+  var typed = document.getElementById("typed");
+
+  function play(root, extra) {
+    var steps = Array.prototype.slice.call(root.querySelectorAll("[data-step]"));
+    var last = Math.max.apply(null, steps.map(function (el) { return Number(el.getAttribute("data-step")); }));
+    var timers = [], running = false;
+    function clear() { timers.forEach(clearTimeout); timers = []; }
+    function run() {
+      clear();
+      steps.forEach(function (el) { el.classList.remove("on"); });
+      if (extra) extra(timers);
+      steps.forEach(function (el) {
+        timers.push(setTimeout(function () { el.classList.add("on"); }, Number(el.getAttribute("data-step")) * STEP));
+      });
+      timers.push(setTimeout(run, last * STEP + HOLD));
+    }
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting && !running) { running = true; root.classList.add("anim"); run(); }
+        else if (!e.isIntersecting && running) {
+          running = false; clear(); root.classList.remove("anim");
+          steps.forEach(function (el) { el.classList.add("on"); });
+        }
+      });
+    }, { threshold: 0.35 }).observe(root);
+  }
+
+  // The chat's prompt box types each message before it is "sent".
+  function typeOut(timers, text, at) {
+    for (var i = 0; i <= text.length; i++) {
+      (function (n) { timers.push(setTimeout(function () { typed.textContent = text.slice(0, n) || "Ask your agent…"; }, at + n * 30)); })(i);
+    }
+  }
+
+  play(document.getElementById("flow"));
+  play(document.getElementById("card"));
+  play(document.getElementById("rulesv"));
+  play(document.getElementById("chat"), function (timers) {
+    typeOut(timers, "Buy $2 of EURC", 0);
+    timers.push(setTimeout(function () { typed.textContent = "Ask your agent…"; }, STEP));
+    typeOut(timers, "Now put everything in, $50", STEP + 80);
+    timers.push(setTimeout(function () { typed.textContent = "Ask your agent…"; }, 3 * STEP));
   });
 })();
 </script>
