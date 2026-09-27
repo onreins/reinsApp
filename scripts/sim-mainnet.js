@@ -30,21 +30,16 @@ const tradeSize = BigInt(Math.round(tradeUsd * 1e6));
 const sim = artifact("MandateSim");
 const client = createPublicClient({ chain: arc, transport: http() });
 
-const data = encodeFunctionData({
-  abi: sim.abi,
-  functionName: "run",
-  args: [
-    {
-      poolManager: MAINNET.poolManager,
-      usdc: MAINNET.usdc,
-      foreign: MAINNET.eurc,
-      foreignFeed: MAINNET.eurcUsdFeed,
-      fee: MAINNET.fee,
-      tickSpacing: MAINNET.tickSpacing,
-      tradeSize,
-    },
-  ],
-});
+const setup = {
+  poolManager: MAINNET.poolManager,
+  usdc: MAINNET.usdc,
+  foreign: MAINNET.eurc,
+  foreignFeed: MAINNET.eurcUsdFeed,
+  fee: MAINNET.fee,
+  tickSpacing: MAINNET.tickSpacing,
+  tradeSize,
+};
+const data = encodeFunctionData({ abi: sim.abi, functionName: "run", args: [setup] });
 
 const fmt = (units, dp = 6) => (Number(units) / 10 ** dp).toFixed(4);
 
@@ -74,5 +69,30 @@ try {
 } catch (err) {
   console.error("\n  simulation failed:", err.shortMessage ?? err.message);
   if (err.cause?.data) console.error("  revert data:", err.cause.data);
+  await diagnose();
   process.exit(1);
+}
+
+/**
+ * A revert inside one big eth_call often arrives with no message. Rerun the
+ * same path stage by stage (MandateSim.diagnose) and say which one failed.
+ */
+async function diagnose() {
+  const STAGES = ["none", "deploy venue", "set route", "deploy agent", "deploy mandate", "approve USDC", "deposit", "read Chainlink feed", "buy EURC", "sell EURC back"];
+  try {
+    const { data: raw } = await client.call({
+      to: HARNESS,
+      data: encodeFunctionData({ abi: sim.abi, functionName: "diagnose", args: [setup] }),
+      gas: 30_000_000n,
+      stateOverride: [{ address: HARNESS, code: sim.deployedBytecode, balance: parseEther("1000") }],
+    });
+    const [stage, reason] = decodeFunctionResult({ abi: sim.abi, functionName: "diagnose", data: raw });
+    if (stage === 0) {
+      console.error("  diagnosis: every stage passed when run one at a time; the failure was transient or specific to run()");
+    } else {
+      console.error(`  diagnosis: stage ${stage} (${STAGES[stage]}) failed, revert data ${reason === "0x" ? "empty" : reason}`);
+    }
+  } catch (e) {
+    console.error("  diagnosis could not run either:", e.shortMessage ?? e.message);
+  }
 }

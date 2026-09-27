@@ -80,7 +80,15 @@ abstains rather than guessing when it cannot verify.
 | Payments | Settled end to end. Across two runs an agent bought 6 sandbox runs over x402 through Circle Gateway on Arc testnet; the buyer's Gateway balance went $1.0000 → $0.9918 and the seller's rose to exactly $0.0082 once Circle's batch cycle completed (checked 2026-09-25) |
 | Website | `site/index.html`, published as a private claude.ai artifact. Rewritten for Mandate 2026-09-25 in an institutional register — hairline rules, tabular numerals, no rounded corners, one accent. `arena/public/index.html` matches it. Missing: contact email, repo link |
 
-## Open bug: `npm run sim:mainnet` reverts (found 2026-09-26)
+## `npm run sim:mainnet`: passing again (2026-09-27), cause not found
+
+Passed on 2026-09-27 with unchanged code: $10 round trip, fill 0.068% from the
+oracle, cost $0.0100. Added `MandateSim.diagnose()`, which runs every stage in
+its own try/catch; all nine pass, and the script now runs it automatically on
+any failure and names the stage. The failure below was most likely a transient
+RPC or pool condition, but that is a guess. Notes from when it failed:
+
+### Was: reverts (found 2026-09-26)
 
 The headline mainnet proof, which the README quotes, currently fails with
 `Execution reverted for an unknown reason` and no revert data. Established so

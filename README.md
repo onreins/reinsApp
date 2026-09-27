@@ -33,10 +33,13 @@ call, funded, and its agent trades $10 of USDC into EURC and back through the
 real Uniswap v4 pool, checked by the real Chainlink feed. Nothing is broadcast.
 
 ```
-  Chainlink EURC/USD   $1.1379
-  bought               8.7808 EURC for $10.00  (fill $1.1388 per EURC, 0.081% vs oracle)
+  Chainlink EURC/USD   $1.1385
+  bought               8.7775 EURC for $10.00  (fill $1.1393 per EURC, 0.068% vs oracle)
   equity at the end    $19.9900  (round trip cost $0.0100)
 ```
+
+Run on 2026-09-27. If it ever fails, the script reruns the same path stage by
+stage and names the stage that broke.
 
 ### Running live on Arc testnet
 
