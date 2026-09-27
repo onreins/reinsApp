@@ -3,6 +3,29 @@
 Living status for whoever picks this up next — including a future session of
 the agent that wrote it. Update it at the end of every working stretch.
 
+## Where things stand (2026-09-27)
+
+The product is now **Reins** (handle @onreins): automated strategies on Arc
+that trade inside a mandate's rules, fully visible on-chain. Today's work is on
+branch **`feat/app-site-bridge`**, not yet merged to `master`. 303 tests pass.
+
+| | |
+|---|---|
+| App | `npm run app` on :4100. Chamber's explore/vault layout with Family-style characters (one per mandate; the face is its state). Shared `app/public/ui.js` |
+| Returns | "Since funding" is chained across deposits, withdrawals and unfreezes (`arena/returns.js`). The contract's equity/baseline restarts at unfreeze; the live testnet mandate is **−0.08%**, not the +0.04% that ratio shows |
+| Home page | `site/index.html`, published privately. Original hero + rules cards on top, Chamber-style animated vignettes below. Preview: `.claude/launch.json` "site" |
+| Bridge | `npm run bridge` (see `bridge/README.md`). freqtrade (e.g. NostalgiaForInfinity, run unmodified in dry-run) and a TradingAgents runner post signals; each becomes a trade inside the mandate's cap, or a **shadow** trade while the asset isn't on Arc. Shadow mode by default. Reviewed; 2 high + 4 medium findings fixed |
+| Strategy research | GitHub survey, 2026-09-27: DCA, rebalance-with-band, then a 200-day trend filter fit a mandate; hourly bots don't (fees, per-trade cap). Uniswap shipped `dca-bot`/`index-bot`/`copy-trade` AI skills (Jul 2026), which enforce limits in the bot, not a contract |
+
+Before installing any brain: official GitHub org only, pinned release, `pip-audit`,
+Defender scan, agent key only. **`pip install tradingagents` is a different
+project** (Mai0313), not TauricResearch's; install from source.
+
+Next, in order: merge the branch; DCA Autopilot template enforced in the
+contract (anyone can trigger it, no key held by us); backtest the templates with
+Arc's real costs; fix `sim:mainnet`; host the app. Stock mandates also need a
+price feed per asset on Arc, which Chainlink doesn't publish yet.
+
 ## Current product: Mandate (since 2026-09-25)
 
 The founder judged Verdict too weak on demand and chose **Mandate**: a smart
@@ -118,9 +141,10 @@ simulation figures are from an earlier run and should not be quoted as current.
 
 ## Needs a human
 
-1. **Push to GitHub.** Decision made: public. Blocked on an empty repo existing —
+1. **Push to GitHub.** Decision changed (2026-09-26): **private** repo named
+   `reins`, so nobody can copy it. Blocked on an empty private repo existing —
    create one at github.com/new (no README), then `git remote add origin <url>` and
-   `git push -u origin master`. Git Credential Manager handles sign-in.
+   push. Git Credential Manager handles sign-in.
 2. **Grant application** — drafted in [GRANT.md](GRANT.md), not submitted. Submitting
    is the founder's call.
 3. **Talk to one real user.** Nothing outside this repo has seen the product yet.
@@ -156,6 +180,16 @@ mainnet use.
 - USDC ERC-20 is `0x3600000000000000000000000000000000000000` on testnet and mainnet.
 
 ## Session log
+
+- **2026-09-27** — redesigned the app twice on the founder's references
+  (Copilot Money, then Chamber) and made it playful after Family, with a
+  generated character per mandate. Rebuilt the home page on Chamber's layout,
+  keeping the original hero and rules cards. Built the bridge for freqtrade/NFI
+  and TradingAgents with shadow trades; a review found a double-trade risk on
+  retried decisions and trades that landed being recorded as refused, both
+  fixed (the SDK now separates refusals from post-broadcast failures). Found and
+  fixed a misleading return: unfreeze reset the baseline and hid a loss. 303
+  tests pass. Caught that `pip install tradingagents` is someone else's package.
 
 - **2026-09-25 (night)** — deployed Mandate to **Arc testnet** and ran it for
   real: created and funded the USDC/EURC Uniswap v4 pool (testnet had none),
