@@ -1,0 +1,17 @@
+{
+  "_about": "Outside symbol -> the token a mandate holds for it. null means not on Arc yet: signals for it are recorded as shadow trades. When an asset lists on Arc with a pool and a price feed, put its token symbol here and add it to a mandate.",
+  "quotes": ["USD", "USDT", "USDC"],
+  "map": {
+    "EUR": "EURC",
+    "EURC": "EURC",
+    "BTC": null,
+    "ETH": null,
+    "SOL": null,
+    "SPY": "SPYx",
+    "QQQ": "QQQx",
+    "NVDA": "NVDAx",
+    "TSLA": "TSLAx",
+    "AAPL": "AAPLx",
+    "MSFT": "MSFTx"
+  }
+}

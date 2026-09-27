@@ -29,7 +29,8 @@
     "seed:testnet": "node --env-file=.env scripts/seed-testnet-pool.js",
     "live:testnet": "node --env-file=.env scripts/live-testnet.js",
     "app": "node --env-file=.env app/server.js",
-    "feed:publish": "node --env-file=.env scripts/publish-feed.js"
+    "feed:publish": "node --env-file=.env scripts/publish-feed.js",
+    "bridge": "node --env-file=.env bridge/server.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",

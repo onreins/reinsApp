@@ -201,8 +201,9 @@ export class MandateClient {
     const [tIn, tOut, base] = await Promise.all([this._token(from), this._token(to), this._base()]);
     const amountIn = parseUnits(String(amount), tIn.decimals);
     const min = parseUnits(String(minOut), tOut.decimals);
+    let hash;
     try {
-      const hash = await this.wallet.writeContract({
+      hash = await this.wallet.writeContract({
         address: this.address,
         abi: TRADE_ABI,
         functionName: "trade",
@@ -210,30 +211,51 @@ export class MandateClient {
         account: this.wallet.account,
         chain: this.wallet.chain,
       });
-      const receipt = await this.publicClient.waitForTransactionReceipt({ hash });
-      if (receipt.status !== "success") throw new Error(`trade transaction failed: ${hash}`);
-      const traded = receipt.logs
-        .filter((l) => l.address.toLowerCase() === this.address.toLowerCase())
-        .map((l) => {
-          try {
-            return decodeEventLog({ abi: MANDATE.abi, ...l });
-          } catch {
-            return null;
-          }
-        })
-        .find((e) => e?.eventName === "Traded");
-      return {
-        hash,
-        sold: { symbol: tIn.symbol, amount: Number(amount) },
-        bought: { symbol: tOut.symbol, amount: Number(formatUnits(traded.args.amountOut, tOut.decimals)) },
-        equityUsd: Number(formatUnits(traded.args.equity, base.decimals)),
-      };
     } catch (err) {
+      // Refused before it was ever sent: the simulation hit a rule.
       const e = new Error(`trade refused: ${explain(err).reason}`);
       e.mandate = explain(err);
       e.cause = err;
       throw e;
     }
+
+    // From here the transaction exists. A failure now is not a refusal: the
+    // trade may well have happened, so the error carries the hash to check.
+    const landed = (message, cause) => {
+      const e = new Error(`trade sent (${hash}) but ${message}`);
+      e.hash = hash;
+      if (cause) e.cause = cause;
+      return e;
+    };
+    let receipt;
+    try {
+      receipt = await this.publicClient.waitForTransactionReceipt({ hash });
+    } catch (err) {
+      throw landed(`its receipt couldn't be read: ${err.shortMessage ?? err.message}`, err);
+    }
+    if (receipt.status !== "success") {
+      const e = new Error(`trade refused: the transaction reverted on-chain (${hash})`);
+      e.mandate = { rule: "Reverted", reason: "the transaction reverted on-chain" };
+      e.hash = hash;
+      throw e;
+    }
+    const traded = receipt.logs
+      .filter((l) => l.address.toLowerCase() === this.address.toLowerCase())
+      .map((l) => {
+        try {
+          return decodeEventLog({ abi: MANDATE.abi, ...l });
+        } catch {
+          return null;
+        }
+      })
+      .find((e) => e?.eventName === "Traded");
+    if (!traded) throw landed("no Traded event was found in its receipt");
+    return {
+      hash,
+      sold: { symbol: tIn.symbol, amount: Number(amount) },
+      bought: { symbol: tOut.symbol, amount: Number(formatUnits(traded.args.amountOut, tOut.decimals)) },
+      equityUsd: Number(formatUnits(traded.args.equity, base.decimals)),
+    };
   }
 }
 

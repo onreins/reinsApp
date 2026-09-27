@@ -1,0 +1,24 @@
+{
+  "_about": "Merge this into freqtrade's config.json (run NostalgiaForInfinity or any strategy unmodified, with dry_run: true). freqtrade posts each fill to the bridge, which trades it inside the mandate or records it as a shadow trade. Replace CHANGE_ME with your BRIDGE_SECRET.",
+  "webhook": {
+    "enabled": true,
+    "url": "http://127.0.0.1:4300/signal/freqtrade?key=CHANGE_ME",
+    "format": "json",
+    "retries": 3,
+    "retry_delay": 2,
+    "entry_fill": {
+      "type": "entry_fill",
+      "trade_id": "{trade_id}",
+      "pair": "{pair}",
+      "direction": "{direction}",
+      "stake_amount": "{stake_amount}",
+      "enter_tag": "{enter_tag}"
+    },
+    "exit_fill": {
+      "type": "exit_fill",
+      "trade_id": "{trade_id}",
+      "pair": "{pair}",
+      "exit_reason": "{exit_reason}"
+    }
+  }
+}
