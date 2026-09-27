@@ -2,141 +2,228 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reins — Strategies</title>
+<title>Reins — Explore</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
 
-<header class="topbar">
-  <div class="bar">
-    <a class="logo" href="/">
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="#7ba0ff" stroke-width="1.7"/><path d="M6 13.6c0-4 2-6.6 4.6-6.6 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 3-4.4 3" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>
-      Reins
-    </a>
-    <nav class="tabs">
-      <a href="/" aria-current="page">Strategies</a>
-      <a href="/create.html">Create</a>
-    </nav>
-    <div class="bar-right">
-      <span class="net" id="net"><i></i>connecting…</span>
-      <a class="wallet" href="/create.html" style="display:inline-flex;align-items:center;text-decoration:none">New mandate</a>
-    </div>
-  </div>
-</header>
-
+<a class="skip" href="#main">Skip to content</a>
 <div class="wrap">
+  <header class="top" id="top"></header>
 
-  <div class="page-head">
-    <h1>Strategies</h1>
-    <p class="sub">Every figure on this page is read from chain state. There is no database, and nothing here can be faked — open any row and check it against the explorer.</p>
-  </div>
+  <main id="main">
+    <section class="hero">
+      <div>
+        <h1 class="page-title">Explore</h1>
+        <p class="lede">Strategies that trade inside rules nobody can change. Every number here comes straight from the chain, so you can see exactly where the money is.</p>
+      </div>
+      <div class="scene" id="scene" aria-hidden="true"></div>
+    </section>
 
-  <div class="card">
-    <div class="scroll pad" id="board">
-      <p class="empty">Reading the chain…</p>
+    <div class="sec-head">
+      <h2 class="sec-title">Top Strategies</h2>
+      <div class="seg" id="tabs" role="group" aria-label="Rank top strategies by">
+        <button type="button" data-k="capital" aria-pressed="true">Most Capital</button>
+        <button type="button" data-k="perf" aria-pressed="false">Top Performing</button>
+        <button type="button" data-k="new" aria-pressed="false">Newest</button>
+      </div>
     </div>
-  </div>
+    <div class="top-cards" id="cards">
+      <span class="skel card" style="height:290px"></span><span class="skel card" style="height:290px"></span><span class="skel card" style="height:290px"></span>
+    </div>
+    <div class="show-more"><button class="linkish" id="more" type="button" hidden>Show More <span id="more-ic"></span></button></div>
 
-  <footer>
-    <span id="foot">Reins</span>
+    <div class="sec-head board-head">
+      <h2 class="sec-title">Leaderboard</h2>
+      <div class="filters">
+        <div class="seg" id="filter" role="group" aria-label="Show">
+          <button type="button" data-f="all" aria-pressed="true">All</button>
+          <button type="button" data-f="live" aria-pressed="false">Live</button>
+          <button type="button" data-f="closed" aria-pressed="false">Closed</button>
+        </div>
+        <label class="search"><span id="search-ic"></span><span class="sr-only">Search mandates</span><input id="q" type="search" placeholder="Search" autocomplete="off"></label>
+      </div>
+    </div>
+    <div class="card table-card">
+      <table class="lb">
+        <caption class="sr-only">Every mandate on Reins, read from the chain</caption>
+        <thead><tr>
+          <th scope="col">Mandate</th>
+          <th scope="col" data-s="managed"><button type="button">Managed</button></th>
+          <th scope="col" class="num" data-s="1d"><button type="button">1D</button></th>
+          <th scope="col" class="num" data-s="1w"><button type="button">1W</button></th>
+          <th scope="col" class="num" data-s="1m"><button type="button">1M</button></th>
+          <th scope="col" class="num" data-s="all" aria-sort="descending"><button type="button">Total</button></th>
+          <th scope="col">Risk</th>
+          <th scope="col">State</th>
+        </tr></thead>
+        <tbody id="lb"><tr><td colspan="8"><span class="skel line"></span><span class="skel line" style="width:70%"></span></td></tr></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span>Every figure is read from chain state. Returns are flow-free: deposits and withdrawals don’t count as gains or losses.</span>
     <span>Not investment advice</span>
   </footer>
 </div>
 
+<script src="/wallet.js"></script>
+<script src="/ui.js"></script>
 <script>
 (function () {
   "use strict";
+  var U = window.ReinsUI;
   var $ = function (id) { return document.getElementById(id); };
+  var esc = U.esc;
+  var board = [], rets = {}, series = {};
+  var view = { tab: "capital", more: false, filter: "all", q: "", sort: "all", dir: -1 };
 
-  var money = function (n) {
-    return n === null || n === undefined
-      ? "—"
-      : "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-  var FLAT = 0.005; // under half a basis point is rounding, not a move
-  var pct = function (n) {
-    if (n === null || n === undefined) return "—";
-    if (Math.abs(n) < FLAT) return "0.00%";
-    return (n > 0 ? "+" : "−") + Math.abs(n).toFixed(2) + "%";
-  };
-  var short = function (a) { return a.slice(0, 6) + "…" + a.slice(-4); };
-  var esc = function (s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-    });
-  };
+  U.topbar("explore");
+  $("more-ic").innerHTML = U.icon("down", 14);
+  $("search-ic").innerHTML = U.icon("search", 16);
+  document.querySelectorAll(".lb th[data-s] button").forEach(function (b) { b.insertAdjacentHTML("beforeend", U.icon("sort", 12)); });
 
-  function stateOf(r) {
-    if (r.closed) return ["closed", "Closed"];
-    if (r.frozen) return ["frozen", "Frozen"];
-    if (r.expired) return ["expired", "Expired"];
-    return ["live", "Live"];
+  var key = function (r) { return r.address.toLowerCase(); };
+  var owner = function (r) { return "by " + U.short(r.owner); };
+  var link = function (r) { return "/mandate.html?a=" + esc(r.address); };
+
+  // ------------------------------------------------------------- top cards
+  function renderCards() {
+    var live = board.filter(function (r) { return !r.closed; });
+    var sorters = {
+      capital: function (a, b) { return (b.equityUsd || 0) - (a.equityUsd || 0); },
+      perf: function (a, b) { return (b.returnPct || 0) - (a.returnPct || 0); },
+      new: function (a, b) { return Number(b.createdAtBlock) - Number(a.createdAtBlock); },
+    };
+    var list = live.slice().sort(sorters[view.tab]);
+    var shown = view.more ? list.slice(0, 9) : list.slice(0, 3);
+    $("more").hidden = list.length <= 3;
+    $("more").firstChild.textContent = view.more ? "Show Less " : "Show More ";
+    $("cards").innerHTML = shown.length
+      ? shown.map(function (r) {
+          var risk = U.riskOf(r);
+          return '<article class="card vcard">' +
+            '<div class="chips">' +
+              '<span class="chip cash" title="Equity">' + U.icon("coins", 13) + U.compact(r.equityUsd) + "</span>" +
+              '<span class="chip ' + (U.dirOf(r.returnPct) === "up" ? "up" : "") + '" title="Return since funding">' + U.icon("trend", 13) + U.pct(r.returnPct) + "</span>" +
+              (risk ? '<span class="chip" title="Risk, from its loss limit">' + U.icon("gauge", 13) + risk.n + " / 5</span>" : "") +
+            "</div>" +
+            '<div class="spark">' + U.areaSvg(series[key(r)]) + "</div>" +
+            '<div class="who">' + U.mascot(r) + '<span class="t"><b>' + esc(r.name || "unnamed") + "</b><small>" + owner(r) + "</small></span>" +
+              '<a class="btn" href="' + link(r) + '">View<span class="sr-only"> ' + esc(r.name || "") + "</span></a></div>" +
+            "</article>";
+        }).join("") + (shown.length < 3
+          ? '<a class="card vcard invite" href="/create.html">' + U.mascot({ address: "0x0000000000000000000000000000000000000002", returnPct: 1 }) + '<b>Your strategy here</b><span>Set the rules, fund it, and it shows up on this page, read straight from the chain.</span><span class="btn">Create</span></a>'
+          : "")
+      : '<div class="card lb-empty" style="grid-column:1/-1"><b>No live strategies yet</b>The first one appears here the moment it is created on-chain.<br><a class="btn dark" href="/create.html">Create a mandate</a></div>';
   }
 
-  function render(data) {
-    var rows = data.mandates || [];
-    $("foot").textContent = "Reins · " + data.network + " · block " + data.block;
-    if (!rows.length) {
-      $("board").innerHTML =
-        '<p class="empty"><b>No mandates yet.</b><br>The first one appears here the moment it is created on-chain.</p>';
-      return;
+  // ------------------------------------------------------------------ scene
+  // Family's hero scatter, cast with real mandates: the live ones up front,
+  // closed ones asleep behind them.
+  function renderScene() {
+    var live = board.filter(function (r) { return !r.closed; }).sort(function (a, b) { return (b.equityUsd || 0) - (a.equityUsd || 0); });
+    var cast = live.concat(board.filter(function (r) { return r.closed; })).slice(0, 3);
+    var spots = [["left:20%;top:16%", ""], ["left:58%;top:42%", "m2"], ["left:80%;top:4%", "m2"]];
+    var d = U.doodle;
+    $("scene").innerHTML =
+      d("cream", "left:10%;top:22%;width:130px;height:130px", "") + d("cream", "left:66%;top:6%;width:96px;height:96px", "") +
+      d("coin", "left:2%;top:60%;width:46px;height:46px", "float b") + d("coin", "left:70%;top:74%;width:38px;height:38px", "float c") +
+      d("sparkle", "left:16%;top:2%;width:18px;height:18px", "float c") + d("sparkleBlue", "left:48%;top:8%;width:24px;height:24px", "float") +
+      d("sparkle", "left:94%;top:62%;width:16px;height:16px", "float b") + d("heart", "left:44%;top:64%;width:36px;height:32px", "float c") +
+      d("dot", "left:0;top:10%;width:22px;height:22px", "float b") + d("dotRed", "left:90%;top:36%;width:16px;height:16px", "float") +
+      cast.map(function (r, i) { return '<span class="float' + (i ? " b" : "") + '" style="' + spots[i][0] + '">' + U.mascot(r, spots[i][1]) + "</span>"; }).join("");
+  }
+
+  // ------------------------------------------------------------ leaderboard
+  function sortVal(r) {
+    if (view.sort === "managed") return r.equityUsd || 0;
+    var v = rets[key(r)] ? rets[key(r)][view.sort] : null;
+    return v === null || v === undefined ? -Infinity : v;
+  }
+  function renderBoard() {
+    var q = view.q.trim().toLowerCase();
+    var rows = board.filter(function (r) {
+      if (view.filter === "live" && r.closed) return false;
+      if (view.filter === "closed" && !r.closed) return false;
+      return !q || (r.name || "").toLowerCase().indexOf(q) >= 0 || r.address.toLowerCase().indexOf(q) >= 0 || (r.owner || "").toLowerCase().indexOf(q) >= 0;
+    });
+    rows.sort(function (a, b) {
+      if (a.closed !== b.closed) return a.closed ? 1 : -1; // finished mandates sink
+      return view.dir * (sortVal(a) - sortVal(b)) || 0;
+    });
+    $("lb").innerHTML = rows.length
+      ? rows.map(function (r) {
+          var st = U.stateOf(r), rr = rets[key(r)] || {}, risk = U.riskOf(r);
+          var cell = function (k) { return '<td class="num">' + (r.closed ? "—" : U.pctHtml(rr[k] === undefined ? (k === "all" ? r.returnPct : null) : rr[k])) + "</td>"; };
+          return '<tr data-a="' + esc(r.address) + '"' + (r.closed ? ' class="closed"' : "") + ">" +
+            '<td><div class="vault">' + U.mascot(r, "sm") + '<span><a href="' + link(r) + '">' + esc(r.name || "unnamed") + "</a><small>" + owner(r) + "</small></span></div></td>" +
+            '<td class="managed">' + U.compact(r.equityUsd) + "</td>" +
+            cell("1d") + cell("1w") + cell("1m") + cell("all") +
+            "<td>" + (risk && !r.closed ? risk.html : "—") + "</td>" +
+            '<td><span class="state ' + st[0] + '"><i aria-hidden="true"></i>' + st[1] + "</span></td></tr>";
+        }).join("")
+      : '<tr><td colspan="8" class="lb-empty"><b>Nothing matches</b>Try another name or address.</td></tr>';
+    $("lb").querySelectorAll("tr[data-a]").forEach(function (tr) {
+      tr.addEventListener("click", function (ev) { if (!ev.target.closest("a")) location.href = "/mandate.html?a=" + tr.getAttribute("data-a"); });
+    });
+  }
+
+  // --------------------------------------------------------------- controls
+  function pressed(group, attr, fn) {
+    group.querySelectorAll("button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        group.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        fn(b.getAttribute(attr));
+      });
+    });
+  }
+  pressed($("tabs"), "data-k", function (k) { view.tab = k; renderCards(); });
+  pressed($("filter"), "data-f", function (f) { view.filter = f; renderBoard(); });
+  $("more").addEventListener("click", function () { view.more = !view.more; renderCards(); });
+  $("q").addEventListener("input", function () { view.q = $("q").value; renderBoard(); });
+  document.querySelectorAll(".lb th[data-s]").forEach(function (th) {
+    th.querySelector("button").addEventListener("click", function () {
+      var s = th.getAttribute("data-s");
+      view.dir = view.sort === s ? -view.dir : -1;
+      view.sort = s;
+      document.querySelectorAll(".lb th[data-s]").forEach(function (x) { x.removeAttribute("aria-sort"); });
+      th.setAttribute("aria-sort", view.dir < 0 ? "descending" : "ascending");
+      renderBoard();
+    });
+  });
+
+  // ---------------------------------------------------------------- loading
+  async function refresh() {
+    var data = await U.getJson("/api/leaderboard");
+    if (!data || !Array.isArray(data.mandates)) throw new Error("bad payload");
+    board = data.mandates;
+    U.setNet(true);
+    renderCards();
+    renderBoard();
+    renderScene();
+    await Promise.all(board.filter(function (r) { return !r.closed; }).map(async function (r) {
+      try {
+        var s = await U.getJson("/api/mandate/" + r.address + "/series");
+        if (s && s.points && s.points.length) { series[key(r)] = s.points; rets[key(r)] = U.periodReturns(s.points); }
+      } catch (e) { /* the card shows a dotted line; the row falls back to the leaderboard's return */ }
+    }));
+    renderCards();
+    renderBoard();
+  }
+  function fail() {
+    U.setNet(false);
+    if (!board.length) {
+      $("cards").innerHTML = "";
+      $("lb").innerHTML = '<tr><td colspan="8" class="lb-empty" role="status"><b>Couldn’t reach the chain</b>Retrying every 30 seconds.<br><button class="btn" type="button" id="retry">Retry now</button></td></tr>';
+      $("retry").addEventListener("click", function () { refresh().catch(fail); });
     }
-    var html =
-      "<table><thead><tr>" +
-      "<th></th><th>Strategy</th><th>Holds</th>" +
-      '<th class="r">Funded</th><th class="r">Equity</th><th class="r">Return</th><th class="r">State</th>' +
-      "</tr></thead><tbody>";
-    rows.forEach(function (r, i) {
-      var st = stateOf(r);
-      var dir = r.returnPct === null || Math.abs(r.returnPct) < FLAT ? "flat" : r.returnPct > 0 ? "up" : "down";
-      var holds =
-        (r.holdings || [])
-          .filter(function (h) { return h.amount > 0; })
-          .map(function (h) { return h.amount.toFixed(2) + " " + esc(h.symbol); })
-          .join(" · ") || "—";
-      html +=
-        '<tr class="rowlink' + (r.closed ? " done" : "") + '" data-a="' + esc(r.address) + '">' +
-        '<td class="dim mono">' + String(i + 1).padStart(2, "0") + "</td>" +
-        '<td class="name"><b>' + esc(r.name || "unnamed") + "</b><small>" + short(r.address) + "</small></td>" +
-        '<td class="mono dim">' + holds + "</td>" +
-        '<td class="r">' + money(r.baselineUsd) + "</td>" +
-        '<td class="r">' + money(r.equityUsd) + "</td>" +
-        '<td class="r ret ' + dir + '">' + pct(r.returnPct) + "</td>" +
-        '<td class="r"><span class="pill ' + st[0] + '">' + st[1] + "</span></td>" +
-        "</tr>";
-    });
-    html += "</tbody></table>";
-    $("board").innerHTML = html;
-    Array.prototype.forEach.call(document.querySelectorAll("tr.rowlink"), function (tr) {
-      tr.addEventListener("click", function () {
-        location.href = "/mandate.html?a=" + tr.getAttribute("data-a");
-      });
-    });
   }
-
-  function tick() {
-    fetch("/api/leaderboard")
-      .then(function (r) {
-        if (!r.ok) throw new Error("chain read failed");
-        return r.json();
-      })
-      .then(function (d) {
-        if (!d || !Array.isArray(d.mandates)) throw new Error("bad payload");
-        render(d);
-      })
-      .catch(function () {
-        $("board").innerHTML = '<p class="empty">Couldn&rsquo;t reach the chain just now — retrying.</p>';
-      });
-  }
-
-  fetch("/api/config")
-    .then(function (r) { return r.json(); })
-    .then(function (c) { $("net").innerHTML = "<i></i>Arc " + esc(c.network); })
-    .catch(function () { $("net").textContent = "offline"; });
-
-  tick();
-  setInterval(tick, 15000);
+  refresh().catch(fail);
+  setInterval(function () { refresh().catch(fail); }, 30000);
 })();
 </script>
 </html>

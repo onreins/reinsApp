@@ -2,113 +2,96 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reins — Create a mandate</title>
+<title>Reins — Create</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
 
-<header class="topbar">
-  <div class="bar">
-    <a class="logo" href="/">
-      <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9" fill="none" stroke="#7ba0ff" stroke-width="1.7"/><path d="M6 13.6c0-4 2-6.6 4.6-6.6 1.6 0 2.6.9 2.6 2.2 0 2.6-4.4 3-4.4 3" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>
-      Reins
-    </a>
-    <nav class="tabs">
-      <a href="/">Strategies</a>
-      <a href="/create.html" aria-current="page">Create</a>
-    </nav>
-    <div class="bar-right">
-      <span class="net hide-sm" id="net"><i></i>connecting…</span>
-      <button class="wallet" id="connect" type="button">Connect wallet</button>
-    </div>
-  </div>
-</header>
-
+<a class="skip" href="#main">Skip to content</a>
 <div class="wrap">
+  <header class="top" id="top"></header>
 
-  <div class="page-head">
-    <h1>Create a mandate</h1>
-    <p class="sub">Say the rules in your own numbers. They compile into the contract, and after that nobody can change them — not the agent, not us, not you.</p>
-  </div>
+  <main id="main">
+    <h1 class="page-title">Create</h1>
 
-  <div class="grid two">
-    <form class="card pad" id="form">
-      <div class="field">
-        <label for="f-name">Name<small>public, shown on the leaderboard</small></label>
-        <input id="f-name" type="text" maxlength="64" value="my first mandate" autocomplete="off">
-      </div>
-      <div class="field">
-        <label for="f-agent">Agent address<small>the key that will trade — it can never withdraw</small></label>
-        <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="f-deposit">Fund with<small>USDC, deposited after creation</small></label>
-          <input id="f-deposit" type="number" min="0" step="0.01" value="5">
-        </div>
-        <div class="field">
-          <label for="f-trade">Per-trade cap<small>a single trade may never exceed this</small></label>
-          <input id="f-trade" type="number" min="0" step="0.01" value="2">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="f-loss">Loss limit %<small>fall this far and it freezes</small></label>
-          <input id="f-loss" type="number" min="0.01" max="100" step="0.5" value="10">
-        </div>
-        <div class="field">
-          <label for="f-slip">Price band %<small>fills worse than this vs the oracle revert</small></label>
-          <input id="f-slip" type="number" min="0" max="10" step="0.1" value="1">
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label for="f-age">Max price age, hours<small>refuse to trade on anything staler</small></label>
-          <input id="f-age" type="number" min="1" max="168" step="1" value="24">
-        </div>
-        <div class="field">
-          <label for="f-days">Runs for, days<small>expires by itself after this</small></label>
-          <input id="f-days" type="number" min="1" max="3650" step="1" value="30">
-        </div>
+    <form class="form-grid" id="form" novalidate>
+      <div style="display:grid;gap:16px">
+        <section class="card form-card" aria-labelledby="s1">
+          <h2 id="s1">Who trades</h2>
+          <p class="lead">The agent’s key trades inside your rules. It has no function that moves money out.</p>
+          <div class="field">
+            <label for="f-name">Name<small>Public, shown on Explore</small></label>
+            <input id="f-name" type="text" maxlength="64" value="my first mandate" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-agent">Agent address<small>The key your bot trades with. Not your own wallet.</small></label>
+            <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" aria-describedby="f-agent-err">
+            <div class="err" id="f-agent-err" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="card form-card" aria-labelledby="s2">
+          <h2 id="s2">Money</h2>
+          <p class="lead">USDC goes into the contract, not to us or the agent. You can take it back at any time.</p>
+          <div class="field-row">
+            <div class="field"><label for="f-deposit">Fund with, USDC<small>Deposited right after creation</small></label>
+              <input id="f-deposit" type="number" inputmode="decimal" min="0" step="0.01" value="5"></div>
+            <div class="field"><label for="f-trade">Largest trade, USDC<small>No single trade can exceed this</small></label>
+              <input id="f-trade" type="number" inputmode="decimal" min="0" step="0.01" value="2"></div>
+          </div>
+        </section>
+
+        <section class="card form-card" aria-labelledby="s3">
+          <h2 id="s3">Safety</h2>
+          <p class="lead">Enforced by the contract on every trade. Nobody can loosen them later, including you.</p>
+          <div class="field-row">
+            <div class="field"><label for="f-loss">Loss limit, %<small>Fall this far and anyone can freeze it</small></label>
+              <input id="f-loss" type="number" min="0.01" max="100" step="0.5" value="10"></div>
+            <div class="field"><label for="f-slip">Price band, %<small>Fills worse than this vs the oracle revert</small></label>
+              <input id="f-slip" type="number" min="0" max="10" step="0.1" value="1"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="f-age">Max price age, hours<small>Refuse to trade on anything staler</small></label>
+              <input id="f-age" type="number" min="1" max="168" step="1" value="24"></div>
+            <div class="field"><label for="f-days">Runs for, days<small>It expires by itself after this</small></label>
+              <input id="f-days" type="number" min="1" max="3650" step="1" value="30"></div>
+          </div>
+        </section>
       </div>
 
-      <div class="notice" id="notice" hidden></div>
-      <div style="margin-top:16px">
-        <button class="btn" id="go" type="submit" disabled>Connect a wallet first</button>
-      </div>
+      <aside class="card side-card" aria-label="What you are signing">
+        <div style="display:flex;align-items:center;gap:14px"><span id="preview-mascot"></span><h2 style="font:600 26px/1.15 var(--display);letter-spacing:-0.02em">Your mandate</h2></div>
+        <dl class="kv" id="plain"></dl>
+        <div class="meta" id="risk" style="margin-top:0"></div>
+        <div class="notice" id="notice" role="alert" hidden></div>
+        <button class="btn dark wide" id="go" type="submit">Connect Wallet</button>
+        <div class="steps" id="steps" role="status" aria-live="polite"></div>
+        <details>
+          <summary class="linkish" style="cursor:pointer">What the contract will hold</summary>
+          <div class="compiled" id="compiled" style="margin-top:8px"></div>
+        </details>
+      </aside>
     </form>
+  </main>
 
-    <div class="grid">
-      <div class="card">
-        <div class="head">Compiles to <span>what the contract will hold</span></div>
-        <div class="pad compiled" id="compiled"></div>
-      </div>
-      <div class="card">
-        <div class="head">Progress <span>every step is a transaction</span></div>
-        <div class="pad steps" id="steps">Waiting to start.</div>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    <span>Reins · your wallet signs everything; this page never sees a key</span>
+  <footer class="foot">
+    <span>Your wallet signs every step. This page never sees a key.</span>
     <span>Not investment advice</span>
   </footer>
 </div>
 
+<script src="/wallet.js"></script>
+<script src="/ui.js"></script>
 <script>
 (function () {
   "use strict";
+  var U = window.ReinsUI, W = window.ReinsWallet;
   var $ = function (id) { return document.getElementById(id); };
-  var cfg = null, account = null, busy = false;
-  var eth = window.ethereum;
+  var esc = U.esc, money = U.money;
+  var cfg = null, busy = false;
 
-  var esc = function (s) {
-    return String(s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-    });
-  };
+  U.topbar("create");
 
   function readForm() {
     return {
@@ -125,153 +108,112 @@
     };
   }
 
-  function compilePreview() {
-    var r = readForm().rules;
+  function preview() {
+    var f = readForm(), r = f.rules;
     var expires = new Date(Date.now() + r.expiryDays * 86400000);
+    var risk = U.riskOf({ rules: r });
+    $("plain").innerHTML =
+      "<div><dt>Starts with</dt><dd>" + money(f.deposit) + "</dd></div>" +
+      "<div><dt>Largest trade</dt><dd>" + money(r.maxTradeUsd) + "</dd></div>" +
+      "<div><dt>Freezes below</dt><dd>" + money(f.deposit * (1 - r.maxLossPercent / 100)) + "</dd></div>" +
+      "<div><dt>Worst fill</dt><dd>" + r.maxSlippagePercent + "% off the oracle</dd></div>" +
+      "<div><dt>Ends</dt><dd>" + expires.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + "</dd></div>" +
+      "<div><dt>Withdraw</dt><dd>you, any time</dd></div>";
+    // A preview of its character: cheerful while the loss limit is modest, worried when it isn't.
+    $("preview-mascot").innerHTML = U.mascot({ address: "0x" + (f.name || "reins").split("").map(function (c) { return c.charCodeAt(0).toString(16); }).join("").slice(0, 40), returnPct: risk && risk.n >= 4 ? -1 : 1 });
+    $("risk").innerHTML = risk ?"<span>Risk Factor " + risk.html + "</span><span class=\"muted\">set by the loss limit</span>" : "";
     $("compiled").innerHTML =
-      '<span class="k">maxTradeValue</span>  <b>' + Math.round(r.maxTradeUsd * 1e6).toLocaleString("en-US") + "</b> · $" + r.maxTradeUsd + " in 6-decimal units<br>" +
-      '<span class="k">maxDrawdownBps</span> <b>' + Math.round(r.maxLossPercent * 100) + "</b> · freeze at −" + r.maxLossPercent + "%<br>" +
-      '<span class="k">maxSlippageBps</span> <b>' + Math.round(r.maxSlippagePercent * 100) + "</b> · refuse fills beyond " + r.maxSlippagePercent + "%<br>" +
-      '<span class="k">maxPriceAge</span>    <b>' + r.maxPriceAgeSeconds.toLocaleString("en-US") + "</b> s · no stale prices<br>" +
-      '<span class="k">expiresAt</span>      <b>' + Math.floor(expires.getTime() / 1000) + "</b> · " + expires.toLocaleDateString() + "<br>" +
-      '<span class="k">withdraw()</span>     <b>owner only</b> · the agent has no such function';
+      '<span class="k">maxTradeValue</span> ' + Math.round(r.maxTradeUsd * 1e6).toLocaleString("en-US") + "<br>" +
+      '<span class="k">maxDrawdownBps</span> ' + Math.round(r.maxLossPercent * 100) + "<br>" +
+      '<span class="k">maxSlippageBps</span> ' + Math.round(r.maxSlippagePercent * 100) + "<br>" +
+      '<span class="k">maxPriceAge</span> ' + r.maxPriceAgeSeconds.toLocaleString("en-US") + " s<br>" +
+      '<span class="k">expiresAt</span> ' + Math.floor(expires.getTime() / 1000) + "<br>" +
+      '<span class="k">withdraw()</span> owner only';
   }
 
   function step(html, cls) {
     var div = document.createElement("div");
     if (cls) div.className = cls;
     div.innerHTML = html;
-    if ($("steps").textContent === "Waiting to start.") $("steps").textContent = "";
     $("steps").appendChild(div);
   }
-  function notice(msg, warn) {
-    $("notice").hidden = false;
-    $("notice").className = "notice" + (warn ? " warn" : "");
-    $("notice").textContent = msg;
-  }
-
-  var link = function (h) {
-    return '<a href="' + cfg.explorer + "/tx/" + h + '" target="_blank" rel="noopener">' + h.slice(0, 10) + "…</a>";
-  };
-
-  async function ensureChain() {
-    var hex = "0x" + cfg.chainId.toString(16);
-    try {
-      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: hex }] });
-    } catch (err) {
-      if (err && err.code === 4902) {
-        await eth.request({
-          method: "wallet_addEthereumChain",
-          params: [{
-            chainId: hex,
-            chainName: "Arc " + (cfg.network === "testnet" ? "Testnet" : "Mainnet"),
-            nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-            rpcUrls: [cfg.network === "testnet" ? "https://rpc.testnet.arc.network" : "https://rpc.mainnet.arc.io"],
-            blockExplorerUrls: [cfg.explorer],
-          }],
-        });
-      } else { throw err; }
-    }
-  }
-
-  async function post(path, body) {
-    var res = await fetch(path, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    var out = await res.json();
-    if (!res.ok) throw new Error(out.error || "the server refused that");
-    return out;
-  }
-
-  async function send(tx) {
-    return eth.request({ method: "eth_sendTransaction", params: [{ from: account, to: tx.to, data: tx.data }] });
-  }
+  function notice(msg) { $("notice").hidden = false; $("notice").className = "notice warn"; $("notice").textContent = msg; }
+  var link = function (h) { return '<a href="' + cfg.explorer + "/tx/" + h + '" target="_blank" rel="noopener">' + h.slice(0, 10) + "…</a>"; };
 
   async function waitCreated(hash) {
     for (var i = 0; i < 60; i++) {
-      var res = await fetch("/api/tx/created?hash=" + hash).then(function (r) { return r.json(); });
+      // A failed read is a hiccup, not a verdict: the transaction is already sent.
+      var res = await U.getJson("/api/tx/created?hash=" + hash).catch(function () { return { status: "pending" }; });
       if (res.status === "success") return res.mandate;
-      if (res.status === "reverted") throw new Error("the create transaction reverted");
+      if (res.status === "reverted") throw new Error("The create transaction reverted.");
       await new Promise(function (r) { setTimeout(r, 2000); });
     }
-    throw new Error("timed out waiting for the transaction");
+    throw new Error("Timed out waiting for the transaction.");
   }
 
-  async function connect() {
-    if (!eth) { notice("No wallet found. Install a browser wallet, then reload.", true); return; }
-    var accounts = await eth.request({ method: "eth_requestAccounts" });
-    account = accounts[0];
-    $("connect").textContent = account.slice(0, 6) + "…" + account.slice(-4);
-    $("go").disabled = false;
-    $("go").textContent = "Create the mandate";
+  function setAgentError(msg) {
+    $("f-agent").setAttribute("aria-invalid", msg ? "true" : "false");
+    $("f-agent-err").textContent = msg;
+    if (msg) $("f-agent").focus();
+    return !msg;
   }
 
   async function create(ev) {
     ev.preventDefault();
-    if (busy || !account) return;
+    if (busy) return;
+    if (!W.account) {
+      try { await U.connect(); } catch (err) { notice(W.explain(err)); }
+      return;
+    }
     var f = readForm();
-    if (!/^0x[0-9a-fA-F]{40}$/.test(f.agent)) {
-      notice("The agent must be a full 0x address — it's the key your bot will trade with.", true);
-      return;
-    }
-    if (f.agent.toLowerCase() === account.toLowerCase()) {
-      notice("The agent can't be your own wallet — the contract refuses owner-as-agent, so use a separate key.", true);
-      return;
-    }
+    if (!setAgentError(!/^0x[0-9a-fA-F]{40}$/.test(f.agent)
+      ? "Enter a full 0x address, 42 characters. It’s the key your bot will trade with."
+      : f.agent.toLowerCase() === W.account.toLowerCase()
+        ? "The agent can’t be your own wallet. The contract refuses owner-as-agent, so use a separate key."
+        : "")) return;
 
     busy = true;
     $("go").disabled = true;
+    $("go").setAttribute("aria-busy", "true");
     $("notice").hidden = true;
+    $("steps").innerHTML = "";
     try {
       $("go").textContent = "Check your wallet…";
-      await ensureChain();
-
-      var createTx = await post("/api/tx/create", { name: f.name, agent: f.agent, rules: f.rules });
-      var h1 = await send(createTx);
-      step("create sent · " + link(h1));
+      await W.ensureChain();
+      var h1 = await W.send(await W.post("/api/tx/create", { name: f.name, agent: f.agent, rules: f.rules }));
+      step("Create sent · " + link(h1));
       var mandate = await waitCreated(h1);
-      step("mandate is live at " + mandate.slice(0, 10) + "…", "ok");
-
+      step("Mandate is live at " + mandate.slice(0, 10) + "…", "ok");
       if (f.deposit > 0) {
-        var dep = await post("/api/tx/deposit", { mandate: mandate, amountUsd: f.deposit });
+        var dep = await W.post("/api/tx/deposit", { mandate: mandate, amountUsd: f.deposit });
         for (var i = 0; i < dep.txs.length; i++) {
-          $("go").textContent = dep.txs[i].label + " — check your wallet…";
-          var h = await send(dep.txs[i]);
-          step(esc(dep.txs[i].label) + " · " + link(h));
+          $("go").textContent = dep.txs[i].label + ": check your wallet…";
+          step(esc(dep.txs[i].label) + " · " + link(await W.send(dep.txs[i])));
         }
-        step("funded with $" + f.deposit, "ok");
+        step("Funded with " + money(f.deposit), "ok");
       }
-
-      step("done — opening your mandate", "ok");
+      step("Done. Opening your mandate.", "ok");
       location.href = "/mandate.html?a=" + mandate;
     } catch (err) {
-      var msg = err && err.message ? err.message : "something went wrong";
-      if (err && err.code === 4001) msg = "you declined in the wallet — nothing was sent";
-      step(esc(msg), "err");
-      notice(msg, true);
+      step(esc(W.explain(err)), "err");
+      notice(W.explain(err));
       $("go").disabled = false;
-      $("go").textContent = "Create the mandate";
+      $("go").textContent = "Create mandate";
     } finally {
       busy = false;
+      $("go").removeAttribute("aria-busy");
     }
   }
 
-  ["f-name", "f-agent", "f-deposit", "f-trade", "f-loss", "f-slip", "f-age", "f-days"].forEach(function (id) {
-    $(id).addEventListener("input", compilePreview);
-  });
-  $("connect").addEventListener("click", function () { connect().catch(function (e) { notice(e.message, true); }); });
+  U.onAccount(function () { $("go").textContent = "Create mandate"; });
+  ["f-name", "f-agent", "f-deposit", "f-trade", "f-loss", "f-slip", "f-age", "f-days"].forEach(function (id) { $(id).addEventListener("input", preview); });
+  $("f-agent").addEventListener("input", function () { if ($("f-agent").getAttribute("aria-invalid") === "true") setAgentError(""); });
   $("form").addEventListener("submit", create);
-
-  fetch("/api/config")
-    .then(function (r) { return r.json(); })
-    .then(function (c) {
-      cfg = c;
-      $("net").innerHTML = "<i></i>Arc " + esc(c.network);
-      if (!eth) notice("No wallet detected. You can still explore the strategies list; creating needs a browser wallet.", true);
-    });
-  compilePreview();
+  W.config().then(function (c) {
+    cfg = c;
+    if (!W.available) notice("No wallet detected. You can still explore; creating a mandate needs a browser wallet.");
+  });
+  preview();
 })();
 </script>
 </html>
