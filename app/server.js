@@ -30,6 +30,7 @@ import { arc, arcTestnet } from "viem/chains";
 
 import { artifact } from "../scripts/artifact.js";
 import { ArenaIndexer } from "../arena/indexer.js";
+import { chainIndex, RESET_EVENTS } from "../arena/returns.js";
 
 const FACTORY = artifact("MandateFactory");
 const MANDATE = artifact("Mandate");
@@ -325,14 +326,12 @@ export function createApp({ deployment, rpcUrl } = {}) {
       const blocks = [...new Set(history.map((e) => e.block))];
       const client = getClient();
 
-      const points = [];
-      for (const block of blocks) {
+      const sample = async (block) => {
         const key = `${row.address.toLowerCase()}:${block}`;
         if (!samples.has(key)) {
           try {
-            // Baseline alongside equity: the contract shrinks it on withdrawal and
-            // grows it on deposit, so return = equity / baseline ignores flows.
-            // Without it a withdrawal would read as a loss.
+            // Baseline alongside equity: between money movements, equity /
+            // baseline is the return. Across them, chainIndex takes over.
             const [raw, base, header] = await Promise.all([
               client.readContract({ address: row.address, abi: MANDATE.abi, functionName: "equity", blockNumber: BigInt(block) }),
               client.readContract({ address: row.address, abi: MANDATE.abi, functionName: "baseline", blockNumber: BigInt(block) }),
@@ -340,19 +339,30 @@ export function createApp({ deployment, rpcUrl } = {}) {
             ]);
             samples.set(key, { t: Number(header.timestamp), equityUsd: Number(raw) / 1e6, baselineUsd: Number(base) / 1e6 });
           } catch {
-            samples.set(key, null); // a stale feed at that block: equity was unreadable, so no point
+            samples.set(key, null); // a stale feed, or before the mandate existed: no point
           }
         }
-        const s = samples.get(key);
-        if (s) {
-          const events = history.filter((e) => e.block === block).map((e) => e.event);
-          points.push({ ...s, block, events });
+        return samples.get(key);
+      };
+
+      const points = [];
+      for (const block of blocks) {
+        const events = history.filter((e) => e.block === block).map((e) => e.event);
+        const reset = events.some((e) => RESET_EVENTS.has(e));
+        // A deposit, withdrawal or unfreeze moves the baseline. Read the block
+        // just before it too, so the performance up to the movement counts and
+        // the movement itself counts as nothing.
+        if (reset) {
+          const before = await sample(Number(block) - 1);
+          if (before) points.push({ ...before, block: String(Number(block) - 1), events: [] });
         }
+        const s = await sample(block);
+        if (s) points.push({ ...s, block, events, reset });
       }
       if (row.equityUsd != null) {
         points.push({ t: Math.floor(Date.now() / 1000), equityUsd: row.equityUsd, baselineUsd: row.baselineUsd, block: null, events: ["now"] });
       }
-      res.json({ points });
+      res.json({ points: chainIndex(points) });
     } catch (err) {
       fail(res, err);
     }

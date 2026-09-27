@@ -251,6 +251,12 @@ export class ArenaIndexer {
         });
       } else if (e.eventName === "AgentChanged") {
         events.push({ ...at, agent: e.args.agent });
+      } else if (e.eventName === "Unfrozen") {
+        // The baseline is re-anchored here; return since funding chains across it.
+        events.push({ ...at, baselineUsd: Number(formatUnits(e.args.baseline, base.decimals)) });
+      } else if (e.eventName === "AssetRemoved") {
+        const t = sym(e.args.token);
+        events.push({ ...at, amount: Number(formatUnits(e.args.amount, t?.decimals ?? 18)), symbol: t?.symbol ?? e.args.token });
       }
     }
     return events.reverse().slice(0, limit);

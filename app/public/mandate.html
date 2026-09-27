@@ -136,6 +136,8 @@
     if (e.event === "Deposited") return ["", "Deposit", "Added " + esc(e.amount) + " " + esc(e.symbol), "By the owner"];
     if (e.event === "Withdrawn") return ["", "Withdrawal", "Took out " + esc(e.amount) + " " + esc(e.symbol), "By the owner"];
     if (e.event === "AgentChanged") return ["", "Agent", ZERO.test(e.agent) ? "Revoked the agent" : "Set the agent to " + short(e.agent), "By the owner"];
+    if (e.event === "Unfrozen") return ["", "Unfreeze", "The owner unfroze it", "The loss limit counts from " + money(e.baselineUsd, 4) + " again; the return since funding still counts the loss"];
+    if (e.event === "AssetRemoved") return ["", "Removed", "Took out " + esc(e.amount) + " " + esc(e.symbol), "By the owner"];
     return ["", "Event", esc(e.event), ""];
   }
 
@@ -393,6 +395,12 @@
     data = await res.json();
     var s = await U.getJson("/api/mandate/" + address + "/series").catch(function () { return null; });
     if (s && s.points && s.points.length) points = s.points;
+    // Return since funding, chained across deposits, withdrawals and
+    // unfreezes; the contract's own ratio restarts at every unfreeze.
+    if (points) {
+      var since = U.periodReturns(points).all;
+      if (since !== null) data = Object.assign({}, data, { returnPct: since });
+    }
     render();
     if (points) {
       chart.set(points);

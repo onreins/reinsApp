@@ -211,8 +211,16 @@
         if (s && s.points && s.points.length) { series[key(r)] = s.points; rets[key(r)] = U.periodReturns(s.points); }
       } catch (e) { /* the card shows a dotted line; the row falls back to the leaderboard's return */ }
     }));
+    // The leaderboard's returnPct is the contract's equity / baseline, which an
+    // unfreeze resets. Where the chained series is known, it replaces it
+    // everywhere: chips, sorting, the leaderboard, and each character's mood.
+    board = board.map(function (r) {
+      var rr = rets[key(r)];
+      return rr && rr.all !== null ? Object.assign({}, r, { returnPct: rr.all }) : r;
+    });
     renderCards();
     renderBoard();
+    renderScene();
   }
   function fail() {
     U.setNet(false);

@@ -182,15 +182,33 @@ window.ReinsUI = (function () {
   var SPAN = { "1d": 86400, "1w": 604800, "1m": 2592000 };
   var WHEN = { "1d": "past day", "1w": "past week", "1m": "past month", all: "since funding" };
 
-  // Return, not equity change: deposits and withdrawals move equity but are
-  // not gains or losses. The contract's baseline moves with them, so
-  // equity / baseline is the flow-free measure; a withdrawal leaves it flat.
-  function change(v0, b0, v, b) {
-    var r0 = b0 > 0 ? v0 / b0 : null;
-    var r1 = b > 0 ? v / b : null;
-    var diff, p;
-    if (r0 && r1) { p = (r1 / r0 - 1) * 100; diff = v - b * r0; }
-    else { diff = v - v0; p = v0 ? (diff / v0) * 100 : 0; }
+  // Every point carries `index`: what $1 put in at funding is worth then.
+  // The server chains it across deposits, withdrawals and unfreezes
+  // (arena/returns.js), so a movement of money is never a gain or a loss and
+  // an unfreeze can't wipe a loss off the record. A return over any period is
+  // the ratio of two indexes.
+  function growth(p) {
+    if (typeof p.index === "number") return p.index;
+    return p.baselineUsd > 0 ? p.equityUsd / p.baselineUsd : null;
+  }
+
+  // Same chaining, for series built in the browser (several mandates summed).
+  function chain(points) {
+    var idx = 1, prev = null;
+    return points.map(function (p) {
+      var r = p.baselineUsd > 0 ? p.equityUsd / p.baselineUsd : null;
+      if (r !== null && prev !== null && !p.reset) idx *= r / prev;
+      prev = r;
+      return Object.assign({}, p, { index: idx });
+    });
+  }
+
+  // a, z: windowed points { v, i }. pct from the indexes; diff is what the
+  // period's return is worth on today's balance.
+  function change(a, z) {
+    var p, diff;
+    if (a.i && z.i) { p = (z.i / a.i - 1) * 100; diff = z.v * (1 - a.i / z.i); }
+    else { diff = z.v - a.v; p = a.v ? (diff / a.v) * 100 : 0; }
     return { diff: diff, pct: p, dir: Math.abs(diff) < 0.00005 ? "flat" : diff > 0 ? "up" : "down" };
   }
 
@@ -198,12 +216,13 @@ window.ReinsUI = (function () {
   function windowed(points, range) {
     var now = Math.floor(Date.now() / 1000);
     var start = SPAN[range] ? now - SPAN[range] : points[0].t;
-    var v0 = points[0].equityUsd, b0 = points[0].baselineUsd;
-    points.forEach(function (p) { if (p.t <= start) { v0 = p.equityUsd; b0 = p.baselineUsd; } });
-    var out = [{ t: start, v: v0, b: b0, events: [] }];
-    points.forEach(function (p) { if (p.t > start) out.push({ t: p.t, v: p.equityUsd, b: p.baselineUsd, events: p.events || [] }); });
+    var head = points[0];
+    points.forEach(function (p) { if (p.t <= start) head = p; });
+    var row = function (p, t) { return { t: t, v: p.equityUsd, b: p.baselineUsd, i: growth(p), events: t === p.t ? p.events || [] : [] }; };
+    var out = [row(head, start)];
+    points.forEach(function (p) { if (p.t > start) out.push(row(p, p.t)); });
     var tail = out[out.length - 1];
-    if (tail.t < now) out.push({ t: now, v: tail.v, b: tail.b, events: [] });
+    if (tail.t < now) out.push({ t: now, v: tail.v, b: tail.b, i: tail.i, events: [] });
     return out;
   }
 
@@ -213,37 +232,37 @@ window.ReinsUI = (function () {
     ["1d", "1w", "1m", "all"].forEach(function (k) {
       if (!points || !points.length) { out[k] = null; return; }
       var s = windowed(points, k), a = s[0], z = s[s.length - 1];
-      out[k] = a.b > 0 && z.b > 0 ? change(a.v, a.b, z.v, z.b).pct : null;
+      out[k] = a.i && z.i ? change(a, z).pct : null;
     });
     return out;
   }
 
-  // Several mandates as one: at every moment, the sum of what each held.
+  // Several mandates as one: at every moment, the sum of what each held,
+  // chained the same way. A moment where any of them moved money is a reset.
   function combine(lists) {
     var ts = [];
     lists.forEach(function (l) { l.forEach(function (p) { ts.push(p.t); }); });
     ts = ts.filter(function (t, i, a) { return a.indexOf(t) === i; }).sort(function (a, b) { return a - b; });
-    return ts.map(function (t) {
-      var v = 0, b = 0, events = [];
+    return chain(ts.map(function (t) {
+      var v = 0, b = 0, events = [], reset = false;
       lists.forEach(function (l) {
         var last = null;
         l.forEach(function (p) { if (p.t <= t) last = p; });
         if (!last) return;
         v += last.equityUsd; b += last.baselineUsd;
-        if (last.t === t) events = events.concat(last.events || []);
+        if (last.t === t) { events = events.concat(last.events || []); reset = reset || !!last.reset; }
       });
-      return { t: t, equityUsd: v, baselineUsd: b, events: events };
-    });
+      return { t: t, equityUsd: v, baselineUsd: b, events: events, reset: reset };
+    }));
   }
 
-  // Performance, not balance: equity over baseline, rebased to 1 at the start.
+  // The chart's line: growth rebased to 1 at the start of the range.
   function index(series) {
     var base = null, last = 1;
     return series.map(function (s) {
-      if (s.b > 0) {
-        var r = s.v / s.b;
-        if (base === null) base = r;
-        last = r / base;
+      if (s.i) {
+        if (base === null) base = s.i;
+        last = s.i / base;
       }
       return last;
     });
@@ -297,7 +316,7 @@ window.ReinsUI = (function () {
     };
 
     function headline(s, i, whenText) {
-      var c = change(st.first.v, st.first.b, s.v, s.b);
+      var c = change(st.first, s);
       if (mode === "performance") {
         o.big.innerHTML = '<span class="' + c.dir + '">' + pct(c.pct) + "</span>";
         o.chg.innerHTML = (c.diff < 0 ? "−" : "+") + esc(money(Math.abs(c.diff), 4)) + " on " + esc(money(s.v, 2));
@@ -340,7 +359,7 @@ window.ReinsUI = (function () {
       var y0 = Y(vals[0]).toFixed(1);
       o.plot.innerHTML =
         '<svg viewBox="0 0 ' + Wd + " " + H + '" role="img" aria-label="' + (mode === "performance" ? "Return " : "Equity ") + esc(WHEN[range]) + ": " +
-        pct(change(first.v, first.b, end.v, end.b).pct) + ', equity now ' + esc(money(end.v, 4)) + '">' + gradient(id, "#1e9bff", 0.3) + yl + xl +
+        pct(change(first, end).pct) + ', equity now ' + esc(money(end.v, 4)) + '">' + gradient(id, "#1e9bff", 0.3) + yl + xl +
         '<line x1="0" x2="' + (Wd - RIGHT) + '" y1="' + y0 + '" y2="' + y0 + '" stroke="#c9c5bd" stroke-width="1.5" stroke-dasharray="0.1 5" stroke-linecap="round"/>' +
         '<path d="' + d + " V" + BOT + ' H0 Z" fill="url(#' + id + ')"/>' +
         '<path d="' + d + '" fill="none" stroke="#1e9bff" stroke-width="1.8" stroke-linejoin="round"/>' + marks +

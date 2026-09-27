@@ -166,6 +166,10 @@ describe("history", () => {
     assert.ok(kinds.includes("Deposited"));
     assert.ok(kinds.includes("Traded"));
     assert.ok(kinds.includes("Frozen"));
+    // The owner's unfreeze re-anchors the baseline; returns must know where.
+    const unfrozen = events.find((e) => e.event === "Unfrozen");
+    assert.ok(unfrozen, "the unfreeze is in the history");
+    assert.ok(unfrozen.baselineUsd > 0);
 
     const trade = events.find((e) => e.event === "Traded");
     assert.equal(trade.sold.symbol, "USDC");
