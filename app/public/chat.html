@@ -62,6 +62,7 @@
     <section class="rx-doc" id="doc" aria-label="Strategy report">
       <div class="rx-bar">
         <b id="doc-title">Strategy report</b>
+        <span class="rx-ver" id="doc-ver" hidden></span>
         <a class="btn-white rx-publish" id="doc-go" href="/create.html">Create agent</a>
       </div>
       <div class="rx-doc-body" id="strat"></div>
@@ -136,7 +137,7 @@
     sessions = [cur].concat(sessions.filter(function (s) { return s.id !== cur.id; })).slice(0, MAX_SESSIONS);
     store(SESSIONS, sessions.map(function (s) {
       return { id: s.id, spec: s.spec, from: s.from, at: s.at, messages: s.messages.slice(-40).map(function (m) {
-        return { role: m.role, content: m.content, source: m.source, ms: m.ms, spec: m.spec, specName: m.specName, error: m.error, stopped: m.stopped };
+        return { role: m.role, content: m.content, source: m.source, ms: m.ms, spec: m.spec, specName: m.specName, specData: m.specData, v: m.v, card: m.card, options: m.options, error: m.error, stopped: m.stopped };
       }) };
     }));
     renderSessions();
@@ -239,6 +240,62 @@
     el.textContent = m.content;
     return el;
   }
+  // ------------------------------------------------------ strategy versions
+  // A reply that builds a strategy carries it, with the headline numbers and a
+  // small curve, so its card shows that version and can bring it back.
+  var sameSpec = function (a, b) { return !!a && !!b && JSON.stringify(a) === JSON.stringify(b); };
+  function thin(points, n) {
+    if (!points || points.length < 2) return [];
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(+points[Math.round(i * (points.length - 1) / (n - 1))].index.toFixed(4));
+    return out;
+  }
+  function cardData(r) {
+    var bt = r.backtest;
+    return { rule: r.words && r.words[0], ret: bt.strategy.return, hold: bt.hold.return, from: bt.from, dca: r.spec.type === "dca", a: thin(bt.curve, 40), b: thin(bt.bench, 40) };
+  }
+  // The message whose version the report is showing: the latest one that matches it.
+  function showingIndex() {
+    for (var i = cur.messages.length - 1; i >= 0; i--) if (sameSpec(cur.messages[i].specData, cur.spec)) return i;
+    return -1;
+  }
+  function spark(a, b) {
+    if (!a || a.length < 2) return "";
+    var all = a.concat(b).map(function (v) { return Math.log(Math.max(v, 1e-3)); });
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), W = 104, H = 40;
+    var line = function (vals) {
+      return vals.map(function (v, i) {
+        var y = 3 + (1 - (Math.log(Math.max(v, 1e-3)) - lo) / ((hi - lo) || 1)) * (H - 6);
+        return (i ? "L" : "M") + (i * W / (vals.length - 1)).toFixed(1) + " " + y.toFixed(1);
+      }).join(" ");
+    };
+    return '<svg class="spark" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><path class="b" d="' + line(b) + '"/><path class="a" d="' + line(a) + '"/></svg>';
+  }
+  function artCard(m, showing) {
+    var card = document.createElement("button"), c = m.card;
+    card.type = "button";
+    card.className = "rx-art" + (showing ? " on" : "");
+    card.setAttribute("aria-label", (showing ? "Showing " : "Show ") + (m.specName || "this strategy") + " in the report");
+    card.innerHTML = '<span class="h">' + ICON.doc + "<b>Strategy report" + (m.v ? ' <span class="vn">v' + m.v + "</span>" : "") + '</b><span class="pv">' + (showing ? "Showing" : "Open ›") + "</span></span>" +
+      '<span class="t"></span>' + (c && c.rule ? '<span class="w"></span>' : "") +
+      (c && c.a && c.a.length ? '<span class="k">' + spark(c.a, c.b) + '<span class="n"><span><em class="' + (c.ret >= 0 ? "up" : "down") + '">' + plainPct(c.ret) + "</em> " + (c.dca ? "per $1 in" : "strategy") + "</span>" +
+        "<span>" + plainPct(c.hold) + " holding</span><span class=\"s\">since " + new Date(c.from + "T00:00:00Z").getUTCFullYear() + "</span></span></span>" : "");
+    card.querySelector(".t").textContent = m.specName || (cur.spec && cur.spec.name) || "";
+    if (c && c.rule) card.querySelector(".w").textContent = c.rule;
+    card.addEventListener("click", function () { showVersion(m); });
+    return card;
+  }
+  // Tapping an earlier card puts that version back in the report, and the chat
+  // carries on from it.
+  function showVersion(m) {
+    if (!m.specData || sameSpec(m.specData, cur.spec) || busy || streaming) { focusDoc(); return; }
+    cur.spec = JSON.parse(JSON.stringify(m.specData));
+    persist();
+    renderChat();
+    rerun(true);
+    focusDoc();
+  }
+
   // "@cf/meta/llama-3.3-70b-instruct-fp8-fast" reads as "Llama 3.3 70B".
   function modelName(id) {
     var base = String(id).split("/").pop().replace(/-(instruct|chat|it|fp8|fast|versatile|preview)\b.*$/i, "");
@@ -259,13 +316,8 @@
     el.appendChild(p);
     if (opts && opts.stream) return el; // the rest follows once the words have arrived
     var tail = [];
-    if (m.spec && cur.spec) {
-      var card = document.createElement("button");
-      card.type = "button";
-      card.className = "rx-art";
-      card.innerHTML = '<span class="h">' + ICON.doc + '<b>Strategy report</b><span class="pv">Open ›</span></span><span class="t"></span><i></i><i></i><i class="s"></i>';
-      card.querySelector(".t").textContent = m.specName || cur.spec.name;
-      card.addEventListener("click", focusDoc);
+    if (m.spec && (m.specData || cur.spec)) {
+      var card = artCard(m, opts && opts.showing);
       el.appendChild(card);
       tail.push(card);
     }
@@ -381,8 +433,9 @@
   function renderChat(enterFrom) {
     var box = $("thread");
     box.innerHTML = "";
+    var shown = showingIndex();
     cur.messages.forEach(function (m, i) {
-      var node = m.role === "user" ? userMsg(m) : aiMsg(m, { enter: enterFrom !== undefined && i >= enterFrom });
+      var node = m.role === "user" ? userMsg(m) : aiMsg(m, { enter: enterFrom !== undefined && i >= enterFrom, showing: i === shown });
       if (enterFrom !== undefined && i >= enterFrom && m.role === "user") node.classList.add("rx-in");
       box.appendChild(node);
     });
@@ -501,6 +554,12 @@
       if (r.specReset) { cur.spec = null; result = null; }
       if (r.spec) { cur.spec = r.spec; result = { words: r.words, backtest: r.backtest }; }
       reply = { role: "assistant", content: r.reply, source: r.source, ms: ms, spec: !!r.spec, specName: r.spec ? r.spec.name : null };
+      // Each strategy a reply builds is kept with it, as a version you can go back to.
+      if (r.spec) {
+        reply.specData = r.spec;
+        reply.v = cur.messages.filter(function (m) { return m.specData; }).length + 1;
+        reply.card = cardData(r);
+      }
       if (Array.isArray(r.options)) reply.options = r.options.filter(function (x) { return typeof x === "string"; }).slice(0, 4);
     } catch (err) {
       reply = err.name === "AbortError"
@@ -599,6 +658,11 @@
   function renderStrategy(fresh) {
     var box = $("strat");
     $("doc-title").textContent = cur.spec ? cur.spec.name : "Strategy report";
+    var versions = cur.messages.filter(function (m) { return m.specData; }), shownAt = showingIndex();
+    var ver = shownAt >= 0 ? cur.messages[shownAt].v : 0;
+    $("doc-ver").hidden = !(versions.length > 1 && ver);
+    $("doc-ver").textContent = "v" + ver + " of " + versions.length;
+    $("doc-ver").classList.toggle("old", ver > 0 && ver < versions.length);
     box.classList.toggle("fresh", !!fresh && !still);
     if (!cur.spec || !result) { box.innerHTML = ""; return; }
     var s = cur.spec, bt = result.backtest, st = bt.strategy, hd = bt.hold, dca = s.type === "dca";

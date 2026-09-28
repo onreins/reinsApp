@@ -551,8 +551,27 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 .rx-art .h b { flex: 1; font: 500 13px var(--sans); }
 .rx-art .pv { color: var(--ink-3); font-size: 12.5px; }
 .rx-art .t { color: var(--ink-2); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rx-art i { display: block; height: 6px; border-radius: 3px; background: var(--chip-2); }
-.rx-art i.s { width: 60%; }
+/* The card shows its own version: the rule, a small curve against holding, and the headline numbers. */
+.rx-art { width: min(100%, 340px); }
+.rx-art .vn { margin-left: 4px; color: var(--ink-4); font-weight: 400; }
+.rx-art .t { color: var(--ink); font-size: 14px; font-weight: 500; }
+.rx-art .w { color: var(--ink-3); font-size: 12.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rx-art .k { display: flex; align-items: center; gap: 12px; margin-top: 2px; padding-top: 9px; border-top: 1px solid var(--line-2); }
+.rx-art .spark { flex: none; width: 104px; height: 40px; overflow: visible; }
+.rx-art .spark path { fill: none; stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.rx-art .spark .a { stroke: var(--blue); }
+.rx-art .spark .b { stroke: #6b6a6a; stroke-width: 1.2; }
+.rx-art .n { display: grid; gap: 1px; color: var(--ink-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.rx-art .n em { font-style: normal; font-weight: 600; }
+.rx-art .n em.up { color: var(--green); }
+.rx-art .n em.down { color: var(--red); }
+.rx-art .n .s { color: var(--ink-4); }
+.rx-art.on { border-color: rgba(30, 155, 255, .55); background: rgba(30, 155, 255, .06); }
+.rx-art.on .pv { color: #8fcbff; }
+.rx-doc .rx-bar #doc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-ver { flex: none; padding: 3px 8px; border-radius: 999px; background: var(--chip); color: var(--ink-3); font: 500 12px var(--sans); font-variant-numeric: tabular-nums; }
+.rx-ver.old { background: rgba(240, 180, 60, .12); color: #f0c060; }
+.rx-ver[hidden] { display: none; }
 .rx-tools { display: flex; align-items: center; gap: 8px; margin-top: -4px; }
 .rx-src { color: var(--ink-4); font-size: 11.5px; }
 .rx-sug { display: grid; gap: 6px; justify-items: end; }
