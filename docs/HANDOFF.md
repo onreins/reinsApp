@@ -3,17 +3,23 @@
 Living status for whoever picks this up next — including a future session of
 the agent that wrote it. Update it at the end of every working stretch.
 
-## Where things stand (2026-09-27)
+## Where things stand (2026-09-28)
 
 The product is now **Reins** (handle @onreins): automated strategies on Arc
-that trade inside a mandate's rules, fully visible on-chain. Today's work is on
-branch **`feat/app-site-bridge`**, not yet merged to `master`. 303 tests pass.
+that trade inside an agent's rules, fully visible on-chain. The UI says
+**agent** where the code and URLs still say mandate, and the on-chain agent
+address is the **trading key**. Work is on branch **`feat/app-site-bridge`**,
+committed but not merged to `master` and **not pushed** (no remote yet; see
+"Needs a human"). 324 tests pass (`npm test` with `npm run chain` running).
 
 | | |
 |---|---|
-| App | `npm run app` on :4100. Chamber's explore/vault layout with Family-style characters (one per mandate; the face is its state). Shared `app/public/ui.js` |
+| App | `npm run app` on :4100. Aave Pro's dark system (sidebar, top bar, white pill actions) with Hyperliquid's vault layout: Agents list, agent page, strategy page. Shared `app/public/ui.js`. History is only fetched for live agents because Arc testnet rate-limits `eth_getLogs` |
+| Strategies | `app/public/data/strategies.json`, exported from `E:
+eins-lab\library\export_app.py` (outside the repo). Results only: the exporter asserts no rules or trade lists leak, so the strategies can't be copied |
 | Returns | "Since funding" is chained across deposits, withdrawals and unfreezes (`arena/returns.js`). The contract's equity/baseline restarts at unfreeze; the live testnet mandate is **−0.08%**, not the +0.04% that ratio shows |
-| Home page | `site/index.html`, published privately. Original hero + rules cards on top, Chamber-style animated vignettes below. Preview: `.claude/launch.json` "site" |
+| Home page | `site/index.html`, published privately (claude.ai artifact). Hero with coin clusters, then two rows of cards rebuilt from phantom.com's measurements: portrait cards, one sentence, a phone or flat illustration running off the bottom, arriving as a stacked deck that springs apart. Sizes are in container units. Reduced motion shows everything still. Preview: `.claude/launch.json` "site" |
+| Risk engine | `bridge/risk.js`, in front of every bridge trade: reduce at 50% of the loss budget, halt at 80%, per-asset and gross caps. It only narrows what the contract allows |
 | Bridge | `npm run bridge` (see `bridge/README.md`). freqtrade (e.g. NostalgiaForInfinity, run unmodified in dry-run) and a TradingAgents runner post signals; each becomes a trade inside the mandate's cap, or a **shadow** trade while the asset isn't on Arc. Shadow mode by default. Reviewed; 2 high + 4 medium findings fixed |
 | Strategy research | GitHub survey, 2026-09-27: DCA, rebalance-with-band, then a 200-day trend filter fit a mandate; hourly bots don't (fees, per-trade cap). Uniswap shipped `dca-bot`/`index-bot`/`copy-trade` AI skills (Jul 2026), which enforce limits in the bot, not a contract |
 
@@ -152,13 +158,15 @@ simulation figures are from an earlier run and should not be quoted as current.
 1. **Push to GitHub.** Decision changed (2026-09-26): **private** repo named
    `reins`, so nobody can copy it. Blocked on an empty private repo existing —
    create one at github.com/new (no README), then `git remote add origin <url>` and
-   push. Git Credential Manager handles sign-in.
-2. **Grant application** — drafted in [GRANT.md](GRANT.md), not submitted. Submitting
+   push. Git Credential Manager handles sign-in. There is no `gh` CLI on the machine.
+2. **Host the app, then point the site at it.** Every "Launch app" and "Create an
+   agent" link on the site goes to `localhost:4100`.
+3. **Grant application** — drafted in [GRANT.md](GRANT.md), not submitted. Submitting
    is the founder's call.
-3. **Talk to one real user.** Nothing outside this repo has seen the product yet.
+4. **Talk to one real user.** Nothing outside this repo has seen the product yet.
    Four drafted messages, unsent, are in [OUTREACH.md](OUTREACH.md). Best first
    targets: escrow protocols with a pluggable arbiter slot.
-4. **Website contact details.** It has no contact email and no repo link on purpose;
+5. **Website contact details.** It has no contact email and no repo link on purpose;
    both need the founder's say.
 
 ## Secrets
@@ -188,6 +196,17 @@ mainnet use.
 - USDC ERC-20 is `0x3600000000000000000000000000000000000000` on testnet and mainnet.
 
 ## Session log
+
+- **2026-09-28** — app moved to Aave Pro's dark system with Hyperliquid's vault
+  layout; "mandate" became "agent" in both app and site; strategy pages show
+  results only. Risk engine added in front of the bridge. Home page cards
+  rebuilt twice, ending on a faithful copy of phantom.com's feature cards
+  (measured there: 499 x 667 cards, 24px corners, 48px padding, one 39px
+  sentence, a deck that springs apart with a ~6px overshoot), for both the
+  rules cards and the "your money stays in your contract" section. Found and
+  fixed a class clash (`.on`) that piled the old panels' finished steps on top
+  of each other. New "r" logo. 324 tests pass. All committed on the branch,
+  none pushed.
 
 - **2026-09-27** — redesigned the app twice on the founder's references
   (Copilot Money, then Chamber) and made it playful after Family, with a
