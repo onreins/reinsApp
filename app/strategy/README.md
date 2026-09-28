@@ -38,11 +38,22 @@ Behind a reverse proxy (nginx, a PaaS, Cloudflare), also set `TRUST_PROXY` to
 the number of proxy hops (or `loopback`). Without it every visitor shares the
 proxy's address, and one person could use up everyone's chat limit.
 
-**Running now:** Cloudflare Workers AI directly, with Llama 3.3 70B
+**Running now:** Cloudflare Workers AI directly
 (`LLM_BASE_URL=https://api.cloudflare.com/client/v4/accounts/<account id>/ai/v1`,
-`LLM_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast`, a Workers AI token as
-`LLM_API_KEY`). The free tier is 10,000 neurons a day; past it, or when the
-model errors, the chat answers from the offline builder.
+a Workers AI token as `LLM_API_KEY`), rotating through four models:
+`LLM_MODEL=@cf/meta/llama-4-scout-17b-16e-instruct`, then
+`LLM_FALLBACK_MODELS=@cf/meta/llama-3.3-70b-instruct-fp8-fast,@cf/qwen/qwen3-30b-a3b-fp8,@cf/mistralai/mistral-small-3.1-24b-instruct`.
+A limited, out-of-quota, down or refused model rests while the next one
+answers the same conversation (llm.js); with all of them out, the offline
+builder answers. The models share one free quota (10,000 neurons a day), so
+more quota needs a second provider (`LLM2_BASE_URL`, `LLM2_API_KEY`, `LLM2_MODEL`).
+
+Benchmark, 2026-09-28, five real prompts (a mixed-timeframe cross, an RSI dip
+with a stop, a weekly DCA, a pair trade to refuse, a follow-up that needs the
+earlier turns): all of Scout, Llama 3.3 70B, Qwen3 30B, Mistral Small 3.1,
+Nemotron 120B and GPT-OSS 120B got 5/5. Scout answered fastest (1.9 s against
+5.5 s for the 70B) with the fewest tokens. DeepSeek V4, Kimi K2.6 and GLM 5.3
+are on Cloudflare's paid plan only.
 
 Another simple start is **Groq directly**: its terms allow serving end users and
 it does not train on prompts. Put a Groq key in `LLM_API_KEY`, set the base URL
