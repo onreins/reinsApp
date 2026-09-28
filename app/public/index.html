@@ -2,231 +2,248 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reins — Explore</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Agents · Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
 
 <a class="skip" href="#main">Skip to content</a>
-<div class="wrap">
-  <header class="top" id="top"></header>
+<aside id="side"></aside>
+<header id="top"></header>
 
-  <main id="main">
-    <section class="hero">
-      <div>
-        <h1 class="page-title">Explore</h1>
-        <p class="lede">Strategies that trade inside rules nobody can change. Every number here comes straight from the chain, so you can see exactly where the money is.</p>
+<main id="main">
+  <div class="hl-head">
+    <h1>Agents</h1>
+    <a class="btn-white" href="/create.html">Create agent</a>
+  </div>
+
+  <div class="scards two">
+    <div class="scard"><div class="lbl">Total Value Locked</div><div class="val" id="st-value"><span class="skel line" style="width:120px;height:26px"></span></div></div>
+    <div class="scard"><div class="lbl">Live agents</div><div class="val" id="st-live">—</div></div>
+  </div>
+
+  <div class="hcard">
+    <div class="toolbar" role="search">
+      <label class="field-s"><span id="q-ic"></span><span class="sr-only">Search agents and strategies</span><input id="q" type="search" placeholder="Search by agent name, address or owner…" autocomplete="off"></label>
+      <span class="grow"></span>
+      <label class="sr-only" for="filter">Show</label>
+      <select class="sel" id="filter"><option value="all">All agents</option><option value="live">Live</option><option value="closed">Closed</option></select>
+      <label class="sr-only" for="range">Return over</label>
+      <select class="sel" id="range"><option value="all">All time</option><option value="1m">30D</option><option value="1w">7D</option><option value="1d">1D</option></select>
+    </div>
+
+    <section class="hsec" id="strategies" aria-labelledby="s-h">
+      <h2 id="s-h">Strategy templates <small>backtests, not live results</small></h2>
+      <div class="dense-wrap">
+        <table class="dense">
+          <thead><tr>
+            <th scope="col">Strategy</th><th scope="col">Coins</th><th scope="col" aria-sort="descending">APR, since 2024</th>
+            <th scope="col">Since 2021</th><th scope="col">Worst drop</th><th scope="col">Status</th><th scope="col">Snapshot</th>
+          </tr></thead>
+          <tbody id="strats"><tr><td colspan="7"><span class="skel line"></span></td></tr></tbody>
+        </table>
       </div>
-      <div class="scene" id="scene" aria-hidden="true"></div>
     </section>
 
-    <div class="sec-head">
-      <h2 class="sec-title">Top Strategies</h2>
-      <div class="seg" id="tabs" role="group" aria-label="Rank top strategies by">
-        <button type="button" data-k="capital" aria-pressed="true">Most Capital</button>
-        <button type="button" data-k="perf" aria-pressed="false">Top Performing</button>
-        <button type="button" data-k="new" aria-pressed="false">Newest</button>
+    <section class="hsec" id="agents" aria-labelledby="a-h">
+      <h2 id="a-h">Agents <small id="a-count"></small></h2>
+      <div class="dense-wrap">
+        <table class="dense">
+          <caption class="sr-only">Every agent on Reins, read from the chain</caption>
+          <thead><tr>
+            <th scope="col">Agent</th>
+            <th scope="col">Owner</th>
+            <th scope="col" data-s="ret"><button type="button"><span id="ret-h">Return (all time)</span></button></th>
+            <th scope="col" data-s="tvl" aria-sort="descending"><button type="button">TVL</button></th>
+            <th scope="col" class="opt">Your deposit</th>
+            <th scope="col" class="opt" data-s="age"><button type="button">Age (days)</button></th>
+            <th scope="col">Risk</th>
+            <th scope="col">Snapshot</th>
+          </tr></thead>
+          <tbody id="lb"><tr><td colspan="8"><span class="skel line"></span><span class="skel line" style="width:70%"></span></td></tr></tbody>
+        </table>
       </div>
-    </div>
-    <div class="top-cards" id="cards">
-      <span class="skel card" style="height:290px"></span><span class="skel card" style="height:290px"></span><span class="skel card" style="height:290px"></span>
-    </div>
-    <div class="show-more"><button class="linkish" id="more" type="button" hidden>Show More <span id="more-ic"></span></button></div>
-
-    <div class="sec-head board-head">
-      <h2 class="sec-title">Leaderboard</h2>
-      <div class="filters">
-        <div class="seg" id="filter" role="group" aria-label="Show">
-          <button type="button" data-f="all" aria-pressed="true">All</button>
-          <button type="button" data-f="live" aria-pressed="false">Live</button>
-          <button type="button" data-f="closed" aria-pressed="false">Closed</button>
-        </div>
-        <label class="search"><span id="search-ic"></span><span class="sr-only">Search mandates</span><input id="q" type="search" placeholder="Search" autocomplete="off"></label>
-      </div>
-    </div>
-    <div class="card table-card">
-      <table class="lb">
-        <caption class="sr-only">Every mandate on Reins, read from the chain</caption>
-        <thead><tr>
-          <th scope="col">Mandate</th>
-          <th scope="col" data-s="managed"><button type="button">Managed</button></th>
-          <th scope="col" class="num" data-s="1d"><button type="button">1D</button></th>
-          <th scope="col" class="num" data-s="1w"><button type="button">1W</button></th>
-          <th scope="col" class="num" data-s="1m"><button type="button">1M</button></th>
-          <th scope="col" class="num" data-s="all" aria-sort="descending"><button type="button">Total</button></th>
-          <th scope="col">Risk</th>
-          <th scope="col">State</th>
-        </tr></thead>
-        <tbody id="lb"><tr><td colspan="8"><span class="skel line"></span><span class="skel line" style="width:70%"></span></td></tr></tbody>
-      </table>
-    </div>
-  </main>
+      <div class="pager" id="pager" hidden><span id="pg-t"></span><button type="button" id="pg-prev" aria-label="Previous page"></button><button type="button" id="pg-next" aria-label="Next page"></button></div>
+    </section>
+  </div>
 
   <footer class="foot">
-    <span>Every figure is read from chain state. Returns are flow-free: deposits and withdrawals don’t count as gains or losses.</span>
+    <span>Agent figures are read from chain state, and their returns are flow-free: deposits and withdrawals don’t count as gains or losses. Strategy templates are backtests.</span>
     <span>Not investment advice</span>
   </footer>
-</div>
+</main>
 
 <script src="/wallet.js"></script>
 <script src="/ui.js"></script>
 <script>
 (function () {
   "use strict";
-  var U = window.ReinsUI;
+  var U = window.ReinsUI, W = window.ReinsWallet;
   var $ = function (id) { return document.getElementById(id); };
   var esc = U.esc;
-  var board = [], rets = {}, series = {};
-  var view = { tab: "capital", more: false, filter: "all", q: "", sort: "all", dir: -1 };
+  var PAGE = 10;
+  var board = [], rets = {}, series = {}, strats = [];
+  var view = { filter: "all", range: "all", q: new URLSearchParams(location.search).get("q") || "", sort: "tvl", dir: -1, page: 0 };
+  var RANGE = { all: "all time", "1m": "30D", "1w": "7D", "1d": "1D" };
 
-  U.topbar("explore");
-  $("more-ic").innerHTML = U.icon("down", 14);
-  $("search-ic").innerHTML = U.icon("search", 16);
-  document.querySelectorAll(".lb th[data-s] button").forEach(function (b) { b.insertAdjacentHTML("beforeend", U.icon("sort", 12)); });
+  U.topbar(location.hash === "#strategies" ? "strategies" : "explore");
+  $("q-ic").outerHTML = U.icon("search");
+  $("pg-prev").innerHTML = U.icon("back");
+  $("pg-next").innerHTML = U.icon("right");
+  document.querySelectorAll("#agents th[data-s] button").forEach(function (b) { b.insertAdjacentHTML("beforeend", U.icon("updown")); });
+  $("q").value = view.q;
 
   var key = function (r) { return r.address.toLowerCase(); };
-  var owner = function (r) { return "by " + U.short(r.owner); };
-  var link = function (r) { return "/mandate.html?a=" + esc(r.address); };
+  var matches = function (text) { var q = view.q.trim().toLowerCase(); return !q || text.toLowerCase().indexOf(q) >= 0; };
+  var firstT = function (r) { var s = series[key(r)]; return s && s.length ? s[0].t : null; };
+  var ageDays = function (r) { var t = firstT(r); return t ? Math.max(0, Math.floor((Date.now() / 1000 - t) / 86400)) : null; };
+  var retOf = function (r) { var rr = rets[key(r)]; var v = rr ? rr[view.range] : null; return v === null || v === undefined ? (view.range === "all" ? r.returnPct : null) : v; };
 
-  // ------------------------------------------------------------- top cards
-  function renderCards() {
-    var live = board.filter(function (r) { return !r.closed; });
-    var sorters = {
-      capital: function (a, b) { return (b.equityUsd || 0) - (a.equityUsd || 0); },
-      perf: function (a, b) { return (b.returnPct || 0) - (a.returnPct || 0); },
-      new: function (a, b) { return Number(b.createdAtBlock) - Number(a.createdAtBlock); },
-    };
-    var list = live.slice().sort(sorters[view.tab]);
-    var shown = view.more ? list.slice(0, 9) : list.slice(0, 3);
-    $("more").hidden = list.length <= 3;
-    $("more").firstChild.textContent = view.more ? "Show Less " : "Show More ";
-    $("cards").innerHTML = shown.length
-      ? shown.map(function (r) {
-          var risk = U.riskOf(r);
-          return '<article class="card vcard">' +
-            '<div class="chips">' +
-              '<span class="chip cash" title="Equity">' + U.icon("coins", 13) + U.compact(r.equityUsd) + "</span>" +
-              '<span class="chip ' + (U.dirOf(r.returnPct) === "up" ? "up" : "") + '" title="Return since funding">' + U.icon("trend", 13) + U.pct(r.returnPct) + "</span>" +
-              (risk ? '<span class="chip" title="Risk, from its loss limit">' + U.icon("gauge", 13) + risk.n + " / 5</span>" : "") +
-            "</div>" +
-            '<div class="spark">' + U.areaSvg(series[key(r)]) + "</div>" +
-            '<div class="who">' + U.mascot(r) + '<span class="t"><b>' + esc(r.name || "unnamed") + "</b><small>" + owner(r) + "</small></span>" +
-              '<a class="btn" href="' + link(r) + '">View<span class="sr-only"> ' + esc(r.name || "") + "</span></a></div>" +
-            "</article>";
-        }).join("") + (shown.length < 3
-          ? '<a class="card vcard invite" href="/create.html">' + U.mascot({ address: "0x0000000000000000000000000000000000000002", returnPct: 1 }) + '<b>Your strategy here</b><span>Set the rules, fund it, and it shows up on this page, read straight from the chain.</span><span class="btn">Create</span></a>'
-          : "")
-      : '<div class="card lb-empty" style="grid-column:1/-1"><b>No live strategies yet</b>The first one appears here the moment it is created on-chain.<br><a class="btn dark" href="/create.html">Create a mandate</a></div>';
-  }
-
-  // ------------------------------------------------------------------ scene
-  // Family's hero scatter, cast with real mandates: the live ones up front,
-  // closed ones asleep behind them.
-  function renderScene() {
-    var live = board.filter(function (r) { return !r.closed; }).sort(function (a, b) { return (b.equityUsd || 0) - (a.equityUsd || 0); });
-    var cast = live.concat(board.filter(function (r) { return r.closed; })).slice(0, 3);
-    var spots = [["left:20%;top:16%", ""], ["left:58%;top:42%", "m2"], ["left:80%;top:4%", "m2"]];
-    var d = U.doodle;
-    $("scene").innerHTML =
-      d("cream", "left:10%;top:22%;width:130px;height:130px", "") + d("cream", "left:66%;top:6%;width:96px;height:96px", "") +
-      d("coin", "left:2%;top:60%;width:46px;height:46px", "float b") + d("coin", "left:70%;top:74%;width:38px;height:38px", "float c") +
-      d("sparkle", "left:16%;top:2%;width:18px;height:18px", "float c") + d("sparkleBlue", "left:48%;top:8%;width:24px;height:24px", "float") +
-      d("sparkle", "left:94%;top:62%;width:16px;height:16px", "float b") + d("heart", "left:44%;top:64%;width:36px;height:32px", "float c") +
-      d("dot", "left:0;top:10%;width:22px;height:22px", "float b") + d("dotRed", "left:90%;top:36%;width:16px;height:16px", "float") +
-      cast.map(function (r, i) { return '<span class="float' + (i ? " b" : "") + '" style="' + spots[i][0] + '">' + U.mascot(r, spots[i][1]) + "</span>"; }).join("");
-  }
-
-  // ------------------------------------------------------------ leaderboard
+  // ------------------------------------------------------------------ agents
   function sortVal(r) {
-    if (view.sort === "managed") return r.equityUsd || 0;
-    var v = rets[key(r)] ? rets[key(r)][view.sort] : null;
+    if (view.sort === "tvl") return r.equityUsd || 0;
+    if (view.sort === "age") { var a = ageDays(r); return a === null ? -1 : a; }
+    var v = retOf(r);
     return v === null || v === undefined ? -Infinity : v;
   }
+  function yourDeposit(r) {
+    if (!W.account) return '<span class="muted">—</span>';
+    return W.account.toLowerCase() === (r.owner || "").toLowerCase() && r.equityUsd != null ? U.compact(r.equityUsd) : "$0.00";
+  }
   function renderBoard() {
-    var q = view.q.trim().toLowerCase();
     var rows = board.filter(function (r) {
       if (view.filter === "live" && r.closed) return false;
       if (view.filter === "closed" && !r.closed) return false;
-      return !q || (r.name || "").toLowerCase().indexOf(q) >= 0 || r.address.toLowerCase().indexOf(q) >= 0 || (r.owner || "").toLowerCase().indexOf(q) >= 0;
+      return matches((r.name || "") + " " + r.address + " " + (r.owner || ""));
     });
     rows.sort(function (a, b) {
-      if (a.closed !== b.closed) return a.closed ? 1 : -1; // finished mandates sink
+      if (a.closed !== b.closed) return a.closed ? 1 : -1; // finished agents sink
       return view.dir * (sortVal(a) - sortVal(b)) || 0;
     });
-    $("lb").innerHTML = rows.length
-      ? rows.map(function (r) {
-          var st = U.stateOf(r), rr = rets[key(r)] || {}, risk = U.riskOf(r);
-          var cell = function (k) { return '<td class="num">' + (r.closed ? "—" : U.pctHtml(rr[k] === undefined ? (k === "all" ? r.returnPct : null) : rr[k])) + "</td>"; };
-          return '<tr data-a="' + esc(r.address) + '"' + (r.closed ? ' class="closed"' : "") + ">" +
-            '<td><div class="vault">' + U.mascot(r, "sm") + '<span><a href="' + link(r) + '">' + esc(r.name || "unnamed") + "</a><small>" + owner(r) + "</small></span></div></td>" +
-            '<td class="managed">' + U.compact(r.equityUsd) + "</td>" +
-            cell("1d") + cell("1w") + cell("1m") + cell("all") +
-            "<td>" + (risk && !r.closed ? risk.html : "—") + "</td>" +
-            '<td><span class="state ' + st[0] + '"><i aria-hidden="true"></i>' + st[1] + "</span></td></tr>";
+    var pages = Math.max(1, Math.ceil(rows.length / PAGE));
+    view.page = Math.min(view.page, pages - 1);
+    var shown = rows.slice(view.page * PAGE, view.page * PAGE + PAGE);
+    $("lb").innerHTML = shown.length
+      ? shown.map(function (r) {
+          var st = U.stateOf(r), risk = U.riskOf(r), age = ageDays(r);
+          return '<tr class="row' + (r.closed ? " closed" : "") + '" data-a="' + esc(r.address) + '">' +
+            '<td><a class="name" href="/mandate.html?a=' + esc(r.address) + '">' + U.avatar(r) + esc(r.name || "unnamed") + "</a></td>" +
+            '<td class="mono">' + U.short(r.owner) + "</td>" +
+            "<td>" + (r.closed ? "—" : U.pctHtml(retOf(r))) + "</td>" +
+            "<td>" + (r.equityUsd == null ? (r.closed ? "$0.00" : '<span class="muted" title="Its price feed is stale">—</span>') : U.money(r.equityUsd)) + "</td>" +
+            '<td class="opt">' + yourDeposit(r) + "</td>" +
+            '<td class="opt">' + (age === null ? "—" : age) + "</td>" +
+            "<td>" + (r.closed ? '<span class="state closed"><i aria-hidden="true"></i>' + st[1] + "</span>" : risk ? risk.html : "—") + "</td>" +
+            "<td>" + U.spark(U.indexOf(series[key(r)])) + "</td></tr>";
         }).join("")
-      : '<tr><td colspan="8" class="lb-empty"><b>Nothing matches</b>Try another name or address.</td></tr>';
+      : board.length
+        ? '<tr><td colspan="8" class="empty"><b>Nothing matches</b>Try another name, address or owner.</td></tr>'
+        : '<tr><td colspan="8" class="empty"><b>No agents yet</b>The first one appears here the moment it is created on-chain.</td></tr>';
     $("lb").querySelectorAll("tr[data-a]").forEach(function (tr) {
       tr.addEventListener("click", function (ev) { if (!ev.target.closest("a")) location.href = "/mandate.html?a=" + tr.getAttribute("data-a"); });
     });
+    $("pager").hidden = rows.length <= PAGE;
+    $("pg-t").textContent = rows.length ? (view.page * PAGE + 1) + "–" + Math.min(rows.length, view.page * PAGE + PAGE) + " of " + rows.length : "";
+    $("pg-prev").disabled = view.page === 0;
+    $("pg-next").disabled = view.page >= pages - 1;
+    $("a-count").textContent = rows.length + " shown";
+
+    var live = board.filter(function (r) { return !r.closed; });
+    var priced = live.filter(function (r) { return r.equityUsd != null; });
+    // Unknown, not zero, while every live agent's price feed is stale.
+    $("st-value").textContent = priced.length || !live.length ? U.money(priced.reduce(function (s, r) { return s + r.equityUsd; }, 0)) : "—";
+    $("st-live").textContent = String(live.length);
   }
 
-  // --------------------------------------------------------------- controls
-  function pressed(group, attr, fn) {
-    group.querySelectorAll("button").forEach(function (b) {
-      b.addEventListener("click", function () {
-        group.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-        b.setAttribute("aria-pressed", "true");
-        fn(b.getAttribute(attr));
-      });
+  // -------------------------------------------------------------- strategies
+  var T2024 = Date.UTC(2024, 0, 1) / 1000;
+  function renderStrats() {
+    var rows = strats.filter(function (s) { return matches(s.name + " " + s.universe.join(" ") + " " + s.status); });
+    $("strats").innerHTML = rows.length
+      ? rows.map(function (s) {
+          var st = s.stats, valid = s.status === "validated";
+          var curve = s.curve.filter(function (p) { return p.t >= T2024; }).map(function (p) { return p.index; });
+          return '<tr class="row" data-s="' + esc(s.id) + '">' +
+            '<td><a class="name" href="/strategy.html?s=' + encodeURIComponent(s.id) + '">' + U.coins(s.universe) + esc(s.name) + "</a></td>" +
+            "<td>" + U.coinCount(s.universe) + "</td>" +
+            "<td>" + U.pctHtml(st.cagr_since_2024 * 100, 0) + "</td>" +
+            "<td>" + U.pctHtml(st.cagr * 100, 0) + "</td>" +
+            "<td>" + U.pct(st.max_drawdown * 100, 0) + "</td>" +
+            '<td><span class="tagp' + (valid ? " ok" : "") + '">' + (valid ? "Validated" : "Candidate") + "</span></td>" +
+            "<td>" + U.spark(curve) + "</td></tr>";
+        }).join("")
+      : strats.length
+        ? '<tr><td colspan="7" class="empty"><b>Nothing matches</b>Try another name or coin.</td></tr>'
+        : '<tr><td colspan="7" class="empty"><b>Strategy templates couldn’t load</b>Reload the page to try again.</td></tr>';
+    $("strats").querySelectorAll("tr[data-s]").forEach(function (tr) {
+      tr.addEventListener("click", function (ev) { if (!ev.target.closest("a")) location.href = "/strategy.html?s=" + encodeURIComponent(tr.getAttribute("data-s")); });
     });
   }
-  pressed($("tabs"), "data-k", function (k) { view.tab = k; renderCards(); });
-  pressed($("filter"), "data-f", function (f) { view.filter = f; renderBoard(); });
-  $("more").addEventListener("click", function () { view.more = !view.more; renderCards(); });
-  $("q").addEventListener("input", function () { view.q = $("q").value; renderBoard(); });
-  document.querySelectorAll(".lb th[data-s]").forEach(function (th) {
-    th.querySelector("button").addEventListener("click", function () {
-      var s = th.getAttribute("data-s");
+  U.getJson("/data/strategies.json")
+    .then(function (d) {
+      strats = (d.strategies || []).slice().sort(function (a, b) { return b.stats.cagr_since_2024 - a.stats.cagr_since_2024; });
+      renderStrats();
+    })
+    .catch(function () { strats = []; renderStrats(); });
+
+  // ---------------------------------------------------------------- controls
+  $("filter").addEventListener("change", function () { view.filter = $("filter").value; view.page = 0; renderBoard(); });
+  $("range").addEventListener("change", function () {
+    view.range = $("range").value;
+    $("ret-h").textContent = "Return (" + RANGE[view.range] + ")";
+    renderBoard();
+  });
+  document.querySelectorAll("#agents th[data-s] button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var s = b.parentNode.getAttribute("data-s");
       view.dir = view.sort === s ? -view.dir : -1;
       view.sort = s;
-      document.querySelectorAll(".lb th[data-s]").forEach(function (x) { x.removeAttribute("aria-sort"); });
-      th.setAttribute("aria-sort", view.dir < 0 ? "descending" : "ascending");
+      document.querySelectorAll("#agents th[data-s]").forEach(function (x) { x.removeAttribute("aria-sort"); });
+      b.parentNode.setAttribute("aria-sort", view.dir < 0 ? "descending" : "ascending");
       renderBoard();
     });
   });
+  $("pg-prev").addEventListener("click", function () { view.page = Math.max(0, view.page - 1); renderBoard(); });
+  $("pg-next").addEventListener("click", function () { view.page += 1; renderBoard(); });
+  var onQuery = function (v) { view.q = v; view.page = 0; renderBoard(); renderStrats(); };
+  $("q").addEventListener("input", function () { $("gsearch").value = $("q").value; onQuery($("q").value); });
+  $("gsearch").addEventListener("input", function () { $("q").value = $("gsearch").value; onQuery($("gsearch").value); });
+  U.onAccount(renderBoard);
+  window.addEventListener("hashchange", function () {
+    document.querySelectorAll(".side a.item").forEach(function (a) { a.removeAttribute("aria-current"); });
+    var cur = document.querySelector('.side a.item[href="' + (location.hash === "#strategies" ? "/#strategies" : "/") + '"]');
+    if (cur) cur.setAttribute("aria-current", "page");
+  });
 
-  // ---------------------------------------------------------------- loading
+  // ----------------------------------------------------------------- loading
   async function refresh() {
     var data = await U.getJson("/api/leaderboard");
     if (!data || !Array.isArray(data.mandates)) throw new Error("bad payload");
     board = data.mandates;
     U.setNet(true);
-    renderCards();
     renderBoard();
-    renderScene();
+    // Live agents only: every history is an eth_getLogs scan, and the public RPC rate-limits them.
     await Promise.all(board.filter(function (r) { return !r.closed; }).map(async function (r) {
       try {
         var s = await U.getJson("/api/mandate/" + r.address + "/series");
         if (s && s.points && s.points.length) { series[key(r)] = s.points; rets[key(r)] = U.periodReturns(s.points); }
-      } catch (e) { /* the card shows a dotted line; the row falls back to the leaderboard's return */ }
+      } catch (e) { /* the row falls back to the leaderboard's return */ }
     }));
     // The leaderboard's returnPct is the contract's equity / baseline, which an
-    // unfreeze resets. Where the chained series is known, it replaces it
-    // everywhere: chips, sorting, the leaderboard, and each character's mood.
+    // unfreeze resets. Where the chained series is known, it replaces it.
     board = board.map(function (r) {
       var rr = rets[key(r)];
       return rr && rr.all !== null ? Object.assign({}, r, { returnPct: rr.all }) : r;
     });
-    renderCards();
     renderBoard();
-    renderScene();
   }
   function fail() {
     U.setNet(false);
     if (!board.length) {
-      $("cards").innerHTML = "";
-      $("lb").innerHTML = '<tr><td colspan="8" class="lb-empty" role="status"><b>Couldn’t reach the chain</b>Retrying every 30 seconds.<br><button class="btn" type="button" id="retry">Retry now</button></td></tr>';
+      $("st-value").textContent = "—";
+      $("lb").innerHTML = '<tr><td colspan="8" class="empty" role="status"><b>Couldn’t reach the chain</b>Retrying every 30 seconds. <button class="chip" type="button" id="retry" style="margin-left:8px">Retry now</button></td></tr>';
       $("retry").addEventListener("click", function () { refresh().catch(fail); });
     }
   }

@@ -1,5 +1,5 @@
 /**
- * Shared pieces of the Reins app: formatting, the top bar, holdings avatars,
+ * Shared pieces of the Reins app: formatting, the frame (sidebar and top bar), avatars,
  * return maths and charts. Every page loads this after wallet.js; nothing
  * here ever sees a key.
  */
@@ -60,104 +60,117 @@ window.ReinsUI = (function () {
   }
 
   // ------------------------------------------------------------------ icons
-  var P = 'fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"';
-  var ICONS = {
-    coins: '<ellipse cx="7" cy="5" rx="4.5" ry="2" ' + P + '/><path d="M2.5 5v3c0 1.1 2 2 4.5 2s4.5-.9 4.5-2V5" ' + P + "/>",
-    trend: '<path d="M1.5 10 5 6.5l2.5 2.5L12.5 4" ' + P + '/><path d="M9.5 4h3v3" ' + P + "/>",
-    gauge: '<path d="M2 10a5 5 0 1 1 10 0" ' + P + '/><path d="M7 10 9.5 6.5" ' + P + "/>",
-    sort: '<path d="M4.5 5.5 7 3l2.5 2.5M4.5 8.5 7 11l2.5-2.5" ' + P + "/>",
-    down: '<path d="M7 3v8m0 0L4 8m3 3 3-3" ' + P + "/>",
-    back: '<path d="M11 7H3m0 0 3.5-3.5M3 7l3.5 3.5" ' + P + "/>",
-    search: '<circle cx="6.2" cy="6.2" r="4.2" ' + P + '/><path d="m9.5 9.5 3 3" ' + P + "/>",
-    external: '<path d="M5 9 10 4m0 0H6.5M10 4v3.5" ' + P + "/>",
-    close: '<path d="M3.5 3.5l7 7M10.5 3.5l-7 7" ' + P + "/>",
-    chev: '<path d="m5.5 3.5 3.5 3.5-3.5 3.5" ' + P + "/>",
+  // Outline icons on a 24-unit grid, drawn with the .ic stroke (Aave Pro's set).
+  var PATHS = {
+    explore: '<circle cx="12" cy="12" r="8.5"/><path d="m15.2 8.8-1.9 4.5-4.5 1.9 1.9-4.5z"/>',
+    strategies: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
+    create: '<circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/>',
+    window: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9h17M7 6.8h.01M9.5 6.8h.01"/>',
+    shield: '<path d="M12 3.5 19 6v5.5c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6z"/><path d="m9.3 12 1.9 1.9 3.6-3.6"/>',
+    deposit: '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8.5 12.5 12 16l3.5-3.5"/>',
+    withdraw: '<circle cx="12" cy="12" r="8.5"/><path d="M12 16V8M8.5 11.5 12 8l3.5 3.5"/>',
+    ext: '<path d="M7 17 17 7M9 7h8v8"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/>',
+    filter: '<path d="M4.5 7h15M7.5 12h9M10.5 17h3"/>',
+    updown: '<path d="m8.5 9.5 3.5-3.5 3.5 3.5M8.5 14.5l3.5 3.5 3.5-3.5"/>',
+    info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
+    back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+    more: '<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="2.6"/>',
+    right: '<path d="m9.5 6 6 6-6 6"/>',
+    down: '<path d="m6 9.5 6 6 6-6"/>',
+    minus: '<path d="M6 12h12"/>',
+    close: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+    agent: '<circle cx="12" cy="9" r="3.5"/><path d="M5.5 19.5c1.2-3.2 3.6-4.8 6.5-4.8s5.3 1.6 6.5 4.8"/>',
+    freeze: '<path d="M12 3.5v17M4.6 7.8l14.8 8.4M4.6 16.2l14.8-8.4M9.5 4.8 12 7l2.5-2.2M9.5 19.2 12 17l2.5 2.2"/>',
+    exit: '<path d="M14 4.5h4.5v15H14M10 16l4-4-4-4M14 12H4"/>',
+    wallet: '<rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 9.5h17M16 14h.01"/>',
   };
+  var ALIAS = { external: "ext", chev: "right", sort: "updown", trend: "strategies", gauge: "shield", coins: "wallet" };
   function icon(name, size) {
-    var s = size || 14;
-    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 14 14" aria-hidden="true">' + (ICONS[name] || "") + "</svg>";
+    return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"' + (size ? ' style="width:' + size + "px;height:" + size + 'px"' : "") + ">" +
+      (PATHS[ALIAS[name] || name] || "") + "</svg>";
   }
 
-  // ------------------------------------------------------------ characters
-  // Family's cast, one per mandate. The body (shape and colour) comes from the
-  // address, so a mandate always looks the same; the face is its state, so a
-  // glance says how it's doing.
-  var INK = "#2a2a29";
-  var BODY_COLORS = ["#1e9bff", "#1fc46b", "#ff4a1c", "#ffc53d"];
-  var SHAPES = [
-    // flower cloud
-    function (c) {
-      var petals = "";
-      for (var k = 0; k < 8; k++) {
-        var a = (k / 8) * Math.PI * 2;
-        petals += '<circle cx="' + (50 + 27 * Math.cos(a)).toFixed(1) + '" cy="' + (48 + 27 * Math.sin(a)).toFixed(1) + '" r="17" fill="' + c + '"/>';
-      }
-      return petals + '<circle cx="50" cy="48" r="30" fill="' + c + '"/>';
-    },
-    // soft blob
-    function (c) { return '<path d="M50 14c24-2 38 14 37 36s-16 38-39 36-36-16-35-38 15-32 37-34z" fill="' + c + '"/>'; },
-    // tilted rounded square
-    function (c) { return '<rect x="18" y="16" width="64" height="64" rx="17" fill="' + c + '" transform="rotate(-7 50 48)"/>'; },
-    // rounded triangle
-    function (c) { return '<path d="M50 12c6 0 9 4 13 11l24 46c5 10-1 17-11 17H24c-10 0-16-7-11-17l24-46c4-7 7-11 13-11z" fill="' + c + '"/>'; },
-  ];
+  // ---------------------------------------------------------------- avatars
+  // Agents get a disc in a colour taken from their address, with the
+  // name's initial; strategies show the coins they trade.
   function seed(address) {
     var h = 0, a = String(address || "").toLowerCase();
     for (var i = 2; i < a.length; i++) h = (h * 31 + a.charCodeAt(i)) >>> 0;
     return h;
   }
-  function face(mood) {
-    var s = 'fill="none" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"';
-    var dots = '<ellipse cx="41" cy="46" rx="4" ry="5.5" fill="' + INK + '"/><ellipse cx="59" cy="46" rx="4" ry="5.5" fill="' + INK + '"/>';
-    if (mood === "happy") return '<path d="M35 47q6-7 12 0M53 47q6-7 12 0" ' + s + '/><path d="M41 58q9 9 18 0" ' + s + "/>";
-    if (mood === "worried") return dots + '<path d="M42 64q8-7 16 0" ' + s + "/>";
-    if (mood === "frozen") return dots + '<ellipse cx="50" cy="62" rx="4.5" ry="5" fill="' + INK + '"/>';
-    if (mood === "asleep") return '<path d="M35 48h12M53 48h12" ' + s + '/><path d="M45 61h10" ' + s + '/>' +
-      '<text x="74" y="22" font-family="Inter, sans-serif" font-weight="700" font-size="15" fill="#6f6e6c">z</text><text x="84" y="12" font-family="Inter, sans-serif" font-weight="700" font-size="11" fill="#6f6e6c">z</text>';
-    if (mood === "meh") return dots + '<path d="M43 61h14" ' + s + "/>";
-    return dots + '<path d="M43 59q7 6 14 0" ' + s + "/>"; // content
+  function avatar(r, cls) {
+    var hue = seed(r.address) % 360, st = stateOf(r)[0];
+    var bg = st === "closed" ? "#3a3939" : "linear-gradient(135deg, hsl(" + hue + " 72% 58%), hsl(" + ((hue + 40) % 360) + " 70% 36%))";
+    var initial = String(r.name || "?").trim().charAt(0).toUpperCase() || "?";
+    return '<span class="tok' + (cls ? " " + cls : "") + '" style="background:' + bg + '" aria-hidden="true">' + esc(initial) + "</span>";
   }
-  function mascot(r, cls) {
-    var st = stateOf(r)[0];
-    var h = seed(r.address);
-    var d = dirOf(r.returnPct);
-    var mood = st === "closed" ? "asleep" : st === "frozen" ? "frozen" : st === "expired" ? "meh" : d === "up" ? "happy" : d === "down" ? "worried" : "content";
-    var color = st === "closed" ? "#dcd7cf" : st === "frozen" ? "#bfe3ff" : st === "expired" ? "#ffe3a3" : BODY_COLORS[(h >>> 3) % BODY_COLORS.length];
-    var legs = '<path d="M40 84l-4 12M60 84l4 12" fill="none" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>';
-    var frost = st === "frozen" ? '<path d="M84 18v14M77 25h14M79 20l10 10M89 20l-10 10" stroke="#1e9bff" stroke-width="2.5" stroke-linecap="round"/>' : "";
-    return '<span class="mascot' + (cls ? " " + cls : "") + '" aria-hidden="true"><svg viewBox="0 0 100 100">' + legs +
-      SHAPES[h % SHAPES.length](color) + '<ellipse cx="36" cy="30" rx="8" ry="5" fill="#fff" opacity=".28" transform="rotate(-30 36 30)"/>' +
-      face(mood) + frost + "</svg></span>";
+  var COIN_ICONS = { BTC: "btc", ETH: "eth", SOL: "sol", USDC: "usdc", EURC: "eurc" };
+  function coinImg(sym) { return COIN_ICONS[sym] ? '<img src="/tokens/' + COIN_ICONS[sym] + '.svg" alt="">' : "<i>" + esc(String(sym).slice(0, 3)) + "</i>"; }
+  // Up to three of a universe's coins, in the space of one avatar.
+  function coins(universe, cls) {
+    var list = (universe || []).filter(function (u) { return u.charAt(0) !== "+"; }).slice(0, 3);
+    if (list.length === 1) return '<span class="tok' + (cls ? " " + cls : "") + '">' + coinImg(list[0]) + "</span>";
+    return '<span class="tok multi' + (cls ? " " + cls : "") + '" aria-hidden="true">' + list.map(coinImg).join("") + "</span>";
   }
-
-  // Family's doodles: coins, sparkles, a heart, cream circles.
-  var DOODLE = {
-    coin: '<svg viewBox="0 0 40 40"><ellipse cx="20" cy="22" rx="17" ry="16" fill="#f0a81c"/><ellipse cx="20" cy="19" rx="17" ry="16" fill="#ffc53d"/><path d="M11 30 27 7" stroke="#ffe08a" stroke-width="6" stroke-linecap="round"/></svg>',
-    sparkle: '<svg viewBox="0 0 20 20"><path d="M10 0c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10z" fill="#ffc53d"/></svg>',
-    sparkleBlue: '<svg viewBox="0 0 20 20"><path d="M10 0c1 6 4 9 10 10-6 1-9 4-10 10-1-6-4-9-10-10 6-1 9-4 10-10z" fill="#5ec2ff"/></svg>',
-    heart: '<svg viewBox="0 0 40 36"><path d="M20 34S2 23 2 12C2 5 7 1 12 1c4 0 7 2 8 5 1-3 4-5 8-5 5 0 10 4 10 11 0 11-18 22-18 22z" fill="#ff4a1c"/><ellipse cx="29" cy="10" rx="3" ry="2" fill="#fff" opacity=".5"/></svg>',
-    dot: '<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#1fc46b"/></svg>',
-    dotRed: '<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#ff4a1c"/></svg>',
-    cream: '<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#f1ece4"/></svg>',
-  };
-  function doodle(kind, style, cls) {
-    return '<span class="' + (cls || "float") + '" style="' + style + '" aria-hidden="true">' + DOODLE[kind].replace("<svg ", '<svg width="100%" height="100%" ') + "</span>";
+  // How many coins a universe covers: "BTC, ETH, SOL, +22 large coins" is 25.
+  function coinCount(universe) {
+    return (universe || []).reduce(function (n, u) { return n + (u.charAt(0) === "+" ? parseInt(u.slice(1), 10) || 0 : 1); }, 0);
+  }
+  // A ring gauge, 0..1 filled.
+  function ring(share, cls) {
+    var r = 6.5, c = 2 * Math.PI * r, f = Math.max(0, Math.min(1, share || 0)) * c;
+    return '<svg class="ring' + (cls ? " " + cls : "") + '" viewBox="0 0 16 16" aria-hidden="true"><circle class="t" cx="8" cy="8" r="' + r + '"/>' +
+      '<circle class="v" cx="8" cy="8" r="' + r + '" stroke-dasharray="' + f.toFixed(2) + " " + c.toFixed(2) + '"/></svg>';
   }
 
-  // ------------------------------------------------------------- top bar
+  // ---------------------------------------------------------------- frame
+  // Aave Pro's frame: a sidebar with grouped links, and a top bar with search
+  // and the wallet. Pages provide <aside id="side"> and <header id="top">.
   var listeners = [];
-  var MARK = '<svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="1" y="1" width="24" height="24" rx="8" fill="#1e9bff"/>' +
-    '<ellipse cx="10" cy="12" rx="2" ry="2.7" fill="#2a2a29"/><ellipse cx="16" cy="12" rx="2" ry="2.7" fill="#2a2a29"/><path d="M10 17q3 2.5 6 0" fill="none" stroke="#2a2a29" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  // The Reins mark: a rounded lowercase r and its dot, white on the dark sidebar.
+  var MARK = '<svg width="26" height="26" viewBox="256 256 512 512" aria-hidden="true"><g fill="#fff"><rect x="307" y="327" width="130" height="368" rx="65"/><path d="M430 396C452 352 494 327 540 327a50.5 50.5 0 0 1 0 101c-58 0-103 34-103 96H415V396z"/><circle cx="670" cy="378" r="47"/></g></svg>';
+  var NAV = [
+    [null, [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["create", "Create agent", "/create.html"]]],
+    ["ARC", [["window", "Block explorer", "#", "nav-explorer"]]],
+  ];
   function topbar(page) {
+    var nav = NAV.map(function (g) {
+      return (g[0] ? '<div class="grp">' + g[0] + "</div>" : "") + g[1].map(function (it) {
+        return '<a class="item" href="' + it[2] + '"' + (it[3] ? ' id="' + it[3] + '" target="_blank" rel="noopener"' : "") +
+          (it[0] === page ? ' aria-current="page"' : "") + ">" + icon(it[0]) + it[1] + (it[3] ? icon("ext").replace('class="ic"', 'class="ic ext"') : "") + "</a>";
+      }).join("");
+    }).join("");
+    var hidden = false;
+    try { hidden = localStorage.getItem("reins-promo") === "hidden"; } catch (e) { /* storage off */ }
+    var rings = '<svg class="rings" viewBox="0 0 220 220" aria-hidden="true">' + [30, 55, 80, 105].map(function (r) {
+      return '<circle cx="110" cy="110" r="' + r + '" fill="none" stroke="rgba(255,255,255,.07)"/>';
+    }).join("") + "</svg>";
+    $("side").className = "side";
+    $("side").innerHTML =
+      '<div class="side-head"><a class="brand" href="/">' + MARK + 'Reins <span class="tag">BETA</span></a></div>' +
+      '<nav aria-label="Main">' + nav + "</nav>" +
+      (hidden ? "" : '<div class="promo" id="promo">' + rings + '<span class="badge"><img src="/tokens/arc.svg" alt=""></span>' +
+        '<button class="x" id="promo-x" type="button" aria-label="Hide">' + icon("minus") + "</button><b>Tokenized stocks</b><span>Coming to Arc</span></div>");
+    $("top").className = "top";
     $("top").innerHTML =
-      '<a class="wordmark" href="/">' + MARK + "Reins</a>" +
-      '<nav class="pills" aria-label="Main">' +
-      '<a href="/"' + (page === "explore" ? ' aria-current="page"' : "") + ">Explore</a>" +
-      '<a href="/create.html"' + (page === "create" ? ' aria-current="page"' : "") + ">Create</a>" +
-      '<a id="nav-explorer" href="#" target="_blank" rel="noopener">Explorer</a>' +
-      "</nav>" +
+      '<label class="search">' + icon("search") + '<span class="sr-only">Search agents and strategies</span>' +
+      '<input id="gsearch" type="search" placeholder="Search agents and strategies" autocomplete="off"><kbd>/</kbd></label>' +
       '<div class="top-r"><span class="net" id="net"><i></i><span id="net-text">Arc</span></span>' +
-      '<button class="btn" id="wallet" type="button">Connect Wallet</button></div>';
+      '<button class="btn-white" id="wallet" type="button">Connect Wallet</button></div>';
+    if ($("promo-x")) $("promo-x").addEventListener("click", function () {
+      $("promo").remove();
+      try { localStorage.setItem("reins-promo", "hidden"); } catch (e) { /* storage off */ }
+    });
+    // Search lives on Explore; elsewhere, Enter takes you there with the query.
+    $("gsearch").value = new URLSearchParams(location.search).get("q") || "";
+    $("gsearch").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && page !== "explore") location.href = "/?q=" + encodeURIComponent($("gsearch").value.trim());
+    });
+    document.addEventListener("keydown", function (e) {
+      var t = document.activeElement && document.activeElement.tagName;
+      if (e.key === "/" && t !== "INPUT" && t !== "TEXTAREA" && t !== "SELECT") { e.preventDefault(); $("gsearch").focus(); }
+    });
     $("wallet").addEventListener("click", function () {
       connect().catch(function (err) { $("wallet").textContent = "No wallet"; $("wallet").title = W.explain(err); });
     });
@@ -286,16 +299,21 @@ window.ReinsUI = (function () {
   }
 
   // ------------------------------------------------------------ card chart
-  // Chamber's card chart: a teal performance area, no axes.
-  function areaSvg(points) {
+  // Chamber's card chart: a teal performance area, no axes. A vault's value
+  // only moves when it trades, so it steps; a backtest's weekly curve
+  // ({ smooth: true }) is drawn point to point.
+  function linePath(series, vals, X, Y) {
+    return series.map(function (p, i) { return (i ? "L" : "M") + X(p.t).toFixed(1) + " " + Y(vals[i]).toFixed(1); }).join(" ");
+  }
+  function areaSvg(points, opts) {
     if (!points || !points.length) {
-      return '<svg viewBox="0 0 300 150" aria-hidden="true"><path d="M0 75H300" stroke="#dcd7cf" stroke-width="2" stroke-dasharray="0.1 7" stroke-linecap="round"/></svg>';
+      return '<svg viewBox="0 0 300 150" aria-hidden="true"><path d="M0 75H300" stroke="#3a3939" stroke-width="2" stroke-dasharray="0.1 7" stroke-linecap="round"/></svg>';
     }
     var s = windowed(points, "all"), vals = index(s), dom = domain(vals);
     var t0 = s[0].t, t1 = s[s.length - 1].t > t0 ? s[s.length - 1].t : t0 + 1;
     var X = function (t) { return ((t - t0) / (t1 - t0)) * 300; };
     var Y = function (v) { return 8 + (1 - (v - dom[0]) / (dom[1] - dom[0])) * 134; };
-    var d = stepPath(s, vals, X, Y), id = "ag" + gradN++;
+    var d = (opts && opts.smooth ? linePath : stepPath)(s, vals, X, Y), id = "ag" + gradN++;
     return '<svg viewBox="0 0 300 150" preserveAspectRatio="none" aria-hidden="true">' + gradient(id, "#1e9bff", 0.28) +
       '<path d="' + d + ' V150 H0 Z" fill="url(#' + id + ')"/><path d="' + d + '" fill="none" stroke="#1e9bff" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>';
   }
@@ -310,7 +328,7 @@ window.ReinsUI = (function () {
    */
   function Chart(o) {
     var points = null, range = "all", mode = "performance", st = null;
-    var EV = { Frozen: "#ff4a1c", Deposited: "#2a2a29", Withdrawn: "#2a2a29", Traded: "#1e9bff", AgentChanged: "#2a2a29" };
+    var EV = { Frozen: "#e8716b", Deposited: "#bcbbbb", Withdrawn: "#bcbbbb", Traded: "#1e9bff", AgentChanged: "#bcbbbb" };
     var stamp = function (t, withTime) {
       return new Date(t * 1000).toLocaleString("en-GB", withTime ? { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" } : { day: "2-digit", month: "short" });
     };
@@ -341,29 +359,31 @@ window.ReinsUI = (function () {
       var yl = "";
       for (var k = 0; k < 4; k++) {
         var v = dom[1] - ((dom[1] - dom[0]) * (k + 0.5)) / 4;
-        yl += '<text x="' + Wd + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end" fill="#6f6e6c" font-size="12" font-family="Inter, sans-serif">' + tick(v) + "</text>";
+        yl += '<text x="' + Wd + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end" fill="#636161" font-size="11.5" font-family="Inter, sans-serif">' + tick(v) + "</text>";
       }
       var xl = "";
       var spanDays = (t1 - t0) / 86400;
-      for (var n = 0; n < 5; n++) {
-        var tt = t0 + ((t1 - t0) * n) / 4;
-        xl += '<text x="' + X(tt).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="' + (n === 0 ? "start" : n === 4 ? "end" : "middle") +
-          '" fill="#6f6e6c" font-size="12" font-family="Inter, sans-serif">' + (n === 4 ? "Now" : stamp(tt, spanDays < 3)) + "</text>";
+      // Fewer dates on a narrow chart, so they never overlap.
+      var NX = Wd < 460 ? 3 : 5;
+      for (var n = 0; n < NX; n++) {
+        var tt = t0 + ((t1 - t0) * n) / (NX - 1);
+        xl += '<text x="' + X(tt).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="' + (n === 0 ? "start" : n === NX - 1 ? "end" : "middle") +
+          '" fill="#636161" font-size="11.5" font-family="Inter, sans-serif">' + (n === NX - 1 ? "Now" : stamp(tt, spanDays < 3)) + "</text>";
       }
       var marks = s.map(function (x, i) {
         var ev = (x.events || []).filter(function (e) { return e !== "now"; });
         if (!ev.length) return "";
         var c = ev.indexOf("Frozen") >= 0 ? EV.Frozen : EV[ev[0]] || "#1e9bff";
-        return '<circle cx="' + X(x.t).toFixed(1) + '" cy="' + Y(vals[i]).toFixed(1) + '" r="3.5" fill="' + c + '" stroke="#fbfaf9" stroke-width="1.5"><title>' + esc(ev.join(" + ")) + "</title></circle>";
+        return '<circle cx="' + X(x.t).toFixed(1) + '" cy="' + Y(vals[i]).toFixed(1) + '" r="3.5" fill="' + c + '" stroke="#1a1919" stroke-width="1.5"><title>' + esc(ev.join(" + ")) + "</title></circle>";
       }).join("");
       var y0 = Y(vals[0]).toFixed(1);
       o.plot.innerHTML =
         '<svg viewBox="0 0 ' + Wd + " " + H + '" role="img" aria-label="' + (mode === "performance" ? "Return " : "Equity ") + esc(WHEN[range]) + ": " +
-        pct(change(first, end).pct) + ', equity now ' + esc(money(end.v, 4)) + '">' + gradient(id, "#1e9bff", 0.3) + yl + xl +
-        '<line x1="0" x2="' + (Wd - RIGHT) + '" y1="' + y0 + '" y2="' + y0 + '" stroke="#c9c5bd" stroke-width="1.5" stroke-dasharray="0.1 5" stroke-linecap="round"/>' +
+        pct(change(first, end).pct) + ', equity now ' + esc(money(end.v, 4)) + '">' + gradient(id, "#1e9bff", 0.22) + yl + xl +
+        '<line x1="0" x2="' + (Wd - RIGHT) + '" y1="' + y0 + '" y2="' + y0 + '" stroke="rgba(255,255,255,.18)" stroke-width="1.5" stroke-dasharray="0.1 5" stroke-linecap="round"/>' +
         '<path d="' + d + " V" + BOT + ' H0 Z" fill="url(#' + id + ')"/>' +
         '<path d="' + d + '" fill="none" stroke="#1e9bff" stroke-width="1.8" stroke-linejoin="round"/>' + marks +
-        '<g id="' + id + '-s" visibility="hidden"><line y1="' + TOP + '" y2="' + BOT + '" stroke="#c9c5bd"/><circle r="5" fill="#1e9bff" stroke="#fbfaf9" stroke-width="2"/></g></svg>';
+        '<g id="' + id + '-s" visibility="hidden"><line y1="' + TOP + '" y2="' + BOT + '" stroke="rgba(255,255,255,.3)" stroke-dasharray="3 3"/><circle r="5" fill="#1e9bff" stroke="#1a1919" stroke-width="2"/></g></svg>';
       st = { s: s, vals: vals, X: X, Y: Y, W: Wd, first: first, end: end, idx: -1, g: $(id + "-s") };
       headline(end, s.length - 1, WHEN[range]);
     }
@@ -430,10 +450,41 @@ window.ReinsUI = (function () {
     return res.json();
   }
 
+  // --------------------------------------------------------------- sparkline
+  // Hyperliquid's "Snapshot" column: a small line, green if it ends above its start.
+  function spark(vals) {
+    vals = (vals || []).filter(function (v) { return typeof v === "number" && isFinite(v); });
+    if (vals.length < 2) return '<svg class="spark" viewBox="0 0 90 26" aria-hidden="true"><path d="M0 13H90" stroke="#3a3939" stroke-dasharray="2 4"/></svg>';
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals), span = hi - lo || Math.abs(hi) * 0.01 || 1;
+    var d = vals.map(function (v, i) { return (i ? "L" : "M") + (i / (vals.length - 1) * 90).toFixed(1) + " " + (23 - ((v - lo) / span) * 20).toFixed(1); }).join("");
+    var up = vals[vals.length - 1] >= vals[0];
+    return '<svg class="spark" viewBox="0 0 90 26" aria-hidden="true"><path d="' + d + '" fill="none" stroke="' + (up ? "#66c399" : "#e8716b") + '" stroke-width="1.4" stroke-linejoin="round"/></svg>';
+  }
+  // A growth index for a series of { t, equityUsd, baselineUsd, index } points.
+  function indexOf(points) { return (points || []).map(function (p) { return typeof p.index === "number" ? p.index : p.baselineUsd > 0 ? p.equityUsd / p.baselineUsd : null; }); }
+
+  // ------------------------------------------------------------ strategies
+  // A backtested strategy's weekly growth curve ({ t, index }) in the point shape the charts read.
+  function curvePoints(curve) {
+    return (curve || []).map(function (p) { return { t: p.t, equityUsd: p.index, baselineUsd: 1, index: p.index }; });
+  }
+  // A stable stand-in address, so each strategy gets its own character.
+  function pseudoAddress(id) {
+    var h = 2166136261, s = String(id), out = "0x";
+    for (var i = 0; out.length < 42; i++) { h = Math.imul(h ^ s.charCodeAt(i % s.length), 16777619) >>> 0; out += (h >>> 28).toString(16); }
+    return out;
+  }
+  // Risk 1-5 from a strategy's worst backtested drop, in the same badge as an agent's.
+  function strategyRisk(s) {
+    var dd = Math.round(Math.abs(s.stats.max_drawdown) * 100);
+    return '<span class="risk r' + s.risk + '" title="Worst backtested drop −' + dd + '%">Risk: ' + s.risk + "/5</span>";
+  }
+
   return {
     FLAT: FLAT, esc: esc, short: short, money: money, compact: compact, bigMoneyHtml: bigMoneyHtml, dirOf: dirOf,
-    pct: pct, pctHtml: pctHtml, stateOf: stateOf, riskOf: riskOf, icon: icon, mascot: mascot, doodle: doodle, RANGES: RANGES,
+    pct: pct, pctHtml: pctHtml, stateOf: stateOf, riskOf: riskOf, icon: icon, avatar: avatar, coins: coins, coinCount: coinCount, ring: ring, RANGES: RANGES,
     topbar: topbar, setNet: setNet, connect: connect, onAccount: onAccount,
     change: change, periodReturns: periodReturns, combine: combine, areaSvg: areaSvg, Chart: Chart, getJson: getJson,
+    curvePoints: curvePoints, pseudoAddress: pseudoAddress, strategyRisk: strategyRisk, spark: spark, indexOf: indexOf, windowed: windowed,
   };
 })();

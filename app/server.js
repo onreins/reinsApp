@@ -31,6 +31,7 @@ import { arc, arcTestnet } from "viem/chains";
 import { artifact } from "../scripts/artifact.js";
 import { ArenaIndexer } from "../arena/indexer.js";
 import { chainIndex, RESET_EVENTS } from "../arena/returns.js";
+import { createRiskEngine, snapshot } from "../bridge/risk.js";
 
 const FACTORY = artifact("MandateFactory");
 const MANDATE = artifact("Mandate");
@@ -203,14 +204,33 @@ export function createApp({ deployment, rpcUrl } = {}) {
     }
   });
 
+  // The bridge's risk engine, run on the vault's live state with its default settings:
+  // the same answer the bridge would give before sending a trade.
+  const risk = createRiskEngine();
+  app.get("/api/mandate/:address/risk", async (req, res) => {
+    try {
+      if (!isAddress(req.params.address)) throw refuse("that is not an address");
+      const board = await getBoard();
+      const row = board.mandates.find((m) => m.address.toLowerCase() === req.params.address.toLowerCase());
+      if (!row) {
+        const err = new Error("no mandate from this factory at that address");
+        err.status = 404;
+        throw err;
+      }
+      res.json({ address: row.address, block: board.block ?? null, ...(await snapshot(risk, row)) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
   // --------------------------------------------------------------- encoding
   app.post("/api/tx/create", (req, res) => {
     try {
       const { name, agent, rules } = req.body ?? {};
       if (typeof name !== "string" || name.trim().length < 1 || name.length > NAME_MAX)
-        throw refuse(`the mandate needs a name of 1 to ${NAME_MAX} characters`);
+        throw refuse(`the agent needs a name of 1 to ${NAME_MAX} characters`);
       if (typeof agent !== "string" || !isAddress(agent))
-        throw refuse("the agent must be a valid address — the key that will trade, never withdraw");
+        throw refuse("the trading key must be a valid address — the key that will trade, never withdraw");
 
       const compiled = compileRules(rules);
       const data = encodeFunctionData({
@@ -235,7 +255,7 @@ export function createApp({ deployment, rpcUrl } = {}) {
   app.post("/api/tx/deposit", (req, res) => {
     try {
       const { mandate, amountUsd } = req.body ?? {};
-      if (typeof mandate !== "string" || !isAddress(mandate)) throw refuse("that mandate address is not valid");
+      if (typeof mandate !== "string" || !isAddress(mandate)) throw refuse("that agent address is not valid");
       const amount = Number(amountUsd);
       if (!Number.isFinite(amount) || amount <= 0) throw refuse("the deposit must be a positive dollar amount");
 
@@ -269,7 +289,7 @@ export function createApp({ deployment, rpcUrl } = {}) {
   app.post("/api/tx/action", (req, res) => {
     try {
       const { mandate, action } = req.body ?? {};
-      if (typeof mandate !== "string" || !isAddress(mandate)) throw refuse("that mandate address is not valid");
+      if (typeof mandate !== "string" || !isAddress(mandate)) throw refuse("that agent address is not valid");
       const call = (functionName, args = []) => encodeFunctionData({ abi: MANDATE.abi, functionName, args });
 
       let data;
@@ -287,14 +307,14 @@ export function createApp({ deployment, rpcUrl } = {}) {
         const { token, amount } = req.body;
         const known = [dep.external.usdc, dep.external.eurc].map((a) => a.toLowerCase());
         if (typeof token !== "string" || !known.includes(token.toLowerCase()))
-          throw refuse("that token is not one this mandate can hold");
+          throw refuse("that token is not one this agent can hold");
         const n = Number(amount);
         if (!Number.isFinite(n) || n <= 0) throw refuse("the withdrawal must be a positive amount");
         data = call("withdraw", [getAddress(token), parseUnits(String(n), 6)]);
         label = `withdraw ${n}`;
       } else if (action === "setAgent") {
         const { agent } = req.body;
-        if (typeof agent !== "string" || !isAddress(agent)) throw refuse("the new agent must be a valid address");
+        if (typeof agent !== "string" || !isAddress(agent)) throw refuse("the new trading key must be a valid address");
         data = call("setAgent", [getAddress(agent)]);
         label = agent.toLowerCase() === ZERO ? "revoke the agent" : `set the agent to ${agent.slice(0, 8)}…`;
       } else {

@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "4200", "--directory", "site"],
       "port": 4200
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--env-file=.env", "app/server.js"],
+      "port": 4100
     }
   ]
 }

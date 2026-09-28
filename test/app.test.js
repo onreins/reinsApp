@@ -72,6 +72,26 @@ describe("config", () => {
   });
 });
 
+describe("strategies and risk (the MVP pages)", () => {
+  test("serves the backtested strategy library the Explore and strategy pages read", async () => {
+    const res = await fetch(`${base}/data/strategies.json`);
+    assert.equal(res.status, 200);
+    const doc = await res.json();
+    const ids = doc.strategies.map((s) => s.id);
+    for (const id of ["balanced", "trend", "momentum"]) assert.ok(ids.includes(id), `missing ${id}`);
+    for (const s of doc.strategies) {
+      assert.ok(s.curve.length > 100 && s.curve.every((p) => Number.isFinite(p.t) && p.index > 0), `${s.id} curve`);
+      assert.ok(Number.isFinite(s.stats.max_drawdown) && s.risk >= 1 && s.risk <= 5, `${s.id} stats`);
+    }
+  });
+
+  test("the risk read refuses something that isn't an address, before touching the chain", async () => {
+    const res = await fetch(`${base}/api/mandate/not-an-address/risk`);
+    assert.equal(res.status, 400);
+    assert.match((await res.json()).error, /not an address/);
+  });
+});
+
 describe("encoding a create", () => {
   test("compiles human rules into the exact factory call", async () => {
     const { status, body } = await post("/api/tx/create", {
@@ -130,7 +150,7 @@ describe("encoding a create", () => {
       rules: goodRules,
     });
     assert.equal(status, 400);
-    assert.match(body.error, /agent/i);
+    assert.match(body.error, /trading key/i);
   });
 
   test("refuses an empty name and a giant one", async () => {

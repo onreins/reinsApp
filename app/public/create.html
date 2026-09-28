@@ -2,84 +2,90 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reins — Create</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Create agent · Reins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
 
 <a class="skip" href="#main">Skip to content</a>
-<div class="wrap">
-  <header class="top" id="top"></header>
+<aside id="side"></aside>
+<header id="top"></header>
 
-  <main id="main">
-    <h1 class="page-title">Create</h1>
+<main id="main">
+  <header class="page-head">
+    <div>
+      <h1>Create an agent</h1>
+      <p class="sub">Give an AI agent a USDC budget and rules it cannot break. The rules are written into the contract; your wallet signs every step.</p>
+    </div>
+  </header>
+  <div class="notice" id="template" hidden style="margin-top:24px"></div>
 
-    <form class="form-grid" id="form" novalidate>
-      <div style="display:grid;gap:16px">
-        <section class="card form-card" aria-labelledby="s1">
-          <h2 id="s1">Who trades</h2>
-          <p class="lead">The agent’s key trades inside your rules. It has no function that moves money out.</p>
-          <div class="field">
-            <label for="f-name">Name<small>Public, shown on Explore</small></label>
-            <input id="f-name" type="text" maxlength="64" value="my first mandate" autocomplete="off">
-          </div>
-          <div class="field">
-            <label for="f-agent">Agent address<small>The key your bot trades with. Not your own wallet.</small></label>
-            <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" aria-describedby="f-agent-err">
-            <div class="err" id="f-agent-err" aria-live="polite"></div>
-          </div>
-        </section>
+  <form class="cgrid" id="form" novalidate>
+    <div style="display:grid;gap:16px">
+      <section class="fcard" aria-labelledby="s1">
+        <h2 id="s1">Who trades</h2>
+        <p class="lead">Your bot trades with its own key, inside your rules. That key has no function that moves money out.</p>
+        <div class="field">
+          <label for="f-name">Name<small>Public, shown on Agents</small></label>
+          <input id="f-name" type="text" maxlength="64" value="my first agent" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="f-agent">Trading key<small>The address your bot trades with. Not your own wallet.</small></label>
+          <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" aria-describedby="f-agent-err">
+          <div class="err" id="f-agent-err" aria-live="polite"></div>
+        </div>
+      </section>
 
-        <section class="card form-card" aria-labelledby="s2">
-          <h2 id="s2">Money</h2>
-          <p class="lead">USDC goes into the contract, not to us or the agent. You can take it back at any time.</p>
-          <div class="field-row">
-            <div class="field"><label for="f-deposit">Fund with, USDC<small>Deposited right after creation</small></label>
-              <input id="f-deposit" type="number" inputmode="decimal" min="0" step="0.01" value="5"></div>
-            <div class="field"><label for="f-trade">Largest trade, USDC<small>No single trade can exceed this</small></label>
-              <input id="f-trade" type="number" inputmode="decimal" min="0" step="0.01" value="2"></div>
-          </div>
-        </section>
+      <section class="fcard" aria-labelledby="s2">
+        <h2 id="s2">Money</h2>
+        <p class="lead">USDC goes into the agent’s contract, not to us or the bot. You can take it back at any time.</p>
+        <div class="field-row">
+          <div class="field"><label for="f-deposit">Fund with, USDC<small>Deposited right after creation</small></label>
+            <input id="f-deposit" type="number" inputmode="decimal" min="0" step="0.01" value="5"></div>
+          <div class="field"><label for="f-trade">Largest trade, USDC<small>No single trade above this</small></label>
+            <input id="f-trade" type="number" inputmode="decimal" min="0" step="0.01" value="2"></div>
+        </div>
+      </section>
 
-        <section class="card form-card" aria-labelledby="s3">
-          <h2 id="s3">Safety</h2>
-          <p class="lead">Enforced by the contract on every trade. Nobody can loosen them later, including you.</p>
-          <div class="field-row">
-            <div class="field"><label for="f-loss">Loss limit, %<small>Fall this far and anyone can freeze it</small></label>
-              <input id="f-loss" type="number" min="0.01" max="100" step="0.5" value="10"></div>
-            <div class="field"><label for="f-slip">Price band, %<small>Fills worse than this vs the oracle revert</small></label>
-              <input id="f-slip" type="number" min="0" max="10" step="0.1" value="1"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label for="f-age">Max price age, hours<small>Refuse to trade on anything staler</small></label>
-              <input id="f-age" type="number" min="1" max="168" step="1" value="24"></div>
-            <div class="field"><label for="f-days">Runs for, days<small>It expires by itself after this</small></label>
-              <input id="f-days" type="number" min="1" max="3650" step="1" value="30"></div>
-          </div>
-        </section>
-      </div>
+      <section class="fcard" aria-labelledby="s3">
+        <h2 id="s3">Safety</h2>
+        <p class="lead">Enforced by the contract on every trade. Nobody can loosen them later, including you.</p>
+        <div class="field-row">
+          <div class="field"><label for="f-loss">Loss limit, %<small>Fall this far and anyone can freeze it</small></label>
+            <input id="f-loss" type="number" min="0.01" max="100" step="0.5" value="10"></div>
+          <div class="field"><label for="f-slip">Price band, %<small>Worse fills than this revert</small></label>
+            <input id="f-slip" type="number" min="0" max="10" step="0.1" value="1"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label for="f-age">Max price age, hours<small>Refuse staler prices</small></label>
+            <input id="f-age" type="number" min="1" max="168" step="1" value="24"></div>
+          <div class="field"><label for="f-days">Runs for, days<small>It expires by itself after this</small></label>
+            <input id="f-days" type="number" min="1" max="3650" step="1" value="30"></div>
+        </div>
+      </section>
+    </div>
 
-      <aside class="card side-card" aria-label="What you are signing">
-        <div style="display:flex;align-items:center;gap:14px"><span id="preview-mascot"></span><h2 style="font:600 26px/1.15 var(--display);letter-spacing:-0.02em">Your mandate</h2></div>
-        <dl class="kv" id="plain"></dl>
-        <div class="meta" id="risk" style="margin-top:0"></div>
-        <div class="notice" id="notice" role="alert" hidden></div>
-        <button class="btn dark wide" id="go" type="submit">Connect Wallet</button>
-        <div class="steps" id="steps" role="status" aria-live="polite"></div>
-        <details>
-          <summary class="linkish" style="cursor:pointer">What the contract will hold</summary>
-          <div class="compiled" id="compiled" style="margin-top:8px"></div>
-        </details>
-      </aside>
-    </form>
-  </main>
+    <aside class="card summary" aria-label="What you are signing">
+      <h2><span id="preview-av"></span><span id="preview-name">Your agent</span></h2>
+      <dl class="kv" id="plain"></dl>
+      <div class="rhead" id="risk"></div>
+      <div class="notice warn" id="notice" role="alert" hidden></div>
+      <button class="btn-white wide" id="go" type="submit">Connect Wallet</button>
+      <div class="steps" id="steps" role="status" aria-live="polite"></div>
+      <details>
+        <summary>What the contract will hold</summary>
+        <div class="compiled" id="compiled"></div>
+      </details>
+    </aside>
+  </form>
 
   <footer class="foot">
     <span>Your wallet signs every step. This page never sees a key.</span>
     <span>Not investment advice</span>
   </footer>
-</div>
+</main>
 
 <script src="/wallet.js"></script>
 <script src="/ui.js"></script>
@@ -118,10 +124,12 @@
       "<div><dt>Freezes below</dt><dd>" + money(f.deposit * (1 - r.maxLossPercent / 100)) + "</dd></div>" +
       "<div><dt>Worst fill</dt><dd>" + r.maxSlippagePercent + "% off the oracle</dd></div>" +
       "<div><dt>Ends</dt><dd>" + expires.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + "</dd></div>" +
-      "<div><dt>Withdraw</dt><dd>you, any time</dd></div>";
-    // A preview of its character: cheerful while the loss limit is modest, worried when it isn't.
-    $("preview-mascot").innerHTML = U.mascot({ address: "0x" + (f.name || "reins").split("").map(function (c) { return c.charCodeAt(0).toString(16); }).join("").slice(0, 40), returnPct: risk && risk.n >= 4 ? -1 : 1 });
-    $("risk").innerHTML = risk ?"<span>Risk Factor " + risk.html + "</span><span class=\"muted\">set by the loss limit</span>" : "";
+      "<div><dt>Withdraw</dt><dd>You, any time</dd></div>";
+    // Its avatar, as it will look on Agents: the colour comes from the name here, from the address once live.
+    var pseudo = "0x" + (f.name || "reins").split("").map(function (c) { return c.charCodeAt(0).toString(16); }).join("").slice(0, 40);
+    $("preview-av").innerHTML = U.avatar({ address: pseudo, name: f.name || "R" });
+    $("preview-name").textContent = f.name || "Your agent";
+    $("risk").innerHTML = risk ? '<span class="muted">Risk, set by the loss limit</span>' + risk.html : "";
     $("compiled").innerHTML =
       '<span class="k">maxTradeValue</span> ' + Math.round(r.maxTradeUsd * 1e6).toLocaleString("en-US") + "<br>" +
       '<span class="k">maxDrawdownBps</span> ' + Math.round(r.maxLossPercent * 100) + "<br>" +
@@ -137,7 +145,7 @@
     div.innerHTML = html;
     $("steps").appendChild(div);
   }
-  function notice(msg) { $("notice").hidden = false; $("notice").className = "notice warn"; $("notice").textContent = msg; }
+  function notice(msg) { $("notice").hidden = false; $("notice").textContent = msg; }
   var link = function (h) { return '<a href="' + cfg.explorer + "/tx/" + h + '" target="_blank" rel="noopener">' + h.slice(0, 10) + "…</a>"; };
 
   async function waitCreated(hash) {
@@ -169,7 +177,7 @@
     if (!setAgentError(!/^0x[0-9a-fA-F]{40}$/.test(f.agent)
       ? "Enter a full 0x address, 42 characters. It’s the key your bot will trade with."
       : f.agent.toLowerCase() === W.account.toLowerCase()
-        ? "The agent can’t be your own wallet. The contract refuses owner-as-agent, so use a separate key."
+        ? "The trading key can’t be your own wallet. The contract refuses it, so use a separate key."
         : "")) return;
 
     busy = true;
@@ -183,7 +191,7 @@
       var h1 = await W.send(await W.post("/api/tx/create", { name: f.name, agent: f.agent, rules: f.rules }));
       step("Create sent · " + link(h1));
       var mandate = await waitCreated(h1);
-      step("Mandate is live at " + mandate.slice(0, 10) + "…", "ok");
+      step("Agent is live at " + mandate.slice(0, 10) + "…", "ok");
       if (f.deposit > 0) {
         var dep = await W.post("/api/tx/deposit", { mandate: mandate, amountUsd: f.deposit });
         for (var i = 0; i < dep.txs.length; i++) {
@@ -192,28 +200,47 @@
         }
         step("Funded with " + money(f.deposit), "ok");
       }
-      step("Done. Opening your mandate.", "ok");
+      step("Done. Opening your agent.", "ok");
       location.href = "/mandate.html?a=" + mandate;
     } catch (err) {
       step(esc(W.explain(err)), "err");
       notice(W.explain(err));
       $("go").disabled = false;
-      $("go").textContent = "Create mandate";
+      $("go").textContent = "Create agent";
     } finally {
       busy = false;
       $("go").removeAttribute("aria-busy");
     }
   }
 
-  U.onAccount(function () { $("go").textContent = "Create mandate"; });
+  U.onAccount(function () { $("go").textContent = "Create agent"; });
   ["f-name", "f-agent", "f-deposit", "f-trade", "f-loss", "f-slip", "f-age", "f-days"].forEach(function (id) { $(id).addEventListener("input", preview); });
   $("f-agent").addEventListener("input", function () { if ($("f-agent").getAttribute("aria-invalid") === "true") setAgentError(""); });
   $("form").addEventListener("submit", create);
   W.config().then(function (c) {
     cfg = c;
-    if (!W.available) notice("No wallet detected. You can still explore; creating a mandate needs a browser wallet.");
+    if (!W.available) notice("No wallet detected. You can still look around; creating an agent needs a browser wallet.");
   });
   preview();
+
+  // Opened from a strategy page (?s=id): name it after the strategy, set the loss limit a
+  // little beyond its worst backtested drop, and the largest trade to a fifth of the deposit.
+  var template = new URLSearchParams(location.search).get("s");
+  if (template) {
+    U.getJson("/data/strategies.json").then(function (d) {
+      var s = (d.strategies || []).filter(function (x) { return x.id === template; })[0];
+      if (!s) return;
+      var dd = Math.abs(s.stats.max_drawdown) * 100;
+      $("f-name").value = s.name.toLowerCase() + " agent";
+      $("f-loss").value = Math.min(50, Math.max(10, Math.ceil((dd + 5) / 5) * 5));
+      $("f-trade").value = Math.max(1, Number($("f-deposit").value) / 5).toFixed(2);
+      $("f-days").value = 90;
+      $("template").innerHTML = "Template: <b>" + esc(s.name) + "</b>. The rules below are filled in from its backtest (worst drop " + Math.round(dd) + "%); change any of them. " +
+        esc(s.onArc) + ' <a href="/strategy.html?s=' + encodeURIComponent(s.id) + '">See the strategy</a>';
+      $("template").hidden = false;
+      preview();
+    }).catch(function () { /* the plain form still works */ });
+  }
 })();
 </script>
 </html>
