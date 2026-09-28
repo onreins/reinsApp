@@ -144,10 +144,10 @@ h1, h2, h3 { text-wrap: balance; }
 
 /* ------------------------------------------------------------ trust + eco */
 .center { text-align: center; padding-block: 72px 40px; }
-.center h2 { font: 600 clamp(30px, 3.6vw, 40px)/1.15 var(--display); letter-spacing: -0.025em; }
+.center h2 { font: 500 clamp(34px, 5.4vw, 64px)/1.04 var(--display); letter-spacing: -.035em; max-width: 21ch; margin-inline: auto; }
 .center p { margin: 14px auto 0; max-width: 60ch; color: var(--ink-2); font-size: 17px; }
 .center .actions { justify-content: center; }
-.eco-title { text-align: center; font: 600 clamp(30px, 3.6vw, 40px)/1.15 var(--display); letter-spacing: -0.025em; margin: 72px 0 28px; }
+.eco-title { text-align: center; font: 500 clamp(34px, 5.4vw, 64px)/1.04 var(--display); letter-spacing: -.035em; margin: 72px 0 28px; }
 .eco { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 @media (max-width: 1000px) { .eco { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .eco { grid-template-columns: minmax(0, 1fr); } }
@@ -160,14 +160,12 @@ h1, h2, h3 { text-wrap: balance; }
 .eco .dashed { background: transparent; border: 2px dashed var(--well-edge); }
 /* Partner logos: each company's official white mark on its own brand colour. */
 .eco .mark.logo svg { width: 28px; height: 28px; display: block; }
-.community { text-align: center; padding-block: 88px 24px; }
-.community h2 { font: 600 clamp(30px, 3.6vw, 40px)/1.15 var(--display); letter-spacing: -0.025em; max-width: 22ch; margin: 14px auto 0; }
+/* The close, as Phantom's: a soft band, one small line, one big sentence. */
+.community { text-align: center; margin-top: 96px; padding: clamp(64px, 9vw, 120px) 22px; border-radius: 30px; background: #e6edff; color: #14173a; }
+.community .kick { font: 500 16px var(--sans); color: #474e7a; }
+.community .see.ghost { background: #fff; }
+.community h2 { font: 500 clamp(34px, 5.4vw, 64px)/1.04 var(--display); letter-spacing: -.035em; max-width: 16ch; margin: 14px auto 0; }
 .community .actions { justify-content: center; }
-
-/* ---------------------------------------------------------------- mascots */
-.mascot { display: block; width: 100%; height: auto; overflow: visible; }
-.m-inline { width: 44px; height: 44px; flex: none; }
-.float { animation: float 5.5s ease-in-out infinite; }
 
 /* ---------------------------------------------------------------- footer */
 footer { margin-top: 96px; padding-block: 40px 48px; border-top: 1px solid var(--well-edge); display: grid; grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr)); gap: 28px; }
@@ -187,7 +185,7 @@ footer .fine { margin-top: 14px; font-size: 13px; color: var(--ink-3); max-width
    Phantom's proportions (499 x 667, 48px padding, 39px type) at any width.
    They arrive as a stacked deck that springs apart (see the script). */
 .statement { padding: clamp(64px, 9vw, 110px) 0 clamp(28px, 4vw, 44px); text-align: center; }
-.statement h2 { font: 700 clamp(34px, 5.4vw, 64px)/1.04 var(--display); letter-spacing: -.04em; max-width: 18ch; margin-inline: auto; }
+.statement h2 { font: 500 clamp(34px, 5.4vw, 64px)/1.04 var(--display); letter-spacing: -.035em; max-width: 18ch; margin-inline: auto; }
 .glyph { display: inline-grid; place-items: center; vertical-align: -.08em; width: .92em; height: .92em; border-radius: .26em; background: #3d6bf3; color: #fff; }
 .glyph svg { width: 62%; height: 62%; }
 .see { display: inline-flex; align-items: center; gap: 7px; margin-top: 24px; height: 44px; padding-inline: 20px; border-radius: 999px; background: #c9d7ff; color: #1d2c6b; text-decoration: none; font: 700 14px var(--sans); transition: transform .16s ease; }
@@ -335,8 +333,8 @@ footer .fine { margin-top: 14px; font-size: 13px; color: var(--ink-3); max-width
 .eco article.in { transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
 
 /* ---------------------------------------- the second row of Phantom cards */
-.statement .ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
-.statement .ctas .see { margin-top: 0; }
+.ctas { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+.ctas .see { margin-top: 0; }
 .see.ghost { background: #eceef4; color: #14173a; }
 .screen .ttl { margin: 7cqw 0 0; font: 600 5.6cqw/1.15 var(--display); letter-spacing: -.02em; }
 .rl { margin-top: 4cqw; display: grid; }
@@ -441,7 +439,6 @@ footer .fine { margin-top: 14px; font-size: 13px; color: var(--ink-3); max-width
 footer .legal { grid-column: 1 / -1; border-top: 1px solid var(--well-edge); padding-top: 20px; }
 footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-width: 96ch; margin: 0 0 8px; }
 
-@keyframes float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-6px) rotate(-3deg); } }
 @keyframes blink { 50% { opacity: 0; } }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
 @media (prefers-reduced-motion: reduce) {
@@ -477,7 +474,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       <p class="kicker">Where agents trade under rules</p>
       <h1>Hand an agent the <em>reins</em>, never the keys</h1>
       <a class="pillbtn" href="#cards">See how it holds</a>
-      <p class="fine">Live on Arc testnet &middot; 271 tests &middot; ~$0.01 a trade</p>
+      <p class="fine">Live on Arc testnet &middot; 324 tests &middot; ~$0.01 a trade</p>
     </div>
   </header>
 </div>
@@ -493,7 +490,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       <span>withdraw() &mdash; <i>no permission needed</i></span>
       <span>every position visible <i>on-chain</i></span>
       <span><b>IsFrozen</b> &mdash; refused on-chain</span>
-      <span>271 tests passing</span>
+      <span>324 tests passing</span>
       <span>a trade costs ~$0.01 on Arc</span>
     </div>
     <div class="tape-run">
@@ -505,7 +502,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       <span>withdraw() &mdash; <i>no permission needed</i></span>
       <span>every position visible <i>on-chain</i></span>
       <span><b>IsFrozen</b> &mdash; refused on-chain</span>
-      <span>271 tests passing</span>
+      <span>324 tests passing</span>
       <span>a trade costs ~$0.01 on Arc</span>
     </div>
   </div>
@@ -541,7 +538,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 <div class="carousel" id="deck" data-deck>
   <article class="ph-card sky">
     <h3>Cap every trade. Anything over it reverts.</h3>
-    <p class="sr">The cap is set when the mandate is created and can never be edited, not by the agent, not by us.</p>
+    <p class="sr">The cap is set when the agent is created and can never be edited, not by the AI trading it, not by us.</p>
     <div class="art" aria-hidden="true">
       <div class="phone"><div class="screen">
         <div class="bar"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg><span>Buy SPYx</span><svg viewBox="0 0 16 16"><path d="M3 5h10M3 11h10M6 3v4M10 9v4"/></svg></div>
@@ -557,7 +554,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 
   <article class="ph-card ink">
     <h3>Stop at &minus;10%. Any stranger can pull the brake.</h3>
-    <p class="sr">If your mandate falls through its floor, anyone on the internet can freeze it. You don&rsquo;t have to be awake.</p>
+    <p class="sr">If your agent falls through its floor, anyone on the internet can freeze it. You don&rsquo;t have to be awake.</p>
     <div class="art ill" aria-hidden="true">
       <span class="shape st" style="--x:5%;--y:-2%;--w:19cqw;--r:-18deg;--c:#ffd84d;--k:0"><svg><use href="#i-star"/></svg></span>
       <span class="shape" style="--x:25%;--y:-4%;--w:5cqw;--c:#ff6b4a;--k:1"></span>
@@ -634,7 +631,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
     <span class="glyph" aria-hidden="true"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2.5" y="6" width="9" height="6.5" rx="1.6"/><path d="M4.5 6V4.6a2.5 2.5 0 0 1 5 0V6"/></svg></span>
     in your contract</h2>
   <div class="ctas">
-    <a class="see" href="http://localhost:4100/create.html">Create a mandate <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
+    <a class="see" href="http://localhost:4100/create.html">Create an agent <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
     <a class="see ghost" href="http://localhost:4100/">Explore strategies</a>
   </div>
 </section>
@@ -661,7 +658,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 
   <article class="ph-card ink" id="rules">
     <h3>Rules nobody can change. Not us, not even you.</h3>
-    <p class="sr">Per-trade cap, loss limit, price band, allowed assets. Set once when the mandate is created. Nobody can loosen them later. You can always withdraw.</p>
+    <p class="sr">Per-trade cap, loss limit, price band, allowed assets. Set once when the agent is created. Nobody can loosen them later. You can always withdraw.</p>
     <div class="art" aria-hidden="true">
       <div class="phone"><div class="screen">
         <div class="bar"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg><span>Rules</span><span class="gap"></span></div>
@@ -729,26 +726,28 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
     <section class="center">
       <h2>No custody. No database. No trust required.</h2>
       <p>Your funds never touch Reins. Our pages read the chain directly, so anyone can check every number against the explorer, including the trades an agent tried and was refused.</p>
-      <div class="actions">
-        <a class="btn" href="http://localhost:4100/">See live strategies</a>
-        <a class="link" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">Open the explorer ↗</a>
+      <div class="ctas">
+        <a class="see" href="http://localhost:4100/">See live strategies <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
+        <a class="see ghost" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">Open the explorer</a>
       </div>
     </section>
 
     <!-- ------------------------------------------------------- ecosystem -->
     <h2 class="eco-title" id="built">Built on open rails</h2>
     <div class="eco">
-      <article><span class="est" aria-hidden="true"><span class="f"><span class="pl sm"><span class="ic"><svg><use href="#sym-usdc"/></svg></span>USDC gas</span></span></span><span class="mark logo" style="background:#1b3158"><svg aria-hidden="true" focusable="false" viewBox="0 0 31 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 32C0.260374 24.166 1.59328 16.8547 3.82135 11.1696C6.64316 3.96673 10.728 0 15.3227 0C19.9174 0 24.0016 3.96673 26.824 11.1696C28.292 14.9157 29.372 19.3668 30.0119 24.2089C30.0691 24.6414 30.1178 25.0809 30.1678 25.5195C30.184 25.5466 30.1938 25.5718 30.1905 25.5923C30.1905 25.5923 30.5666 27.9326 30.6465 32H30.604C30.0462 31.5439 23.4681 26.3931 12.5636 27.8845C12.7282 26.0457 12.9544 24.2565 13.2467 22.5415C13.2617 22.4538 13.2789 22.3692 13.2942 22.2821C17.5711 22.1536 21.3146 22.6486 24.1853 23.2972C24.1746 23.2293 24.1657 23.1594 24.1547 23.0918C23.5647 19.4302 22.6941 16.0779 21.5717 13.2131C19.7364 8.52888 17.3416 5.61852 15.3227 5.61852C13.3038 5.61852 10.909 8.52888 9.07379 13.2131C8.62954 14.3462 8.22512 15.5545 7.86244 16.8291C7.35258 18.615 6.92424 20.5296 6.58214 22.5413C6.0758 25.5124 5.75944 28.6987 5.64292 32H0Z" fill="white"/></svg></span><b>Arc</b><span class="sub">Circle’s stablecoin chain</span><p>Mandates live on Arc, where gas is paid in USDC and tokenized stocks are on the way.</p></article>
+      <article><span class="est" aria-hidden="true"><span class="f"><span class="pl sm"><span class="ic"><svg><use href="#sym-usdc"/></svg></span>USDC gas</span></span></span><span class="mark logo" style="background:#1b3158"><svg aria-hidden="true" focusable="false" viewBox="0 0 31 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 32C0.260374 24.166 1.59328 16.8547 3.82135 11.1696C6.64316 3.96673 10.728 0 15.3227 0C19.9174 0 24.0016 3.96673 26.824 11.1696C28.292 14.9157 29.372 19.3668 30.0119 24.2089C30.0691 24.6414 30.1178 25.0809 30.1678 25.5195C30.184 25.5466 30.1938 25.5718 30.1905 25.5923C30.1905 25.5923 30.5666 27.9326 30.6465 32H30.604C30.0462 31.5439 23.4681 26.3931 12.5636 27.8845C12.7282 26.0457 12.9544 24.2565 13.2467 22.5415C13.2617 22.4538 13.2789 22.3692 13.2942 22.2821C17.5711 22.1536 21.3146 22.6486 24.1853 23.2972C24.1746 23.2293 24.1657 23.1594 24.1547 23.0918C23.5647 19.4302 22.6941 16.0779 21.5717 13.2131C19.7364 8.52888 17.3416 5.61852 15.3227 5.61852C13.3038 5.61852 10.909 8.52888 9.07379 13.2131C8.62954 14.3462 8.22512 15.5545 7.86244 16.8291C7.35258 18.615 6.92424 20.5296 6.58214 22.5413C6.0758 25.5124 5.75944 28.6987 5.64292 32H0Z" fill="white"/></svg></span><b>Arc</b><span class="sub">Circle’s stablecoin chain</span><p>Agents live on Arc, where gas is paid in USDC and tokenized stocks are on the way.</p></article>
       <article><span class="est" aria-hidden="true"><span class="f"><span class="swap"><span class="tk a"><svg><use href="#sym-usdc"/></svg></span><span class="tk b"><svg><use href="#sym-eurc"/></svg></span></span></span></span><span class="mark logo" style="background:#F50DB4"><svg aria-hidden="true" focusable="false" viewBox="0 0 400 434" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M325.144 65.7698C325.727 55.5419 327.119 48.7957 329.918 42.6348C331.025 40.1962 332.063 38.2003 332.223 38.2003C332.383 38.2003 331.902 40.0003 331.153 42.1999C329.118 48.1791 328.784 56.3572 330.186 65.872C331.965 77.9447 332.976 79.6866 345.782 92.7278C351.788 98.8446 358.775 106.559 361.307 109.871L365.912 115.894L361.307 111.59C355.676 106.327 342.724 96.0618 339.863 94.5945C337.945 93.6104 337.66 93.6274 336.477 94.801C335.387 95.8823 335.157 97.5072 335.005 105.189C334.77 117.16 333.132 124.845 329.18 132.528C327.042 136.684 326.705 135.797 328.64 131.106C330.084 127.604 330.231 126.064 330.22 114.475C330.198 91.1888 327.424 85.5906 311.153 76.0005C307.032 73.5711 300.24 70.0674 296.062 68.2141C291.883 66.3608 288.564 64.7467 288.685 64.6261C289.146 64.1691 305.013 68.7839 311.399 71.2318C320.899 74.8731 322.467 75.3449 323.621 74.9057C324.394 74.6113 324.768 72.367 325.144 65.7698Z" fill="white"/><path d="M124.431 31.8931C118.795 31.0236 118.557 30.9216 121.209 30.5162C126.292 29.7389 138.292 30.7983 146.562 32.754C165.867 37.3182 183.434 49.0103 202.186 69.7754L207.168 75.2919L214.295 74.1524C244.318 69.3537 274.861 73.1675 300.407 84.9049C307.435 88.134 318.516 94.5618 319.9 96.2136C320.341 96.7401 321.151 100.129 321.699 103.745C323.597 116.255 322.647 125.843 318.8 133.005C316.707 136.903 316.59 138.138 317.997 141.473C319.121 144.135 322.253 146.105 325.355 146.1C331.703 146.092 338.536 135.885 341.702 121.683L342.96 116.042L345.452 118.849C359.117 134.248 369.85 155.248 371.694 170.196L372.174 174.093L369.877 170.55C365.924 164.454 361.952 160.303 356.866 156.956C347.697 150.922 338.002 148.868 312.327 147.523C289.139 146.307 276.015 144.337 263.002 140.117C240.861 132.937 229.699 123.375 203.399 89.0559C191.717 73.8123 184.497 65.3784 177.314 58.5864C160.994 43.1536 144.958 35.0599 124.431 31.8931Z" fill="white"/><path d="M135.377 105.713C123.937 90.0473 116.858 66.0289 118.391 48.0742L118.864 42.518L121.469 42.9906C126.359 43.8778 134.791 46.9992 138.739 49.3844C149.574 55.9291 154.265 64.5458 159.037 86.6722C160.435 93.1531 162.269 100.487 163.113 102.97C164.472 106.967 169.605 116.302 173.779 122.365C176.785 126.731 174.788 128.8 168.143 128.204C157.994 127.293 144.246 117.856 135.377 105.713Z" fill="white"/><path d="M311.254 222.301C257.789 200.891 238.958 182.307 238.958 150.95C238.958 146.336 239.118 142.56 239.313 142.56C239.507 142.56 241.576 144.083 243.909 145.945C254.751 154.593 266.891 158.287 300.501 163.164C320.279 166.034 331.408 168.352 341.675 171.738C374.308 182.502 394.497 204.345 399.312 234.098C400.711 242.743 399.891 258.955 397.623 267.5C395.832 274.248 390.367 286.413 388.918 286.879C388.516 287.009 388.122 285.477 388.019 283.393C387.469 272.221 381.793 261.345 372.26 253.197C361.421 243.934 346.859 236.559 311.254 222.301Z" fill="white"/><path d="M273.719 231.195C273.049 227.231 271.888 222.168 271.138 219.944L269.773 215.901L272.307 218.73C275.814 222.645 278.585 227.654 280.933 234.325C282.726 239.417 282.927 240.932 282.914 249.206C282.9 257.33 282.676 259.032 281.021 263.616C278.411 270.843 275.172 275.967 269.737 281.468C259.971 291.354 247.415 296.828 229.295 299.098C226.145 299.492 216.965 300.157 208.895 300.574C188.556 301.626 175.17 303.8 163.142 308C161.412 308.605 159.868 308.972 159.711 308.816C159.225 308.334 167.414 303.479 174.178 300.238C183.716 295.668 193.211 293.175 214.484 289.651C224.992 287.91 235.844 285.799 238.6 284.958C264.624 277.023 278.001 256.544 273.719 231.195Z" fill="white"/><path d="M298.228 274.486C291.125 259.299 289.493 244.635 293.385 230.959C293.802 229.498 294.471 228.302 294.874 228.302C295.276 228.302 296.953 229.203 298.598 230.305C301.872 232.496 308.437 236.188 325.928 245.672C347.754 257.507 360.198 266.672 368.66 277.142C376.071 286.312 380.658 296.755 382.865 309.49C384.115 316.704 383.383 334.061 381.521 341.325C375.653 364.229 362.015 382.22 342.562 392.718C339.712 394.256 337.153 395.519 336.876 395.524C336.599 395.53 337.638 392.904 339.184 389.688C345.728 376.083 346.473 362.849 341.526 348.118C338.496 339.099 332.32 328.094 319.849 309.493C305.35 287.868 301.795 282.113 298.228 274.486Z" fill="white"/><path d="M97.4084 356.432C117.249 339.771 141.935 327.934 164.422 324.301C174.113 322.735 190.257 323.357 199.231 325.641C213.616 329.302 226.484 337.503 233.176 347.273C239.716 356.823 242.522 365.144 245.443 383.659C246.596 390.962 247.849 398.296 248.228 399.957C250.422 409.552 254.691 417.222 259.982 421.074C268.385 427.191 282.854 427.571 297.087 422.049C299.503 421.111 301.6 420.464 301.748 420.61C302.264 421.12 295.097 425.892 290.04 428.404C283.237 431.784 277.827 433.09 270.638 433.09C257.602 433.09 246.779 426.495 237.748 413.046C235.971 410.399 231.976 402.471 228.871 395.429C219.336 373.799 214.628 367.21 203.556 359.998C193.922 353.723 181.496 352.599 172.148 357.158C159.87 363.146 156.444 378.752 165.238 388.642C168.733 392.573 175.251 395.964 180.581 396.623C190.552 397.856 199.121 390.312 199.121 380.299C199.121 373.798 196.609 370.088 190.284 367.249C181.646 363.372 172.36 367.904 172.405 375.975C172.424 379.417 173.931 381.578 177.4 383.139C179.625 384.14 179.677 384.22 177.862 383.845C169.936 382.21 168.079 372.707 174.452 366.398C182.103 358.824 197.924 362.166 203.357 372.504C205.64 376.847 205.905 385.495 203.915 390.717C199.461 402.405 186.475 408.552 173.302 405.207C164.333 402.93 160.681 400.464 149.867 389.386C131.077 370.135 123.782 366.405 96.6926 362.198L91.5016 361.393L97.4084 356.432Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M9.2415 11.8782C71.9927 87.6272 115.213 118.88 120.016 125.483C123.981 130.935 122.489 135.836 115.695 139.678C111.917 141.813 104.15 143.977 100.261 143.977C95.8623 143.977 94.3522 142.29 94.3522 142.29C91.8018 139.884 90.3654 140.305 77.2685 117.183C59.0858 89.1221 43.8693 65.8442 43.4542 65.4545C42.4943 64.5531 42.5108 64.5836 75.4146 123.138C80.7309 135.342 76.472 139.822 76.472 141.56C76.472 145.096 75.5021 146.955 71.1164 151.82C63.8053 159.933 60.537 169.047 58.1777 187.911C55.5328 209.058 48.0957 223.995 27.485 249.56C15.4202 264.526 13.446 267.269 10.4018 273.3C6.56722 280.896 5.51286 285.15 5.08553 294.742C4.63386 304.883 5.51354 311.434 8.62869 321.13C11.3559 329.619 14.2026 335.224 21.4801 346.435C27.7605 356.109 31.3768 363.299 31.3768 366.111C31.3768 368.349 31.8063 368.352 41.5383 366.166C64.8282 360.936 83.7395 351.736 94.3756 340.462C100.958 333.483 102.503 329.63 102.554 320.067C102.587 313.812 102.365 312.503 100.665 308.904C97.898 303.048 92.8603 298.178 81.7568 290.629C67.2082 280.737 60.9944 272.774 59.2779 261.822C57.8699 252.836 59.5033 246.496 67.5518 229.719C75.8822 212.353 77.9466 204.953 79.3431 187.449C80.245 176.141 81.4941 171.681 84.761 168.101C88.1682 164.368 91.2354 163.104 99.6675 161.958C113.414 160.09 122.168 156.552 129.363 149.958C135.605 144.238 138.217 138.725 138.618 130.427L138.922 124.138L135.434 120.093C122.802 105.445 0.782165 0.363281 0.00480791 0.363281C-0.161257 0.363281 3.99542 5.54535 9.2415 11.8782ZM38.4675 306.217C41.3235 301.186 39.8061 294.719 35.0288 291.56C30.515 288.574 23.503 289.98 23.503 293.87C23.503 295.057 24.163 295.921 25.6504 296.683C28.155 297.965 28.3368 299.406 26.3662 302.352C24.3705 305.335 24.5316 307.958 26.8207 309.741C30.5099 312.614 35.7324 311.034 38.4675 306.217Z" fill="white"/><path fill-rule="evenodd" clip-rule="evenodd" d="M147.597 165.257C141.144 167.228 134.87 174.031 132.928 181.164C131.744 185.515 132.416 193.149 134.19 195.506C137.057 199.314 139.829 200.317 147.336 200.264C162.033 200.162 174.809 193.893 176.294 186.056C177.512 179.632 171.901 170.729 164.172 166.82C160.183 164.804 151.701 164.004 147.597 165.257ZM164.778 178.619C167.044 175.416 166.053 171.954 162.198 169.613C154.858 165.155 143.757 168.844 143.757 175.741C143.757 179.174 149.546 182.92 154.852 182.92C158.384 182.92 163.217 180.825 164.778 178.619Z" fill="white"/></svg></span><b>Uniswap v4</b><span class="sub">Where trades fill</span><p>An agent’s trades route through Uniswap pools, and every fill is checked against the price band.</p></article>
       <article><span class="est" aria-hidden="true"><span class="f"><span class="pl sm" style="padding-left:12px">Live price<span class="live"></span></span></span></span><span class="mark logo" style="background:#375BD2"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M12 0L9.798 1.266l-6 3.468L1.596 6v12l2.202 1.266 6.055 3.468L12.055 24l2.202-1.266 5.945-3.468L22.404 18V6l-2.202-1.266-6-3.468zM6 15.468V8.532l6-3.468 6 3.468v6.936l-6 3.468z"/></svg></span><b>Chainlink</b><span class="sub">The price referee</span><p>Oracle prices decide what a fair fill is and when a loss limit is hit. Stale prices stop trading.</p></article>
-      <article class="dashed"><span class="est" aria-hidden="true"><span class="f"><span class="code">trade()<i></i></span></span></span><span class="mark" style="background:#ffc53d;color:#2a2a29" aria-hidden="true">+</span><b>Build with Reins</b><span class="sub">MCP server and SDK</span><p>Plug any AI agent or bot into a mandate. It gets status, prices and trades, and nothing more.</p></article>
+      <article class="dashed"><span class="est" aria-hidden="true"><span class="f"><span class="code">trade()<i></i></span></span></span><span class="mark" style="background:#ffc53d;color:#2a2a29" aria-hidden="true">+</span><b>Build with Reins</b><span class="sub">MCP server and SDK</span><p>Plug any AI or bot into a Reins agent. It gets status, prices and trades, and nothing more.</p></article>
     </div>
 
     <!-- ------------------------------------------------------- community -->
     <section class="community">
-      <span id="cta-mascots" style="display:inline-flex;gap:10px" aria-hidden="true"></span>
-      <h2>Be first in line when tokenized stocks land on Arc</h2>
-      <div class="actions"><a class="btn dark" href="https://x.com/onreins" target="_blank" rel="noopener">Follow @onreins</a><a class="link" href="http://localhost:4100/">Try it on testnet →</a></div>
+      <p class="kick">Tokenized stocks are coming to Arc.</p>
+      <h2>Be first in line. Follow
+        <span class="glyph" aria-hidden="true"><svg><use href="#i-r"/></svg></span>
+        Reins.</h2>
+      <div class="ctas"><a class="see" href="https://x.com/onreins" target="_blank" rel="noopener">Follow @onreins <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a><a class="see ghost" href="http://localhost:4100/">Try it on testnet</a></div>
     </section>
 </div>
 </main>
@@ -761,12 +760,12 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       </a>
       <p class="fine">Running on Arc testnet. Not investment advice.</p>
     </div>
-    <div><h4>Product</h4><ul><li><a href="http://localhost:4100/">Explore</a></li><li><a href="http://localhost:4100/create.html">Create a mandate</a></li></ul></div>
-    <div><h4>Build</h4><ul><li>MCP server</li><li>SDK</li><li><a href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">First mandate ↗</a></li></ul></div>
+    <div><h4>Product</h4><ul><li><a href="http://localhost:4100/">Explore</a></li><li><a href="http://localhost:4100/create.html">Create an agent</a></li></ul></div>
+    <div><h4>Build</h4><ul><li>MCP server</li><li>SDK</li><li><a href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">First agent ↗</a></li></ul></div>
     <div><h4>Connect</h4><ul><li><a href="https://x.com/onreins" target="_blank" rel="noopener">X @onreins</a></li></ul></div>
     <div class="legal">
-      <p>Reins is software. Funds placed under a mandate sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The mandates shown in the product panels are examples: tokenized equities such as SPYx are not yet issued on Arc.</p>
-      <p>Nothing on this page is investment advice or an offer of securities. Automated strategies can lose money up to the loss limit their mandate sets.</p>
+      <p>Reins is software. Funds placed with a Reins agent sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The agents shown in the cards are examples: tokenized equities such as SPYx are not yet issued on Arc.</p>
+      <p>Nothing on this page is investment advice or an offer of securities. Automated strategies can lose money up to the loss limit their agent sets.</p>
     </div>
   </footer>
 </div>
@@ -774,25 +773,6 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 <script>
 (function () {
   "use strict";
-
-  // ------------------------------------------------ characters (as in the app)
-  var INK = "#2a2a29";
-  var SHAPES = [
-    function (c) { var p = ""; for (var k = 0; k < 8; k++) { var a = (k / 8) * Math.PI * 2; p += '<circle cx="' + (50 + 27 * Math.cos(a)).toFixed(1) + '" cy="' + (48 + 27 * Math.sin(a)).toFixed(1) + '" r="17" fill="' + c + '"/>'; } return p + '<circle cx="50" cy="48" r="30" fill="' + c + '"/>'; },
-    function (c) { return '<path d="M50 14c24-2 38 14 37 36s-16 38-39 36-36-16-35-38 15-32 37-34z" fill="' + c + '"/>'; },
-    function (c) { return '<rect x="18" y="16" width="64" height="64" rx="17" fill="' + c + '" transform="rotate(-7 50 48)"/>'; },
-    function (c) { return '<path d="M50 12c6 0 9 4 13 11l24 46c5 10-1 17-11 17H24c-10 0-16-7-11-17l24-46c4-7 7-11 13-11z" fill="' + c + '"/>'; },
-  ];
-  function mascot(shape, color, mood) {
-    var s = 'fill="none" stroke="' + INK + '" stroke-width="4.5" stroke-linecap="round"';
-    var dots = '<ellipse cx="41" cy="46" rx="4" ry="5.5" fill="' + INK + '"/><ellipse cx="59" cy="46" rx="4" ry="5.5" fill="' + INK + '"/>';
-    var face = mood === "happy" ? '<path d="M35 47q6-7 12 0M53 47q6-7 12 0" ' + s + '/><path d="M41 58q9 9 18 0" ' + s + "/>"
-      : dots + '<path d="M43 59q7 6 14 0" ' + s + "/>";
-    return '<svg class="mascot" viewBox="0 0 100 100" aria-hidden="true"><path d="M40 84l-4 12M60 84l4 12" fill="none" stroke="' + INK + '" stroke-width="5" stroke-linecap="round"/>' +
-      SHAPES[shape](color) + '<ellipse cx="36" cy="30" rx="8" ry="5" fill="#fff" opacity=".28" transform="rotate(-30 36 30)"/>' + face + "</svg>";
-  }
-  document.getElementById("cta-mascots").innerHTML = [[0, "#ff4a1c", "happy"], [1, "#ffc53d", "content"], [2, "#1e9bff", "happy"]]
-    .map(function (m, i) { return '<span class="float" style="display:block;width:56px;animation-delay:-' + (i * 1.3) + 's">' + mascot(m[0], m[1], m[2]) + "</span>"; }).join("");
 
   // ------------------------------------------------------- card carousels
   // Prev/next arrows at the top right run for everyone, reduced motion too.
