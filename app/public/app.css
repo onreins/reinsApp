@@ -662,9 +662,28 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 /* Gemini's thinking: a turning sparkle and a shimmer over the step it's on. */
 .rx-thought.live svg { animation: rxSpin 2.4s linear infinite; }
 .rx-thought.live span { display: inline-block; background: linear-gradient(90deg, #5d7fa6 0%, #eaf5ff 45%, #5d7fa6 90%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rxShimmer 1.6s linear infinite; }
-.rx-thought.live span.swap { animation: rxShimmer 1.6s linear infinite, rxIn .3s ease; }
 @keyframes rxSpin { to { transform: rotate(360deg); } }
 @keyframes rxShimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+
+/* The steps under "Thinking": each slides in, the current one shimmers behind a
+   pulsing ring, finished ones fill in and dim. When the answer is ready the list
+   folds shut and the header becomes "Thought for Ns". */
+.rx-think { display: grid; }
+.rx-steps-w { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows .4s cubic-bezier(.2, .8, .2, 1), opacity .25s ease; }
+.rx-think.done .rx-steps-w { grid-template-rows: 0fr; opacity: 0; }
+.rx-steps { min-height: 0; overflow: hidden; list-style: none; margin: 0 0 0 -4px; padding: 10px 0 4px 28px; background: linear-gradient(var(--line-2), var(--line-2)) 10px 0 / 1px 100% no-repeat; display: grid; gap: 9px; }
+.rx-steps li { position: relative; color: var(--ink-2); font: 400 13.5px/1.35 var(--sans); animation: rxStep .4s cubic-bezier(.2, .8, .2, 1) both; transition: color .3s; }
+.rx-steps li::before { content: ""; position: absolute; left: -22px; top: 4px; width: 9px; height: 9px; border-radius: 50%; background: var(--bg, #141313); border: 1.5px solid #8fcbff; box-shadow: 0 0 0 0 rgba(143, 203, 255, .5); animation: rxRing 1.2s ease-out infinite; transition: background .25s, transform .25s; }
+.rx-steps li:not(.ok) { background: linear-gradient(90deg, var(--ink-3) 0%, #eaf5ff 45%, var(--ink-3) 90%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rxStep .4s cubic-bezier(.2, .8, .2, 1) both, rxShimmer 1.6s linear infinite; }
+.rx-steps li.ok { color: var(--ink-4); }
+.rx-steps li.ok::before { background: #8fcbff; animation: rxTick .3s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes rxStep { from { opacity: 0; transform: translateX(-8px); } }
+@keyframes rxRing { 70%, 100% { box-shadow: 0 0 0 6px rgba(143, 203, 255, 0); } }
+@keyframes rxTick { from { transform: scale(.4); } }
+
+/* Each word of an answer fades up out of a soft blur as it arrives. */
+.rx-a p .w { display: inline; animation: rxWord .42s ease-out both; }
+@keyframes rxWord { from { opacity: 0; filter: blur(4px); } }
 
 /* Stop while it works; a way back down when you've scrolled up to read. */
 .rx-send.stop { background: var(--ink); }
@@ -693,4 +712,10 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
   .rx-in, .rx-doc-body.fresh > *, .rx[data-mode="home"] .rx-card-btn, .rx-hist, .rx-down, .rx-caret,
   .rx-thought.live svg, .rx-thought.live span, .plot svg.draw-in .l-strat, .plot svg.draw-in .l-bench { animation: none; }
   .rx-thought.live span { color: #8fcbff; background: none; }
+  /* Still shown, just without movement: steps and words fade rather than slide or blur. */
+  .rx-steps li, .rx-steps li:not(.ok) { animation: rxFade .3s ease both; }
+  .rx-steps li:not(.ok) { color: var(--ink-2); background: none; }
+  .rx-steps li::before, .rx-steps li.ok::before { animation: none; }
+  .rx-a p .w { animation: rxFade .3s ease both; }
 }
+@keyframes rxFade { from { opacity: 0; } }

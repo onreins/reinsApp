@@ -322,19 +322,46 @@
   }
 
   var STEPS = ["Reading your idea…", "Building the rules…", "Running the backtest…", "Checking it against holding…"];
+  // Gemini's "thinking": the steps appear one by one and tick off, then fold
+  // away into Claude's "Thought for Ns" line once the answer is ready.
+  var STEP_MS = 560, MIN_THINK = STEPS.length * STEP_MS + 250;
   var stepTimer = null;
+  var wait = function (ms) { return new Promise(function (res) { setTimeout(res, ms); }); };
+  function addStep(ol, k) {
+    var prev = ol.lastElementChild;
+    if (prev) prev.classList.add("ok");
+    var li = document.createElement("li");
+    li.textContent = STEPS[k];
+    ol.appendChild(li);
+  }
   function thinking() {
     var t = document.createElement("div");
     t.className = "rx-a rx-in";
-    t.innerHTML = '<div class="rx-thought live">' + ICON.spark + "<span>" + STEPS[0] + "</span></div>";
-    var i = 0;
+    t.id = "thinking";
+    t.innerHTML = '<div class="rx-think"><div class="rx-thought live">' + ICON.spark + '<span>Thinking</span></div><div class="rx-steps-w"><ol class="rx-steps"></ol></div></div>';
+    var ol = t.querySelector("ol"), k = 0;
     clearInterval(stepTimer);
+    addStep(ol, k++);
     stepTimer = setInterval(function () {
-      i = Math.min(i + 1, STEPS.length - 1);
-      var span = t.querySelector("span");
-      if (span) { span.textContent = STEPS[i]; span.classList.remove("swap"); void span.offsetWidth; span.classList.add("swap"); }
-    }, 900);
+      if (k >= STEPS.length) { clearInterval(stepTimer); return; }
+      addStep(ol, k++);
+      toBottom(false);
+    }, STEP_MS);
     return t;
+  }
+  async function settleThinking(ms) {
+    clearInterval(stepTimer);
+    var t = $("thinking");
+    if (!t) return;
+    var ol = t.querySelector("ol");
+    for (var k = ol.children.length; k < STEPS.length; k++) addStep(ol, k);
+    ol.lastElementChild.classList.add("ok");
+    await wait(320);
+    var th = t.querySelector(".rx-thought");
+    th.classList.remove("live");
+    th.querySelector("span").textContent = "Thought for " + Math.max(1, Math.round(ms / 1000)) + "s";
+    t.querySelector(".rx-think").classList.add("done");
+    await wait(420);
   }
 
   /**
@@ -360,26 +387,36 @@
     toBottom(enterFrom !== undefined);
   }
 
-  // ChatGPT's reveal: the answer arrives word by word behind a pulsing dot.
+  // The answer arrives word by word, each word fading up out of a soft blur,
+  // behind ChatGPT's pulsing dot. Short replies take a second, long ones ~2.5s.
   function stream(m, done) {
     var box = $("thread");
     var el = aiMsg(m, { stream: true });
     box.appendChild(el);
-    var p = el.querySelector("p"), text = document.createTextNode(""), caret = document.createElement("span");
+    var p = el.querySelector("p"), caret = document.createElement("span");
     caret.className = "rx-caret";
     p.textContent = "";
-    p.appendChild(text); p.appendChild(caret);
-    var words = m.content.split(/(\s+)/), total = Math.min(1400, Math.max(300, words.length * 22)), t0 = performance.now();
-    function finish() { streaming = null; done(); }
-    if (still || document.hidden) { text.data = m.content; finish(); return; }
-    streaming = { finish: function () { text.data = m.content; finish(); } };
-    (function tick(now) {
+    p.appendChild(caret);
+    var parts = m.content.split(/(\s+)/).filter(Boolean);
+    var words = parts.filter(function (x) { return /\S/.test(x); }).length;
+    var per = Math.min(2600, Math.max(1000, words * 45)) / Math.max(1, words);
+    var i = 0, shown = 0, t0 = performance.now(), timer = null;
+    function finish() { clearTimeout(timer); streaming = null; done(); }
+    if (document.hidden) { finish(); return; }
+    streaming = { finish: finish };
+    (function tick() {
       if (!streaming) return;
-      var n = Math.min(words.length, Math.ceil(words.length * (now - t0) / total));
-      text.data = words.slice(0, n).join("");
+      var due = Math.floor((performance.now() - t0) / per) + 1;
+      while (i < parts.length && shown < due) {
+        var x = parts[i++], node;
+        if (/\S/.test(x)) { node = document.createElement("span"); node.className = "w"; node.textContent = x; shown++; }
+        else node = document.createTextNode(x);
+        p.insertBefore(node, caret);
+      }
       toBottom(false);
-      if (n < words.length) requestAnimationFrame(tick); else finish();
-    })(t0);
+      // Timers rather than frames: they keep a steady pace in embedded or throttled views.
+      timer = i < parts.length ? setTimeout(tick, per) : setTimeout(finish, 380); // let the last word settle
+    })();
   }
 
   // Frames pause in a background tab, so an answer still arriving there just lands whole.
@@ -444,11 +481,13 @@
         spec: cur.spec,
         from: cur.from,
       }, ctl.signal);
+      // The simple builder answers in milliseconds; hold the thinking state until
+      // every step has shown, so it reads as work rather than a flash.
       var ms = performance.now() - t0;
-      // The simple builder answers in milliseconds; hold the thinking state a moment
-      // so its steps can be read. "Thought for" still reports the real time.
-      if (!still && ms < 700) await new Promise(function (res) { setTimeout(res, 700 - ms); });
+      if (ms < MIN_THINK) await wait(MIN_THINK - ms);
       if (ctl.signal.aborted) throw Object.assign(new Error("stopped"), { name: "AbortError" });
+      ms = performance.now() - t0;
+      await settleThinking(ms);
       if (r.specReset) { cur.spec = null; result = null; }
       if (r.spec) { cur.spec = r.spec; result = { words: r.words, backtest: r.backtest }; }
       reply = { role: "assistant", content: r.reply, source: r.source, ms: ms, spec: !!r.spec, specName: r.spec ? r.spec.name : null };
