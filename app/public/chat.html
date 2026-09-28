@@ -282,18 +282,30 @@
         "<span>" + plainPct(c.hold) + " holding</span><span class=\"s\">since " + new Date(c.from + "T00:00:00Z").getUTCFullYear() + "</span></span></span>" : "");
     card.querySelector(".t").textContent = m.specName || (cur.spec && cur.spec.name) || "";
     if (c && c.rule) card.querySelector(".w").textContent = c.rule;
+    card.msg = m;
     card.addEventListener("click", function () { showVersion(m); });
     return card;
   }
+  // Mark the card the report is showing, in place: redrawing the thread would
+  // scroll the chat and fight the scroll down to the report on a phone.
+  function markShowing() {
+    var shown = cur.messages[showingIndex()];
+    document.querySelectorAll("#thread .rx-art").forEach(function (card) {
+      var on = card.msg === shown;
+      card.classList.toggle("on", on);
+      card.querySelector(".pv").textContent = on ? "Showing" : "Open ›";
+    });
+    $("coin-chip").innerHTML = cur.spec ? U.coins([cur.spec.asset]) + esc(cur.spec.asset) : "No strategy yet";
+    $("chat-title").textContent = titleOf(cur);
+  }
   // Tapping an earlier card puts that version back in the report, and the chat
-  // carries on from it.
+  // carries on from it. The page moves to the report once it has the new numbers.
   function showVersion(m) {
     if (!m.specData || sameSpec(m.specData, cur.spec) || busy || streaming) { focusDoc(); return; }
     cur.spec = JSON.parse(JSON.stringify(m.specData));
     persist();
-    renderChat();
-    rerun(true);
-    focusDoc();
+    markShowing();
+    rerun(true, true).then(focusDoc);
   }
 
   // "@cf/meta/llama-3.3-70b-instruct-fp8-fast" reads as "Llama 3.3 70B".
@@ -594,7 +606,11 @@
   // On a narrow screen the report sits below the chat: the report card takes you to it.
   function focusDoc() {
     var d = $("doc");
-    if (window.matchMedia("(max-width: 1100px)").matches) d.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+    if (window.matchMedia("(max-width: 1100px)").matches) {
+      d.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
+      // Some in-app browsers drop smooth scrolls; land there anyway.
+      setTimeout(function () { if (Math.abs(d.getBoundingClientRect().top) > 40) d.scrollIntoView({ block: "start" }); }, 800);
+    }
     d.classList.remove("flash"); void d.offsetWidth; d.classList.add("flash");
   }
 
@@ -744,7 +760,8 @@
     rerun(true);
     if (!busy && !streaming) renderChat();
   }
-  async function rerun(drawIn) {
+  // `fresh` redraws the report with its sections cascading in, as when switching versions.
+  async function rerun(drawIn, fresh) {
     if (!cur.spec) return;
     var id = cur.id;
     try {
@@ -752,8 +769,13 @@
       if (!cur || cur.id !== id) return;
       var opening = !result;
       result = r;
-      morph(function () { layout(); renderStrategy(opening); });
-      if (!opening && drawIn) renderChart(true);
+      // Only the report's first appearance is a view transition; an update draws
+      // straight away, so it never waits on an animation frame.
+      if (opening) morph(function () { layout(); renderStrategy(true); });
+      else {
+        renderStrategy(!!fresh);
+        if (drawIn && !fresh) renderChart(true);
+      }
     } catch (err) {
       // A saved strategy the server no longer accepts is dropped, so the page doesn't stay stuck on it.
       if (err.status === 400) {
