@@ -66,7 +66,7 @@
         <a class="btn-white rx-publish" id="doc-go" href="/create.html">Create agent</a>
       </div>
       <div class="rx-doc-body" id="strat"></div>
-      <div class="rx-doc-foot">Backtested by Reins on daily prices · 0.1% per trade · not investment advice</div>
+      <div class="rx-doc-foot">Backtested by Reins on Binance prices · not investment advice</div>
     </section>
 
   </div>
@@ -130,13 +130,13 @@
   };
   var cur = null, result = null, busy = false, ctl = null, streaming = null;
 
-  function newSession() { cur = { id: rid(), messages: [], spec: null, from: (cur && cur.from) || "2021-01-01", at: Date.now() }; result = null; }
+  function newSession() { cur = { id: rid(), messages: [], spec: null, from: (cur && cur.from) || "2021-01-01", fee: (cur && cur.fee) || 10, at: Date.now() }; result = null; }
   function persist() {
     if (!cur || !cur.messages.length) return;
     cur.at = Date.now();
     sessions = [cur].concat(sessions.filter(function (s) { return s.id !== cur.id; })).slice(0, MAX_SESSIONS);
     store(SESSIONS, sessions.map(function (s) {
-      return { id: s.id, spec: s.spec, from: s.from, at: s.at, messages: s.messages.slice(-40).map(function (m) {
+      return { id: s.id, spec: s.spec, from: s.from, fee: s.fee, at: s.at, messages: s.messages.slice(-40).map(function (m) {
         return { role: m.role, content: m.content, source: m.source, ms: m.ms, spec: m.spec, specName: m.specName, specData: m.specData, v: m.v, card: m.card, options: m.options, error: m.error, stopped: m.stopped };
       }) };
     }));
@@ -555,6 +555,7 @@
         messages: cur.messages.filter(function (m) { return !m.error && !m.stopped; }).map(function (m) { return { role: m.role, content: m.content }; }),
         spec: cur.spec,
         from: cur.from,
+        fee: cur.fee || 10,
       }, ctl.signal);
       // The simple builder answers in milliseconds; hold the thinking state until
       // every step has shown, so it reads as work rather than a flash.
@@ -667,10 +668,17 @@
       out.push("<b>Activity:</b> " + st.trades + (st.trades === 1 ? " trade" : " trades") + (st.winRate === null ? "" : ", " + Math.round(st.winRate * 100) + "% of them winners") + "; in the market " + Math.round(st.exposure * 100) + "% of the time.");
     }
     out.push("<b>Worst drop:</b> " + plainPct(st.maxDrawdown) + ", against " + plainPct(hd.maxDrawdown) + " for holding.");
+    // What trading cost, in money: the number that decides most fast strategies.
+    if (typeof st.feesPaid === "number") {
+      var paid = st.feesPaid < 0.01 ? "under 1¢" : "$" + st.feesPaid.toFixed(2);
+      out.push("<b>Fees:</b> " + paid + (s.type === "dca" ? " per $1 put in" : " per $1 you started with") + ", at " + feeLabel(bt.feeBps) + " a trade" +
+        (s.type !== "dca" && st.feesPaid >= 0.25 ? ". Trading this often is what makes it add up." : "."));
+    }
     var beat = st.return > hd.return, calmer = st.maxDrawdown > hd.maxDrawdown;
     out.push("<b>In short:</b> " + (beat && calmer ? "it beat holding, with a smaller worst drop." : beat ? "it beat holding, but with a deeper worst drop." : calmer ? "it trailed holding, but with a smaller worst drop." : "holding did better on both counts."));
     return '<div><h3 class="rx-h3">Summary</h3><ul class="rx-sum">' + out.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul></div>";
   }
+  var feeLabel = function (bps) { return (bps / 100).toFixed(bps % 10 ? 2 : 1).replace(/\.0$/, "") + "%"; };
   function stat(label, value, caption) {
     return '<div class="rx-stat"><div class="l">' + label + '</div><div class="v">' + value + '</div><div class="c">' + caption + "</div></div>";
   }
@@ -692,7 +700,7 @@
     }).join("");
     box.innerHTML =
       '<div class="rx-hero">' + U.coins([s.asset], "xl") + "<h2>" + esc(s.name) + "</h2><p>" + (dca ? "Regular buying" : "Rules") + " · " + esc(s.asset) + " · " + niceDate(bt.from) + " – " + niceDate(bt.to) + "</p>" +
-      '<div class="rx-tags"><span>Backtest</span><span>' + CANDLES[bt.timeframe || "1d"] + '</span><span>0.1% per trade</span><span>' + (dca ? st.trades + " buys" : st.trades + (st.trades === 1 ? " trade" : " trades")) + "</span></div></div>" +
+      '<div class="rx-tags"><span>Backtest</span><span>' + CANDLES[bt.timeframe || "1d"] + '</span><span>' + feeLabel(bt.feeBps) + ' per trade</span><span>' + (dca ? st.trades + " buys" : st.trades + (st.trades === 1 ? " trade" : " trades")) + "</span></div></div>" +
       summary(s, bt) +
       '<div class="rx-stats">' +
         stat(dca ? "Value per $1 in" : "Strategy", pct(st.return), dca ? "each dollar put in" : "since " + niceDate(bt.from)) +
@@ -701,6 +709,10 @@
         (dca ? stat("Buys", String(st.trades), "every " + s.every_days + (s.every_days === 1 ? " day" : " days"))
              : stat("Trades", String(st.trades), st.winRate === null ? "none closed yet" : Math.round(st.winRate * 100) + "% won")) +
       "</div>" +
+      '<div class="rx-feeline"><span>Fee per trade</span><div class="rx-seg" id="fee" role="group" aria-label="Fee per trade">' +
+        [[5, "0.05%"], [10, "0.1%"], [30, "0.3%"]].map(function (f) {
+          return '<button type="button" data-f="' + f[0] + '" aria-pressed="' + (f[0] === (cur.fee || 10) ? "true" : "false") + '">' + f[1] + "</button>";
+        }).join("") + "</div></div>" +
       '<div class="rx-card"><div class="rx-card-h"><b>Growth of $1</b><div class="rx-seg" id="range" role="group" aria-label="Backtest period">' + ranges + "</div></div>" +
         '<div class="plot" id="plot"></div>' +
         '<div class="legend"><span><i style="background:var(--blue)"></i>' + (dca ? "Your buying" : "Strategy") + '</span><span><i style="background:#8f8e8e"></i>Holding ' + esc(s.asset) + '</span><span class="muted">Log scale</span></div></div>' +
@@ -711,6 +723,10 @@
     $("range").addEventListener("click", function (e) {
       var b = e.target.closest("[data-r]");
       if (b) setRange(b.getAttribute("data-r"));
+    });
+    $("fee").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-f]");
+      if (b) setFee(+b.getAttribute("data-f"));
     });
     renderChart(fresh);
   }
@@ -759,6 +775,12 @@
   var resizeTimer = null;
   window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { renderChart(false); }, 150); });
 
+  function setFee(bps) {
+    if (bps === (cur.fee || 10)) return;
+    cur.fee = bps;
+    persist();
+    rerun(true);
+  }
   function setRange(from) {
     cur.from = from;
     persist();
@@ -770,7 +792,7 @@
     if (!cur.spec) return;
     var id = cur.id;
     try {
-      var r = await post("/api/backtest", { spec: cur.spec, from: cur.from });
+      var r = await post("/api/backtest", { spec: cur.spec, from: cur.from, fee: cur.fee || 10 });
       if (!cur || cur.id !== id) return;
       var opening = !result;
       result = r;

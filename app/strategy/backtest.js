@@ -215,13 +215,14 @@ export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}
 
   if (spec.type === "dca") {
     const when = compile(spec.only_when, series);
-    let units = 0, invested = 0, buys = 0;
+    let units = 0, invested = 0, buys = 0, fees = 0;
     const ratio = new Float64Array(n - start);
     for (let i = start; i < n; i++) {
       const due = (i - start) % spec.every_days === 0;
       // The filter reads yesterday's close, like every other signal.
       if (due && (!when.length || (i > 0 && all(when, i - 1)))) {
         units += 1 / (k.o[i] * (1 + fee));
+        fees += fee / (1 + fee);
         invested += 1;
         buys += 1;
       }
@@ -229,7 +230,8 @@ export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}
     }
     return {
       ...base,
-      strategy: { ...summary(ratio, days), trades: buys, winRate: null, exposure: 1 },
+      // Fees per $1 put in.
+      strategy: { ...summary(ratio, days), trades: buys, winRate: null, exposure: 1, feesPaid: invested ? fees / invested : 0 },
       hold: summary(holdVals, days),
       dca: { buys, invested, value: units * k.c[n - 1] },
       recent: [],
@@ -242,13 +244,14 @@ export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}
   const exit = compile(spec.exit, series);
   const size = spec.position_pct / 100;
   let cash = 1, units = 0, entryPx = 0, entryT = 0, cost = 0;
-  let pending = null, armed = true, inBars = 0;
+  let pending = null, armed = true, inBars = 0, fees = 0;
   const trades = [];
   const equity = new Float64Array(n - start);
 
   const buy = (i, px) => {
     const spend = cash * size;
     units = spend / (px * (1 + fee));
+    fees += spend - units * px;
     cash -= spend;
     cost = spend;
     entryPx = px;
@@ -256,6 +259,7 @@ export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}
   };
   const sell = (i, px) => {
     const proceeds = units * px * (1 - fee);
+    fees += units * px * fee;
     trades.push({ in: stamp(entryT), out: stamp(k.t[i]), ret: proceeds / cost - 1, open: false });
     cash += proceeds;
     units = 0;
@@ -302,6 +306,8 @@ export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}
       trades: trades.length,
       winRate: closedCount ? wins / closedCount : null,
       exposure: inBars / equity.length,
+      // Fees per $1 started with; can pass $1 when a strategy trades a lot on a growing balance.
+      feesPaid: fees,
     },
     hold: summary(holdVals, days),
     recent: trades.slice(-10).reverse(),

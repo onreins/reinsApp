@@ -114,6 +114,15 @@ describe("the backtest endpoint", () => {
     assert.equal(r.body.backtest.from, "2021-01-01");
   });
 
+  test("charges the fee you pick, and 0.1% for any it doesn't offer", async () => {
+    const cheap = await post(s.base, "/api/backtest", { spec: trend, fee: 5 });
+    const dear = await post(s.base, "/api/backtest", { spec: trend, fee: 30 });
+    const odd = await post(s.base, "/api/backtest", { spec: trend, fee: 999 });
+    assert.equal(cheap.body.backtest.feeBps, 5);
+    assert.equal(odd.body.backtest.feeBps, 10);
+    assert.ok(dear.body.backtest.strategy.feesPaid > cheap.body.backtest.strategy.feesPaid);
+  });
+
   test("refuses an invalid spec with the reason", async () => {
     const r = await post(s.base, "/api/backtest", { spec: { ...trend, asset: "PEPE" } });
     assert.equal(r.status, 400);

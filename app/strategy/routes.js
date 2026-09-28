@@ -13,9 +13,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ASSETS, parseSpec, describeSpec, needsIntraday } from "./spec.js";
-import { backtest } from "./backtest.js";
-import { createMinuteStore } from "./candles.js";
+import { ASSETS, parseSpec } from "./spec.js";
+import { createRunner, Unavailable, Busy } from "./runner.js";
 import { respond } from "./chat.js";
 import { createLlm } from "./llm.js";
 
@@ -53,8 +52,10 @@ const bad = (res, message) => res.status(400).json({ error: message });
 /** Minute prices live outside git; CANDLES_DIR points at them (default data/candles). */
 const MINUTES_DIR = process.env.CANDLES_DIR || path.join(here, "..", "..", "data", "candles");
 
-/** A strategy this server can't run (no minute prices for its coin): the message says why. */
-class Unavailable extends Error {}
+/** Fees a backtest can charge per fill, in basis points: 0.05%, 0.1% (the default), 0.3%. */
+export const FEES = [5, 10, 30];
+const feeOf = (x) => (FEES.includes(Number(x)) ? Number(x) : 10);
+const rangeOf = (from) => (RANGES.includes(from) ? from : DEFAULT_FROM);
 
 export function mountStrategy(app, {
   llm = createLlm(),
@@ -62,26 +63,19 @@ export function mountStrategy(app, {
   perVisitor = createLimiter({ max: 20, windowMs: 10 * 60_000 }),
   modelBudget = createLimiter({ max: 400, windowMs: 60 * 60_000 }),
   backtests = createLimiter({ max: 60, windowMs: 60_000 }),
-  minutes = createMinuteStore(MINUTES_DIR),
+  // In-memory minute prices (tests); without them minute jobs go to worker threads.
+  minutes,
+  runner = createRunner({ candles, minutes, minutesDir: MINUTES_DIR }),
 } = {}) {
-  // Daily strategies run on the small daily file; anything shorter reads the coin's minutes.
-  const run = (spec, from) => {
-    const range = RANGES.includes(from) ? from : DEFAULT_FROM;
-    let source = candles()[spec.asset];
-    if (needsIntraday(spec)) {
-      source = minutes.feed(spec.asset);
-      if (!source) throw new Unavailable(`minute prices for ${spec.asset} aren't on this server yet, so it can only test daily rules for it`);
-    }
-    return { words: describeSpec(spec), backtest: backtest(spec, source, { from: range }) };
-  };
+  const run = (spec, body) => runner.run(spec, { from: rangeOf(body?.from), feeBps: feeOf(body?.fee) });
 
   app.get("/api/chat/status", (_req, res) => {
-    res.json({ model: llm.connected ? llm.name : null, assets: ASSETS, intraday: ASSETS.filter((a) => minutes.has(a)), ranges: RANGES });
+    res.json({ model: llm.connected ? llm.name : null, assets: ASSETS, intraday: ASSETS.filter((a) => runner.has(a)), ranges: RANGES, fees: FEES });
   });
 
   app.post("/api/chat", async (req, res) => {
     try {
-      const { messages, spec: current, from } = req.body ?? {};
+      const { messages, spec: current } = req.body ?? {};
       if (!Array.isArray(messages) || !messages.length || messages.length > MAX_MESSAGES) return bad(res, "send the conversation as a list of messages");
       if (!perVisitor.take(req.ip)) return res.status(429).json({ error: "That's a lot of messages. Give it a few minutes and try again." });
 
@@ -95,10 +89,10 @@ export function mountStrategy(app, {
       const out = await respond({ messages, spec, llm: model });
       let result = null;
       if (out.spec) {
-        try { result = run(out.spec, from); } catch (err) {
-          if (!(err instanceof Unavailable)) throw err;
+        try { result = await run(out.spec, req.body); } catch (err) {
+          if (!(err instanceof Unavailable || err instanceof Busy)) throw err;
           // Keep the conversation going: say why, and leave the current strategy as it was.
-          return res.json({ reply: `${out.reply} I can't test it here, though: ${err.message}.`, spec: null, source: out.source });
+          return res.json({ reply: `${out.reply} I can't test it right now, though: ${err.message}.`, spec: null, source: out.source });
         }
       }
       res.json({ reply: out.reply, spec: out.spec, source: out.source, ...(out.options ? { options: out.options } : {}), ...(specReset ? { specReset } : {}), ...(result ?? {}) });
@@ -108,14 +102,15 @@ export function mountStrategy(app, {
     }
   });
 
-  app.post("/api/backtest", (req, res) => {
+  app.post("/api/backtest", async (req, res) => {
     try {
       if (!backtests.take(req.ip)) return res.status(429).json({ error: "Too many backtests at once. Try again in a minute." });
       const parsed = parseSpec(req.body?.spec);
       if (!parsed.ok) return bad(res, `that strategy isn't valid: ${parsed.error}`);
-      res.json(run(parsed.spec, req.body?.from));
+      res.json(await run(parsed.spec, req.body));
     } catch (err) {
-      if (err instanceof Unavailable || /no prices|no w+ prices/.test(err.message)) return bad(res, err.message);
+      if (err instanceof Busy) return res.status(503).json({ error: err.message });
+      if (err instanceof Unavailable || /no prices|no \w+ prices|too long/.test(err.message)) return bad(res, err.message);
       console.error("[backtest]", err);
       res.status(500).json({ error: "The backtest hit a problem on our side." });
     }

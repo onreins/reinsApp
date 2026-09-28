@@ -741,3 +741,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
   .rx-a p .w { animation: rxFade .3s ease both; }
 }
 @keyframes rxFade { from { opacity: 0; } }
+
+/* The fee a backtest charges per trade, next to what it cost. */
+.rx-feeline { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--ink-3); font-size: 13px; }

@@ -75,10 +75,28 @@ function targetIn(text) {
   return num(m?.[1]);
 }
 
+// Candle sizes written the ways people write them: "15 minute chart", "on the 4h", "5m candles".
+const TF_TOKEN = /\b(1|5|15|4)\s*-?\s*(m|mins?|minutes?|h|hrs?|hours?)\b/g;
+const TF_LABEL = { "1m": "1-minute", "5m": "5-minute", "15m": "15-minute", "1h": "hourly", "4h": "4-hour" };
+
+/** The timeframe someone asked for, or undefined for daily. */
+function timeframeIn(text) {
+  const t = text.toLowerCase();
+  if (/every minute/.test(t)) return "1m";
+  if (/hourly|every hour/.test(t)) return "1h";
+  const every = t.match(/every (5|15) minutes|every 4 hours/);
+  if (every) return every[1] ? every[1] + "m" : "4h";
+  for (const m of t.matchAll(TF_TOKEN)) {
+    const tf = m[1] + (/^h/.test(m[2]) ? "h" : "m");
+    if (TF_LABEL[tf]) return tf;
+  }
+  return undefined;
+}
+
 /** The idea in `text`, as a rules/DCA draft without asset or risk settings. */
 function ideaIn(text) {
-  // Percentages are stops and targets, never periods: take them out first.
-  const t = text.toLowerCase().replace(/\d+(?:\.\d+)?\s*%/g, " ");
+  // Percentages are stops and targets and "15 minute" is a timeframe, never periods: take them out first.
+  const t = text.toLowerCase().replace(/\d+(?:\.\d+)?\s*%/g, " ").replace(TF_TOKEN, " ");
 
   const dca = t.match(/\bdca\b|dollar[- ]cost|every\s+(day|week|month|(\d+)\s*days?)/);
   if (dca) {
@@ -117,7 +135,7 @@ function ideaIn(text) {
     };
   }
 
-  const ma = t.match(/(\d+)\s*[- ]?\s*(?:day|d)\b[^.]{0,25}(?:average|\bma\b|\bsma\b|\bema\b)|(?:average|\bma\b|\bsma\b|\bema\b)[^.]{0,10}?(\d+)/);
+  const ma = t.match(/(\d+)\s*[- ]?\s*(?:sma|ema|ma)\b/) || t.match(/(\d+)\s*[- ]?\s*(?:day|d)\b[^.]{0,25}(?:average|\bma\b|\bsma\b|\bema\b)|(?:average|\bma\b|\bsma\b|\bema\b)[^.]{0,10}?(\d+)/);
   if (ma || /moving average|\baverage\b|trend/.test(t)) {
     const n = num(ma?.[1] ?? ma?.[2]) ?? 200;
     const kind = /\bema\b/.test(t) ? "ema" : "sma";
@@ -230,6 +248,7 @@ export function offlineDraft(text, current = null, { previous } = {}) {
   }
 
   const idea = ideaIn(text);
+  const tf = timeframeIn(text);
   if (idea) {
     const a = asset ?? current?.asset ?? "BTC";
     const { label, ...rest } = idea;
@@ -237,12 +256,14 @@ export function offlineDraft(text, current = null, { previous } = {}) {
     if (draft.type === "rules") {
       if (stop) draft.stop_loss_pct = stop;
       if (target) draft.take_profit_pct = target;
+      if (tf) draft.timeframe = tf;
     }
-  } else if (current && (asset || stop || target)) {
+  } else if (current && (asset || stop || target || tf)) {
     draft = { ...current };
     if (asset) { draft.asset = asset; draft.name = draft.name.replace(/^[A-Z]+\b/, asset); }
     if (draft.type === "rules" && stop) draft.stop_loss_pct = stop;
     if (draft.type === "rules" && target) draft.take_profit_pct = target;
+    if (draft.type === "rules" && tf) draft.timeframe = tf;
   } else {
     return { ...talk, spec: null };
   }
@@ -250,7 +271,8 @@ export function offlineDraft(text, current = null, { previous } = {}) {
   const r = parseSpec(draft);
   if (!r.ok) return { reply: `I couldn't build that: ${r.error}. ${HELP}`, spec: null };
   const changed = !idea && current;
-  return { reply: changed ? `Updated your strategy: ${r.spec.name}.` : `Built "${r.spec.name}". The backtest is on the right.`, spec: r.spec };
+  const on = r.spec.timeframe ? ` on ${TF_LABEL[r.spec.timeframe]} candles` : "";
+  return { reply: changed ? `Updated your strategy: ${r.spec.name}${on}.` : `Built "${r.spec.name}"${on}. The backtest is on the right.`, spec: r.spec };
 }
 
 // ---------------------------------------------------------------- the model

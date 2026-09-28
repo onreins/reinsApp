@@ -154,6 +154,17 @@ describe("the backtester", () => {
     assert.equal(r.strategy.exposure > 0.9, true);
   });
 
+  test("counts what the fees cost, per $1 started with", () => {
+    // In at 20, out at 5, at 1% a fill: the entry fee is 1/1.01 of 1%, the exit 1% of what's left.
+    const k = candles([10, 10, 20, 20, 5, 5, 5]);
+    const r = backtest(rules([{ left: { kind: "price" }, op: "above", right: { kind: "value", value: 15 } }]), k, { from: iso(k.d[0]), feeBps: 100 });
+    const entryFee = 0.01 / 1.01, units = 1 / (20 * 1.01), exitFee = units * 5 * 0.01;
+    near(r.strategy.feesPaid, entryFee + exitFee, 1e-12);
+    // DCA reports fees per $1 put in.
+    const d = backtest(parseSpec({ type: "dca", name: "d", asset: "BTC", every_days: 2 }).spec, candles([10, 10, 10, 10]), { from: iso(18628), feeBps: 100 });
+    near(d.strategy.feesPaid, 0.01 / 1.01, 1e-12);
+  });
+
   test("refuses a start after the last day it has", () => {
     const k = candles([1, 2, 3]);
     assert.throws(() => backtest(rules([priceAboveSma(2)]), k, { from: "2099-01-01" }), /no prices/);
@@ -202,6 +213,26 @@ describe("the offline builder", () => {
     assert.deepEqual(r.spec.exit, [{ left: { kind: "rsi", period: 14 }, op: "above", right: { kind: "value", value: 80 } }]);
     // With nothing to sell yet, it asks for the buy side first.
     assert.equal(offlineDraft("sell when RSI is above 80").spec, null);
+  });
+
+  test("reads the timeframe people ask for, instead of quietly going daily", () => {
+    const r = offlineDraft("buy SOL on the 15 minute chart when RSI drops below 25");
+    assert.equal(r.spec.timeframe, "15m");
+    assert.equal(r.spec.entry[0].right.value, 25);
+    assert.match(r.reply, /15-minute/);
+    assert.equal(offlineDraft("hourly golden cross on BTC").spec.timeframe, "1h");
+    assert.equal(offlineDraft("ETH breakout on the 4h").spec.timeframe, "4h");
+    assert.equal(offlineDraft("BTC above the 200 ema on 5m candles").spec.timeframe, "5m");
+    // Daily stays daily, and DCA keeps its schedule in days.
+    assert.equal(offlineDraft("golden cross on BTC").spec.timeframe, undefined);
+    assert.equal(offlineDraft("dca into btc every week").spec.timeframe, undefined);
+  });
+
+  test("moves the current strategy to another timeframe when asked", () => {
+    const base = offlineDraft("golden cross on BTC").spec;
+    const r = offlineDraft("check it every hour instead", base);
+    assert.equal(r.spec.timeframe, "1h");
+    assert.deepEqual(r.spec.entry, base.entry);
   });
 
   test("says what it can do when it can't read the idea", () => {
