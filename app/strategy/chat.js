@@ -10,7 +10,7 @@
  * reads the common ideas (trend filter, golden cross, RSI dip, breakout, DCA)
  * so the chat still works.
  */
-import { ASSETS, parseSpec } from "./spec.js";
+import { ASSETS, parseSpec, describeSpec } from "./spec.js";
 
 const MAX_TURNS = 10;
 const MAX_CHARS = 1500;
@@ -128,15 +128,82 @@ function exitIn(text) {
 
 const HELP = "I can build a few kinds of strategy: a trend filter (\"buy ETH above its 200-day average\"), a golden cross, an RSI dip (\"buy SOL when RSI is oversold\"), a breakout above the 20-day high, or regular buying (\"DCA into BTC every week\"). Add a stop-loss like \"with a 10% stop\".";
 
+// Ideas to tap, each phrased so this builder reads it.
+const ideasFor = (a) => [`Buy ${a} above its 200-day average`, `Golden cross on ${a} with a 10% stop`, `Buy ${a} when RSI is oversold`, `DCA into ${a} every week`];
+const STARTER_IDEAS = ["Buy ETH above its 200-day average", "Golden cross on BTC with a 10% stop", "Buy SOL when RSI is oversold", "DCA into BTC every week"];
+
+const SUGGEST = `Here are the ideas people test most. Each one is backtested against simply holding the coin:
+
+• Trend filter: hold BTC only while it's above its 200-day average
+• Golden cross: buy when the 50-day average crosses above the 200-day
+• RSI dip: buy SOL when it's oversold, sell when it recovers
+• Breakout: buy LINK at a new 20-day high
+• DCA: buy a fixed amount of ETH every week
+
+None of this is advice; the backtest shows how each would have done. Tap one to try it.`;
+
+/**
+ * Replies for things that aren't a strategy: a greeting, a request for ideas,
+ * a pair trade or a short, a coin with no rule, a question about the current
+ * strategy. Each comes with `options` the page shows as ideas to tap.
+ */
+function conversation(text, current, previous) {
+  const t = text.toLowerCase().trim();
+  const assets = ASSET_WORDS.filter(([re]) => re.test(t)).map(([, a]) => a);
+
+  if (/\bshort(ing)?\b|leverage|\d+\s*x\b|margin|futures|perps?\b/.test(t)) {
+    const a = assets[0] ?? current?.asset ?? "BTC";
+    return { early: true, reply: `Strategies here are spot and long-only: they buy a coin, hold it, and sell back to cash. No shorting or leverage. The closest thing is stepping aside when ${a} is falling, which a trend filter does. Want to try one?`, options: ideasFor(a).slice(0, 3) };
+  }
+  if (assets.length >= 2 && /\bsell|swap|rotat|instead|\bvs\b|versus|against|pair|ratio|switch between/.test(t)) {
+    const [a, b] = assets;
+    return {
+      early: true,
+      reply: `A strategy trades one coin against cash, so it can't buy ${a} and sell ${b} at the same time. You can test each on its own and compare their reports: say, a trend filter on each, holding it only while it's rising.`,
+      options: [`Buy ${a} above its 200-day average`, `Buy ${b} above its 200-day average`, `Golden cross on ${a}`],
+    };
+  }
+  if (/^(hi+|hey+|hello|hiya|howdy|yo|ho|sup|gm|good (morning|afternoon|evening))\b[\s!.?]*\w{0,12}[\s!.?]*$/.test(t)) {
+    return { reply: "Hi! Describe a trading idea in plain words and I'll turn it into rules, then backtest it on real daily prices since 2021. A few to start from:", options: STARTER_IDEAS };
+  }
+  if (/suggest|ideas?\b|recommend|examples?|what (can|should|could) i|best strateg|good strateg|options|\bhelp\b|where do i start/.test(t)) {
+    return { reply: SUGGEST, options: STARTER_IDEAS };
+  }
+  if (current && /how (does|did|is|would)|explain|what does|what is it|what'?s it|\bresults?\b|perform|is it good|does it work/.test(t)) {
+    return { reply: `${current.name}: ${describeSpec(current).join(" ")} The report shows the backtest next to simply holding ${current.asset}. Ask me to change any part of it.`, options: [] };
+  }
+  if (/^(thanks|thank you|thx|ty|cool|nice|great|ok|okay|perfect|awesome)\b/.test(t)) {
+    return current
+      ? { reply: "Glad it helps. Want to tweak it? Add a stop-loss, try another coin or change the period.", options: [] }
+      : { reply: "Anytime. Describe an idea whenever you're ready.", options: STARTER_IDEAS };
+  }
+  if (assets.length === 1 && !current) {
+    const a = assets[0];
+    return { reply: `What should make it buy ${a}? Here are a few rules to start from, or describe your own:`, options: ideasFor(a) };
+  }
+
+  // Nothing readable. Say it differently than last time, so it never loops.
+  const first = `I didn't catch a strategy in that. Right now I'm in simple mode, which reads a handful of patterns: a trend filter (the 200-day average), a golden cross, an RSI dip, a 20-day breakout, or regular buying (DCA). Tap one below or phrase your idea like those.`;
+  const again = `Still no strategy I can read there. Start with "Buy", a coin and a condition, like "Buy ETH when it's above its 200-day average", or tap an idea below.`;
+  return { reply: previous === first ? again : first, options: ideasFor(current?.asset ?? assets[0] ?? "BTC") };
+}
+
 /**
  * Read a strategy from plain words without a model.
- * @returns {{ reply: string, spec: object|null }}
+ * @param {string} text  the last thing the person said
+ * @param {object|null} current  the strategy so far
+ * @param {{ previous?: string }} [o]  the last reply, so a fallback is never repeated word for word
+ * @returns {{ reply: string, spec: object|null, options?: string[] }}
  */
-export function offlineDraft(text, current = null) {
+export function offlineDraft(text, current = null, { previous } = {}) {
   const asset = assetIn(text);
   const stop = stopIn(text);
   const target = targetIn(text);
   const sellOnly = /^\s*(?:sell|exit|close|get out)\b/i.test(text) && !/\bbuy\b/i.test(text);
+
+  // A short or a pair trade reads like a strategy but isn't one we can build: say so first.
+  const { early, ...talk } = conversation(text, current, previous);
+  if (early) return { ...talk, spec: null };
 
   let draft;
   if (sellOnly) {
@@ -165,7 +232,7 @@ export function offlineDraft(text, current = null) {
     if (draft.type === "rules" && stop) draft.stop_loss_pct = stop;
     if (draft.type === "rules" && target) draft.take_profit_pct = target;
   } else {
-    return { reply: HELP, spec: null };
+    return { ...talk, spec: null };
   }
 
   const r = parseSpec(draft);
@@ -203,8 +270,9 @@ export async function respond({ messages, spec, llm }) {
   const history = clip(messages);
   const last = [...history].reverse().find((m) => m.role === "user")?.content ?? "";
   const offline = (prefix = "") => {
-    const d = offlineDraft(last, spec);
-    return { reply: (prefix + d.reply).slice(0, MAX_REPLY), spec: d.spec, source: "offline" };
+    const previous = [...history].reverse().find((m) => m.role === "assistant")?.content;
+    const d = offlineDraft(last, spec, { previous });
+    return { reply: (prefix + d.reply).slice(0, MAX_REPLY), spec: d.spec, source: "offline", ...(d.options?.length ? { options: d.options } : {}) };
   };
   if (!llm?.connected) return offline();
 

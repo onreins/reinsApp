@@ -621,6 +621,9 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
   .rx-box-foot { justify-content: space-between; }
 }
 @media (prefers-reduced-motion: reduce) { .rx-thought.live span, .rx-doc.flash { animation: none; } }
+/* iOS zooms the whole page into any field under 16px when it's focused, and
+   stays zoomed, cutting off both edges of the chat. */
+@media (pointer: coarse) { .rx-box textarea, .rx-box.big textarea, input[type="text"], input[type="search"], input[type="number"], input:not([type]), select { font-size: 16px; } }
 
 /* ------------------------------------------------ chat sessions and motion */
 /* Past chats, as ChatGPT's history: a list on the start screen and a panel

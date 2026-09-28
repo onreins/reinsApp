@@ -208,6 +208,52 @@ describe("the offline builder", () => {
     const r = offlineDraft("what's the weather like");
     assert.equal(r.spec, null);
     assert.match(r.reply, /200-day|golden cross|RSI/);
+    assert.ok(r.options.length >= 3);
+  });
+
+  test("never repeats the same fallback twice in a row", () => {
+    const first = offlineDraft("what's the weather like");
+    const second = offlineDraft("and tomorrow?", null, { previous: first.reply });
+    assert.notEqual(second.reply, first.reply);
+  });
+
+  test("answers a greeting with ideas to tap, not the help text", () => {
+    const r = offlineDraft("ho");
+    assert.equal(r.spec, null);
+    assert.match(r.reply, /^Hi/);
+    assert.ok(r.options.length >= 3);
+  });
+
+  test("lists ideas when asked for suggestions", () => {
+    const r = offlineDraft("do u have suggestions of strategys");
+    assert.equal(r.spec, null);
+    assert.match(r.reply, /Trend filter/);
+    assert.match(r.reply, /DCA/);
+    assert.ok(r.options.every((o) => offlineDraft(o).spec), "every suggested idea builds");
+  });
+
+  test("explains that a pair trade isn't possible and offers each coin on its own", () => {
+    const r = offlineDraft("what abt a buy btc sell eth strategy");
+    assert.equal(r.spec, null);
+    assert.match(r.reply, /one coin/);
+    assert.ok(r.options.some((o) => /BTC/.test(o)) && r.options.some((o) => /ETH/.test(o)));
+  });
+
+  test("explains that shorting isn't possible", () => {
+    assert.match(offlineDraft("short ETH with 5x leverage").reply, /spot/);
+  });
+
+  test("asks what should trigger a buy when it only hears a coin", () => {
+    const r = offlineDraft("what about doge");
+    assert.match(r.reply, /DOGE/);
+    assert.ok(r.options.every((o) => /DOGE/.test(o) && offlineDraft(o).spec));
+  });
+
+  test("describes the current strategy when asked about it", () => {
+    const base = offlineDraft("golden cross on BTC").spec;
+    const r = offlineDraft("how does it work?", base);
+    assert.equal(r.spec, null);
+    assert.match(r.reply, /50-day average crosses above/);
   });
 });
 

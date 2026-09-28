@@ -80,7 +80,7 @@ export function mountStrategy(app, {
       const model = modelBudget.take("all") ? llm : null;
       const out = await respond({ messages, spec, llm: model });
       const result = out.spec ? run(out.spec, from) : null;
-      res.json({ reply: out.reply, spec: out.spec, source: out.source, ...(specReset ? { specReset } : {}), ...(result ?? {}) });
+      res.json({ reply: out.reply, spec: out.spec, source: out.source, ...(out.options ? { options: out.options } : {}), ...(specReset ? { specReset } : {}), ...(result ?? {}) });
     } catch (err) {
       console.error("[chat]", err);
       res.status(500).json({ error: "The chat hit a problem on our side. Try again." });

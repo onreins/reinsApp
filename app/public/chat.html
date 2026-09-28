@@ -289,6 +289,9 @@
 
   // Next steps the simple builder understands too, so they always work.
   function suggestions() {
+    // Ideas the last reply offered come first (a greeting, a pair trade, a fallback).
+    var last = cur.messages[cur.messages.length - 1];
+    if (last && last.role === "assistant" && last.options && last.options.length) return last.options.slice(0, 4).map(function (q) { return { q: q }; });
     var s = cur.spec;
     if (!s) return [];
     var other = s.asset === "ETH" ? "BTC" : "ETH", out = [];
@@ -307,7 +310,9 @@
     if (!sug.length) return null;
     var wrap = document.createElement("div");
     wrap.className = "rx-sug";
-    wrap.innerHTML = '<div class="l">Suggested actions</div>' + sug.map(function (x, i) {
+    var last = cur.messages[cur.messages.length - 1];
+    var label = last && last.options && last.options.length ? "Try one of these" : "Suggested actions";
+    wrap.innerHTML = '<div class="l">' + label + '</div>' + sug.map(function (x, i) {
       return '<button type="button" data-s="' + i + '"' + (enter ? ' class="rx-in" style="--d:' + (200 + i * 70) + 'ms"' : "") + "><span></span>" + ICON.send + "</button>";
     }).join("");
     sug.forEach(function (x, i) { wrap.querySelector('[data-s="' + i + '"] span').textContent = x.q; });
@@ -491,6 +496,7 @@
       if (r.specReset) { cur.spec = null; result = null; }
       if (r.spec) { cur.spec = r.spec; result = { words: r.words, backtest: r.backtest }; }
       reply = { role: "assistant", content: r.reply, source: r.source, ms: ms, spec: !!r.spec, specName: r.spec ? r.spec.name : null };
+      if (Array.isArray(r.options)) reply.options = r.options.filter(function (x) { return typeof x === "string"; }).slice(0, 4);
     } catch (err) {
       reply = err.name === "AbortError"
         ? { role: "assistant", content: "Stopped.", stopped: true }
