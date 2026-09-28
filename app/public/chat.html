@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Strategy chat · Reins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="/app.css">
+
+<a class="skip" href="#main">Skip to content</a>
+<aside id="side"></aside>
+<header id="top"></header>
+
+<main id="main">
+  <div class="hl-head">
+    <div>
+      <h1>Strategy chat</h1>
+      <p class="page-sub">Describe a trading idea in plain words. It becomes rules, tested on real daily prices after fees.</p>
+    </div>
+    <div class="hbtns">
+      <span class="tagp" id="model-tag">…</span>
+      <button class="chip" id="reset" type="button">New chat</button>
+    </div>
+  </div>
+
+  <div class="chat-grid">
+    <section class="tpanel chat-panel" aria-label="Chat">
+      <div class="msgs" id="msgs" role="log" aria-live="polite"></div>
+      <div class="starters" id="starters"></div>
+      <form class="composer" id="form">
+        <label class="sr-only" for="q">Describe a strategy</label>
+        <textarea id="q" rows="1" maxlength="1500" placeholder="e.g. Buy ETH when it's above its 200-day average, with a 10% stop"></textarea>
+        <button class="btn-white" id="send" type="submit">Send</button>
+      </form>
+      <p class="fine">Runs on free AI models: don’t share personal details. Not investment advice.</p>
+    </section>
+
+    <section class="tpanel strat-panel" aria-label="Your strategy">
+      <div class="tabs" id="range" role="group" aria-label="Backtest period">
+        <button type="button" data-r="2019-01-01" aria-pressed="false">Since 2019</button>
+        <button type="button" data-r="2021-01-01" aria-pressed="true">Since 2021</button>
+        <button type="button" data-r="2024-01-01" aria-pressed="false">Since 2024</button>
+      </div>
+      <div class="tbody" id="strat"></div>
+    </section>
+  </div>
+
+  <footer class="foot">
+    <span>Backtests use daily prices and 0.1% per trade. Past results do not predict future returns.</span>
+    <span>Not investment advice</span>
+  </footer>
+</main>
+
+<script src="/wallet.js"></script>
+<script src="/ui.js"></script>
+<script>
+(function () {
+  "use strict";
+  var U = window.ReinsUI, esc = U.esc;
+  var $ = function (id) { return document.getElementById(id); };
+  U.topbar("chat");
+
+  var STARTERS = [
+    "Buy ETH when it's above its 200-day average",
+    "Golden cross on BTC with a 10% stop",
+    "Buy SOL when RSI is oversold",
+    "DCA into BTC every week",
+  ];
+  var KEY = "reins-chat";
+  var state = { messages: [], spec: null, from: "2021-01-01" };
+  var result = null, busy = false;
+
+  // The conversation is kept in this browser only, so a reload doesn't lose it.
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved && Array.isArray(saved.messages)) state = { messages: saved.messages.slice(-40), spec: saved.spec || null, from: saved.from || "2021-01-01" };
+  } catch (e) { /* storage off */ }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage off */ } }
+
+  // ------------------------------------------------------------------ chat
+  function bubble(m) {
+    var el = document.createElement("div");
+    el.className = "bub " + (m.role === "user" ? "me" : m.error ? "err" : "ai");
+    el.textContent = m.content;
+    if (m.role === "assistant" && m.source) {
+      var src = document.createElement("span");
+      src.className = "src";
+      src.textContent = m.source === "offline" ? "Simple builder" : "via " + m.source;
+      el.appendChild(src);
+    }
+    return el;
+  }
+  function renderChat() {
+    var box = $("msgs");
+    box.innerHTML = "";
+    if (!state.messages.length) {
+      var hello = document.createElement("div");
+      hello.className = "bub ai";
+      hello.textContent = "Tell me a trading idea and I’ll turn it into rules and test it on real prices. Try one of these, or write your own.";
+      box.appendChild(hello);
+    }
+    state.messages.forEach(function (m) { box.appendChild(bubble(m)); });
+    if (busy) {
+      var t = document.createElement("div");
+      t.className = "bub ai typing";
+      t.setAttribute("aria-label", "Thinking");
+      t.innerHTML = "<i></i><i></i><i></i>";
+      box.appendChild(t);
+    }
+    $("starters").hidden = state.messages.length > 0;
+    box.scrollTop = box.scrollHeight;
+  }
+  $("starters").innerHTML = STARTERS.map(function (s) { return '<button class="chip" type="button">' + esc(s) + "</button>"; }).join("");
+  $("starters").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b) send(b.textContent);
+  });
+
+  async function post(path, body) {
+    var res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) {
+      var err = new Error(data.error || "Something went wrong (" + res.status + ").");
+      err.status = res.status;
+      throw err;
+    }
+    return data;
+  }
+
+  async function send(text) {
+    text = String(text || "").trim();
+    if (!text || busy) return;
+    state.messages.push({ role: "user", content: text });
+    busy = true;
+    $("q").value = "";
+    fit();
+    lock(true);
+    renderChat();
+    try {
+      var r = await post("/api/chat", {
+        messages: state.messages.filter(function (m) { return !m.error; }).map(function (m) { return { role: m.role, content: m.content }; }),
+        spec: state.spec,
+        from: state.from,
+      });
+      state.messages.push({ role: "assistant", content: r.reply, source: r.source });
+      if (r.specReset) { state.spec = null; result = null; renderStrategy(); }
+      if (r.spec) { state.spec = r.spec; result = { words: r.words, backtest: r.backtest }; renderStrategy(); }
+    } catch (err) {
+      state.messages.push({ role: "assistant", content: err.message, error: true });
+    }
+    busy = false;
+    lock(false);
+    save();
+    renderChat();
+    $("q").focus();
+  }
+  function lock(on) { $("send").disabled = on; $("q").disabled = on; }
+
+  // The box grows with what you type, up to a limit; Enter sends, Shift+Enter breaks the line.
+  function fit() { var q = $("q"); q.style.height = "auto"; q.style.height = Math.min(q.scrollHeight, 160) + "px"; }
+  $("q").addEventListener("input", fit);
+  $("q").addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send($("q").value); }
+  });
+  $("form").addEventListener("submit", function (e) { e.preventDefault(); send($("q").value); });
+
+  $("reset").addEventListener("click", function () {
+    state = { messages: [], spec: null, from: state.from };
+    result = null;
+    save();
+    renderChat();
+    renderStrategy();
+  });
+
+  // ------------------------------------------------------------- strategy
+  var pct = function (x, dp) { return U.pctHtml(x * 100, dp === undefined ? 0 : dp); };
+  var multiple = function (v) { return v >= 10 ? v.toFixed(0) + "×" : v >= 2 ? v.toFixed(1) + "×" : v.toFixed(2) + "×"; };
+  var niceDate = function (iso) { return new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }); };
+
+  function renderStrategy() {
+    var box = $("strat");
+    if (!state.spec || !result) {
+      box.innerHTML = '<div class="strat-empty">' + U.icon("strategies", 28) + "<b>No strategy yet</b><span>Describe one in the chat and its backtest shows up here.</span></div>";
+      return;
+    }
+    var s = state.spec, bt = result.backtest, st = bt.strategy, hd = bt.hold, dca = s.type === "dca";
+    var beat = st.return - hd.return;
+    var trades = dca
+      ? '<div><div class="lbl">Buys</div><div class="val">' + st.trades + '</div><div class="sub2">every ' + s.every_days + (s.every_days === 1 ? " day" : " days") + "</div></div>"
+      : '<div><div class="lbl">Trades</div><div class="val">' + st.trades + '</div><div class="sub2">' + (st.winRate === null ? "none closed yet" : Math.round(st.winRate * 100) + "% won") + " · in the market " + Math.round(st.exposure * 100) + "%</div></div>";
+    box.innerHTML =
+      '<div class="strat-head">' + U.coins([s.asset]) + "<div><h2>" + esc(s.name) + '</h2><span class="muted">' + (dca ? "Regular buying" : "Rules") + " · " + esc(s.asset) + " · " + niceDate(bt.from) + " to " + niceDate(bt.to) + "</span></div></div>" +
+      '<ul class="rules-words">' + result.words.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>" +
+      '<div class="mini-stats">' +
+        '<div><div class="lbl">' + (dca ? "Value per $1 put in" : "Strategy") + '</div><div class="val">' + pct(st.return) + '</div><div class="sub2">' + (beat >= 0 ? "beat" : "trailed") + " holding by " + Math.abs(Math.round(beat * 100)) + " pts</div></div>" +
+        '<div><div class="lbl">Holding ' + esc(s.asset) + '</div><div class="val">' + pct(hd.return) + '</div><div class="sub2">bought on day one</div></div>' +
+        '<div><div class="lbl">Worst drop</div><div class="val"><span class="down">' + Math.round(st.maxDrawdown * 100) + '%</span></div><div class="sub2">holding: ' + Math.round(hd.maxDrawdown * 100) + "%</div></div>" +
+        trades +
+      "</div>" +
+      '<div class="plot" id="plot"></div>' +
+      '<div class="legend"><span><i style="background:var(--blue)"></i>' + (dca ? "Your buying" : "Strategy") + '</span><span><i style="background:#8f8e8e"></i>Holding ' + esc(s.asset) + '</span><span class="muted">Growth of $1, log scale</span></div>' +
+      (bt.recent && bt.recent.length ? recentTrades(bt.recent) : "") +
+      '<div class="strat-actions"><a class="btn-white" href="/create.html">Create an agent</a><span class="muted">Starts from these limits; the agent itself runs on Arc.</span></div>' +
+      '<p class="strat-note">This is a backtest on ' + esc(s.asset) + " prices from Binance. On Arc today agents can trade USDC and EURC; other coins arrive as pools launch, so treat this as a study, not a live strategy yet.</p>";
+    renderChart();
+  }
+
+  function recentTrades(list) {
+    return '<h3 class="rt-title">Recent trades</h3><div class="dense-wrap"><table class="dense"><thead><tr><th>In</th><th>Out</th><th class="r">Result</th></tr></thead><tbody>' +
+      list.slice(0, 5).map(function (t) {
+        return "<tr><td>" + esc(t.in) + "</td><td>" + (t.open ? '<span class="tagp ok">Open</span>' : esc(t.out)) + '</td><td class="r">' + pct(t.ret, 1) + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+
+  // Growth of $1 against holding, on a log scale so one big year doesn't flatten the rest.
+  function renderChart() {
+    var plot = $("plot");
+    if (!plot || !result) return;
+    var a = result.backtest.curve, b = result.backtest.bench;
+    if (a.length < 2) { plot.innerHTML = '<div class="plot-empty">Not enough history for this range.</div>'; return; }
+    var av = a.map(function (p) { return Math.max(p.index, 1e-3); }), bv = b.map(function (p) { return Math.max(p.index, 1e-3); });
+    var W = Math.max(300, Math.round(plot.clientWidth || 640)), H = W < 520 ? 210 : 240, L = 46, R = 44, T = 10, B = 26;
+    var lo = Math.log(Math.min.apply(null, av.concat(bv))), hi = Math.log(Math.max.apply(null, av.concat(bv)));
+    var pad = (hi - lo) * 0.08 || 0.1; lo -= pad; hi += pad;
+    var t0 = a[0].t, t1 = a[a.length - 1].t;
+    var X = function (t) { return L + ((t - t0) / (t1 - t0)) * (W - L - R); };
+    var Y = function (v) { return T + (1 - (Math.log(v) - lo) / (hi - lo)) * (H - T - B); };
+    var path = function (pts, vals) { return pts.map(function (p, i) { return (i ? "L" : "M") + X(p.t).toFixed(1) + " " + Y(vals[i]).toFixed(1); }).join(" "); };
+    var ticks = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10, 20, 50, 100].filter(function (v) { var l = Math.log(v); return l >= lo && l <= hi; });
+    if (ticks.length > 6) ticks = ticks.filter(function (v, i) { return i % 2 === 0 || v === 1; });
+    var out = "";
+    ticks.forEach(function (v) {
+      out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="g' + (v === 1 ? " one" : "") + '"/>' +
+        '<text x="' + (L - 8) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + multiple(v) + "</text>";
+    });
+    var y0 = new Date(t0 * 1000).getUTCFullYear(), y1 = new Date(t1 * 1000).getUTCFullYear();
+    var step = y1 - y0 > 5 ? 2 : 1;
+    for (var y = y0 + 1; y <= y1; y += step) {
+      var ty = Date.UTC(y, 0, 1) / 1000;
+      if (ty >= t0 && ty <= t1) out += '<text x="' + X(ty).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + y + "</text>";
+    }
+    out += '<path d="' + path(b, bv) + '" class="l-bench"/><path d="' + path(a, av) + '" class="l-strat"/>';
+    var ea = av[av.length - 1], eb = bv[bv.length - 1];
+    out += '<text x="' + (W - R + 6) + '" y="' + (Y(ea) + 4).toFixed(1) + '" class="end strat">' + multiple(ea) + "</text>" +
+      '<text x="' + (W - R + 6) + '" y="' + (Y(eb) + 4).toFixed(1) + '" class="end">' + multiple(eb) + "</text>";
+    plot.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(state.spec.name) + " turned $1 into $" + ea.toFixed(2) +
+      ", against $" + eb.toFixed(2) + ' for holding">' + out + "</svg>";
+  }
+  var resizeTimer = null;
+  window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderChart, 150); });
+
+  async function rerun() {
+    if (!state.spec) return;
+    try {
+      var r = await post("/api/backtest", { spec: state.spec, from: state.from });
+      result = r;
+      renderStrategy();
+    } catch (err) {
+      // A saved strategy the server no longer accepts is dropped, so the page doesn't stay stuck on it.
+      if (err.status === 400) {
+        state.spec = null;
+        result = null;
+        save();
+        $("strat").innerHTML = '<div class="strat-empty"><b>Your saved strategy was cleared</b><span>It no longer fits the current rules. Describe it again in the chat.</span></div>';
+        return;
+      }
+      $("strat").innerHTML = '<div class="strat-empty"><b>Couldn’t run the backtest</b><span>' + esc(err.message) + "</span></div>";
+    }
+  }
+  $("range").querySelectorAll("button").forEach(function (b) {
+    b.setAttribute("aria-pressed", b.getAttribute("data-r") === state.from ? "true" : "false");
+    b.addEventListener("click", function () {
+      $("range").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      state.from = b.getAttribute("data-r");
+      save();
+      rerun();
+    });
+  });
+
+  // ------------------------------------------------------------- start up
+  U.getJson("/api/chat/status").then(function (s) {
+    $("model-tag").textContent = s.model ? "AI: " + s.model : "Simple builder";
+    $("model-tag").title = s.model ? "Free AI models, routed across providers" : "No AI model is connected, so a built-in parser reads common strategies";
+    if (s.model) $("model-tag").classList.add("ok");
+  }).catch(function () { $("model-tag").textContent = "Offline"; });
+
+  renderChat();
+  renderStrategy();
+  if (state.spec) rerun();
+})();
+</script>

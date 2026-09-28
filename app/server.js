@@ -32,6 +32,7 @@ import { artifact } from "../scripts/artifact.js";
 import { ArenaIndexer } from "../arena/indexer.js";
 import { chainIndex, RESET_EVENTS } from "../arena/returns.js";
 import { createRiskEngine, snapshot } from "../bridge/risk.js";
+import { mountStrategy } from "./strategy/routes.js";
 
 const FACTORY = artifact("MandateFactory");
 const MANDATE = artifact("Mandate");
@@ -91,12 +92,17 @@ export function compileRules(rules) {
   };
 }
 
-export function createApp({ deployment, rpcUrl } = {}) {
+export function createApp({ deployment, rpcUrl, strategy } = {}) {
   const dep = deployment ?? loadDeployment();
   const chain = dep.chainId === arc.id ? arc : arcTestnet;
   const explorer = dep.chainId === arc.id ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
 
   const app = express();
+  // Behind a reverse proxy every visitor arrives from the proxy's address, which
+  // would put everyone in one rate-limit bucket. TRUST_PROXY names the hops to
+  // trust (a count, or "loopback"); unset, the socket address is used as is.
+  const trustProxy = process.env.TRUST_PROXY;
+  if (trustProxy) app.set("trust proxy", /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy);
   app.use(express.json({ limit: "64kb" }));
 
   const here = path.dirname(fileURLToPath(import.meta.url));
@@ -127,6 +133,9 @@ export function createApp({ deployment, rpcUrl } = {}) {
     if (status >= 500) console.error("[app]", err);
     res.status(status).json({ error: err.status ? err.message : "something went wrong on our side" });
   };
+
+  // The strategy chat: plain words to a validated spec and its backtest.
+  mountStrategy(app, strategy);
 
   // ------------------------------------------------------------------ reads
   app.get("/api/config", (_req, res) => {

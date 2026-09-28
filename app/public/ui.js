@@ -65,6 +65,7 @@ window.ReinsUI = (function () {
     explore: '<circle cx="12" cy="12" r="8.5"/><path d="m15.2 8.8-1.9 4.5-4.5 1.9 1.9-4.5z"/>',
     strategies: '<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',
     create: '<circle cx="12" cy="12" r="8.5"/><path d="M12 8.5v7M8.5 12h7"/>',
+    chat: '<path d="M5 5h14a1.5 1.5 0 0 1 1.5 1.5v8.5a1.5 1.5 0 0 1-1.5 1.5h-7.5L7 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V6.5A1.5 1.5 0 0 1 5 5z"/><path d="M8 9.5h8M8 12.5h5"/>',
     window: '<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9h17M7 6.8h.01M9.5 6.8h.01"/>',
     shield: '<path d="M12 3.5 19 6v5.5c0 4.3-2.9 7.6-7 9-4.1-1.4-7-4.7-7-9V6z"/><path d="m9.3 12 1.9 1.9 3.6-3.6"/>',
     deposit: '<circle cx="12" cy="12" r="8.5"/><path d="M12 8v8M8.5 12.5 12 16l3.5-3.5"/>',
@@ -131,7 +132,7 @@ window.ReinsUI = (function () {
   // The Reins mark: a rounded lowercase r and its dot, white on the dark sidebar.
   var MARK = '<svg width="26" height="26" viewBox="256 256 512 512" aria-hidden="true"><g fill="#fff"><rect x="307" y="327" width="130" height="368" rx="65"/><path d="M430 396C452 352 494 327 540 327a50.5 50.5 0 0 1 0 101c-58 0-103 34-103 96H415V396z"/><circle cx="670" cy="378" r="47"/></g></svg>';
   var NAV = [
-    [null, [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["create", "Create agent", "/create.html"]]],
+    [null, [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["chat", "Strategy chat", "/chat.html"], ["create", "Create agent", "/create.html"]]],
     ["ARC", [["window", "Block explorer", "#", "nav-explorer"]]],
   ];
   function topbar(page) {
