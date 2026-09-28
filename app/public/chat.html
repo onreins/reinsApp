@@ -13,10 +13,11 @@
 <aside id="side"></aside>
 <header id="top"></header>
 
-<!-- Laid out on Rox's agent chat (mobbin.com/screens/b352f022-e416-4a9d-af25-09ada9e5a884):
-     a start screen, then the chat on the left and the report it builds on the right. -->
+<!-- Laid out on Rox's agent chat (mobbin.com/screens/b352f022-e416-4a9d-af25-09ada9e5a884), with
+     motion after the big assistants: ChatGPT's streamed answers and gliding composer, Claude's
+     report panel that slides in once there's something to show, Gemini's shimmering "thinking". -->
 <main id="main" class="rx-main">
-  <div class="rx" id="rx" data-mode="home">
+  <div class="rx" id="rx" data-mode="home" data-doc="closed">
 
     <section class="rx-home" aria-label="Start a strategy">
       <h1>What should your agent trade?</h1>
@@ -31,16 +32,22 @@
       </form>
       <div class="rx-sec">Starting points</div>
       <div class="rx-cards" id="starters"></div>
-      <div class="rx-sec" id="recent-h" hidden>Recent strategies</div>
-      <ul class="rx-recent" id="recent"></ul>
+      <div class="rx-sec" id="recent-h" hidden>Recent chats</div>
+      <ul class="rx-sessions" id="recent"></ul>
     </section>
 
     <section class="rx-chat" aria-label="Chat">
       <div class="rx-bar">
-        <b id="chat-title">Strategy chat</b>
-        <button class="rx-icon" id="new" type="button" title="New strategy" aria-label="New strategy"></button>
+        <button class="rx-icon" id="hist-btn" type="button" title="Chats" aria-label="Your chats" aria-expanded="false" aria-controls="hist"></button>
+        <b id="chat-title">New chat</b>
+        <button class="rx-icon" id="new" type="button" title="New chat" aria-label="New chat"></button>
       </div>
-      <div class="rx-msgs" id="msgs" role="log" aria-live="polite"></div>
+      <div class="rx-hist" id="hist" hidden>
+        <div class="rx-hist-h"><b>Your chats</b><span>Saved in this browser</span></div>
+        <ul class="rx-sessions" id="sessions"></ul>
+      </div>
+      <div class="rx-msgs" id="msgs" role="log" aria-live="polite"><div class="rx-thread" id="thread"></div></div>
+      <button class="rx-down" id="down" type="button" aria-label="Scroll to the latest message" hidden></button>
       <form class="rx-box" id="form">
         <label class="sr-only" for="q">Ask for a change</label>
         <textarea id="q" rows="1" maxlength="1500" placeholder="Ask for a change, or describe a new idea"></textarea>
@@ -71,6 +78,7 @@
   "use strict";
   var U = window.ReinsUI, esc = U.esc;
   var $ = function (id) { return document.getElementById(id); };
+  var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   U.topbar("chat");
 
   var STARTERS = [
@@ -82,56 +90,146 @@
   ];
   var ICON = {
     send: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    stop: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" fill="currentColor"/></svg>',
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    hist: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 5v4h4M12 8v4l3 2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2c.8 5.4 4.6 9.2 10 10-5.4.8-9.2 4.6-10 10-.8-5.4-4.6-9.2-10-10 5.4-.8 9.2-4.6 10-10z"/></svg>',
     doc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10A.5.5 0 0 1 7 20z M14 3.5V8h4 M9.5 12h5 M9.5 15h5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
     copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 15V6a1 1 0 0 1 1-1h9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>',
+    x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   };
-  document.querySelectorAll(".rx-send").forEach(function (b) { b.innerHTML = ICON.send; });
   $("new").innerHTML = ICON.plus;
+  $("hist-btn").innerHTML = ICON.hist;
+  $("down").innerHTML = ICON.down;
 
-  // ----------------------------------------------------------------- state
-  // Kept in this browser only: the current chat, and the last few strategies built.
-  var KEY = "reins-chat", RECENT = "reins-chat-recent";
-  var state = { messages: [], spec: null, from: "2021-01-01" };
-  var result = null, busy = false, recent = [];
+  // --------------------------------------------------------------- storage
+  // Every chat is its own session, kept in this browser. A reload always opens a
+  // fresh chat; past ones stay one click away in the history.
+  var SESSIONS = "reins-chat-sessions", MAX_SESSIONS = 30;
   var load = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
   var store = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off */ } };
-  var saved = load(KEY, null);
-  if (saved && Array.isArray(saved.messages)) state = { messages: saved.messages.slice(-40), spec: saved.spec || null, from: saved.from || "2021-01-01" };
-  recent = (load(RECENT, []) || []).filter(function (r) { return r && r.spec && r.spec.name; }).slice(0, 6);
-  function save() { store(KEY, state); }
-  function remember(spec) {
-    var key = JSON.stringify(spec);
-    recent = [{ spec: spec, at: Date.now() }].concat(recent.filter(function (r) { return JSON.stringify(r.spec) !== key; })).slice(0, 6);
-    store(RECENT, recent);
+  var rid = function () { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); };
+  var sessions = (load(SESSIONS, []) || []).filter(function (s) { return s && s.id && Array.isArray(s.messages) && s.messages.length; });
+
+  // The single saved chat from before sessions existed becomes the first session.
+  (function migrate() {
+    var old = load("reins-chat", null);
+    if (old && Array.isArray(old.messages) && old.messages.length) {
+      sessions.unshift({ id: rid(), messages: old.messages.slice(-40), spec: old.spec || null, from: old.from || "2021-01-01", at: Date.now() });
+      store(SESSIONS, sessions);
+    }
+    try { localStorage.removeItem("reins-chat"); localStorage.removeItem("reins-chat-recent"); } catch (e) { /* storage off */ }
+  })();
+
+  var titleOf = function (s) {
+    if (s.spec && s.spec.name) return s.spec.name;
+    var first = s.messages.filter(function (m) { return m.role === "user"; })[0];
+    return first ? (first.content.length > 48 ? first.content.slice(0, 47) + "…" : first.content) : "New chat";
+  };
+  var cur = null, result = null, busy = false, ctl = null, streaming = null;
+
+  function newSession() { cur = { id: rid(), messages: [], spec: null, from: (cur && cur.from) || "2021-01-01", at: Date.now() }; result = null; }
+  function persist() {
+    if (!cur || !cur.messages.length) return;
+    cur.at = Date.now();
+    sessions = [cur].concat(sessions.filter(function (s) { return s.id !== cur.id; })).slice(0, MAX_SESSIONS);
+    store(SESSIONS, sessions.map(function (s) {
+      return { id: s.id, spec: s.spec, from: s.from, at: s.at, messages: s.messages.slice(-40).map(function (m) {
+        return { role: m.role, content: m.content, source: m.source, ms: m.ms, spec: m.spec, specName: m.specName, error: m.error, stopped: m.stopped };
+      }) };
+    }));
+    renderSessions();
   }
-  function mode() { $("rx").setAttribute("data-mode", state.messages.length || state.spec ? "session" : "home"); }
+
+  // ---------------------------------------------------------------- motion
+  // Mode and panel changes run as view transitions where the browser has them,
+  // so the composer glides from the middle to the bottom and the report slides in.
+  function morph(fn) {
+    if (!still && document.startViewTransition) document.startViewTransition(fn);
+    else fn();
+  }
+  function layout() {
+    $("rx").setAttribute("data-mode", cur.messages.length ? "session" : "home");
+    $("rx").setAttribute("data-doc", cur.spec && result ? "open" : "closed");
+  }
+
+  // ------------------------------------------------------------- sessions
+  function dayGroup(t) {
+    var d = new Date(t), now = new Date(), start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    return t >= start ? "Today" : t >= start - 864e5 ? "Yesterday" : t >= start - 7 * 864e5 ? "This week" : "Earlier";
+  }
+  function sessionItems(list, grouped) {
+    var html = "", last = null;
+    list.forEach(function (s) {
+      var g = dayGroup(s.at);
+      if (grouped && g !== last) { html += '<li class="g">' + g + "</li>"; last = g; }
+      html += '<li class="s' + (cur && s.id === cur.id ? " on" : "") + '"><button type="button" class="open" data-open="' + esc(s.id) + '">' +
+        (s.spec ? U.coins([s.spec.asset]) : '<span class="dot"></span>') + '<span class="n">' + esc(titleOf(s)) + "</span></button>" +
+        '<button type="button" class="del" data-del="' + esc(s.id) + '" aria-label="Delete this chat" title="Delete">' + ICON.x + "</button></li>";
+    });
+    return html;
+  }
+  function renderSessions() {
+    $("recent-h").hidden = !sessions.length;
+    $("recent").innerHTML = sessionItems(sessions.slice(0, 6), false);
+    $("sessions").innerHTML = sessions.length ? sessionItems(sessions, true) : '<li class="empty">No other chats yet.</li>';
+  }
+  function onSessionClick(e) {
+    var del = e.target.closest("[data-del]"), open = e.target.closest("[data-open]");
+    if (del) {
+      var id = del.getAttribute("data-del");
+      sessions = sessions.filter(function (s) { return s.id !== id; });
+      persistList();
+      if (cur && cur.id === id) startFresh();
+      else renderSessions();
+      return;
+    }
+    if (open) openSession(open.getAttribute("data-open"));
+  }
+  function persistList() { store(SESSIONS, sessions); }
+  $("recent").addEventListener("click", onSessionClick);
+  $("sessions").addEventListener("click", onSessionClick);
+
+  function openSession(id) {
+    var s = sessions.filter(function (x) { return x.id === id; })[0];
+    if (!s) return;
+    stopAll();
+    toggleHist(false);
+    // State changes now; only the drawing waits for the transition, which runs later.
+    cur = JSON.parse(JSON.stringify(s));
+    result = null;
+    morph(function () { layout(); renderChat(); renderStrategy(); });
+    renderSessions();
+    if (cur.spec) rerun();
+  }
+  function startFresh() {
+    stopAll();
+    toggleHist(false);
+    newSession();
+    morph(function () { layout(); renderChat(); renderStrategy(); });
+    renderSessions();
+    setTimeout(function () { $("q-home").focus(); }, 50);
+  }
+  $("new").addEventListener("click", startFresh);
+
+  function toggleHist(open) {
+    var h = $("hist");
+    open = open === undefined ? h.hidden : open;
+    h.hidden = !open;
+    $("hist-btn").setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  $("hist-btn").addEventListener("click", function (e) { e.stopPropagation(); toggleHist(); });
+  document.addEventListener("click", function (e) { if (!$("hist").hidden && !e.target.closest("#hist")) toggleHist(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") toggleHist(false); });
 
   // ------------------------------------------------------------ start page
   $("starters").innerHTML = STARTERS.map(function (s, i) {
-    return '<button class="rx-card-btn" type="button" data-i="' + i + '"><b>' + esc(s.t) + "</b><span>" + esc(s.d) + "</span></button>";
+    return '<button class="rx-card-btn" type="button" data-i="' + i + '" style="--d:' + (i * 50) + 'ms"><b>' + esc(s.t) + "</b><span>" + esc(s.d) + "</span></button>";
   }).join("");
   $("starters").addEventListener("click", function (e) {
     var b = e.target.closest("[data-i]");
     if (b) send(STARTERS[+b.getAttribute("data-i")].q);
-  });
-  function renderRecent() {
-    $("recent-h").hidden = !recent.length;
-    $("recent").innerHTML = recent.map(function (r, i) {
-      return '<li><button type="button" data-r="' + i + '">' + U.coins([r.spec.asset]) + '<span class="n">' + esc(r.spec.name) + '</span><span class="w">' +
-        new Date(r.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + "</span></button></li>";
-    }).join("");
-  }
-  $("recent").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-r]");
-    if (!b) return;
-    var r = recent[+b.getAttribute("data-r")];
-    state = { messages: [{ role: "assistant", content: "Reopened “" + r.spec.name + "”. Ask for any change.", spec: true }], spec: r.spec, from: state.from };
-    save();
-    mode();
-    renderChat();
-    rerun();
   });
 
   // ------------------------------------------------------------------ chat
@@ -141,9 +239,9 @@
     el.textContent = m.content;
     return el;
   }
-  function aiMsg(m) {
+  function aiMsg(m, opts) {
     var el = document.createElement("div");
-    el.className = "rx-a" + (m.error ? " err" : "");
+    el.className = "rx-a" + (m.error ? " err" : "") + (m.stopped ? " stopped" : "");
     if (m.ms) {
       var th = document.createElement("div");
       th.className = "rx-thought";
@@ -154,22 +252,27 @@
     var p = document.createElement("p");
     p.textContent = m.content;
     el.appendChild(p);
-    if (m.spec && state.spec) {
+    if (opts && opts.stream) return el; // the rest follows once the words have arrived
+    var tail = [];
+    if (m.spec && cur.spec) {
       var card = document.createElement("button");
       card.type = "button";
       card.className = "rx-art";
-      card.innerHTML = '<span class="h">' + ICON.doc + '<b>Strategy report</b><span class="pv">Preview ›</span></span><span class="t"></span><i></i><i></i><i class="s"></i>';
-      card.querySelector(".t").textContent = m.specName || state.spec.name;
+      card.innerHTML = '<span class="h">' + ICON.doc + '<b>Strategy report</b><span class="pv">Open ›</span></span><span class="t"></span><i></i><i></i><i class="s"></i>';
+      card.querySelector(".t").textContent = m.specName || cur.spec.name;
       card.addEventListener("click", focusDoc);
       el.appendChild(card);
+      tail.push(card);
     }
-    if (!m.error) {
+    if (!m.error && !m.stopped) {
       var tools = document.createElement("div");
       tools.className = "rx-tools";
       var c = document.createElement("button");
       c.type = "button"; c.className = "rx-icon sm"; c.title = "Copy"; c.setAttribute("aria-label", "Copy the reply");
       c.innerHTML = ICON.copy;
-      c.addEventListener("click", function () { if (navigator.clipboard) navigator.clipboard.writeText(m.content).catch(function () {}); });
+      c.addEventListener("click", function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(m.content).then(function () { c.classList.add("done"); setTimeout(function () { c.classList.remove("done"); }, 1200); }).catch(function () {});
+      });
       tools.appendChild(c);
       if (m.source) {
         var s = document.createElement("span");
@@ -178,16 +281,17 @@
         tools.appendChild(s);
       }
       el.appendChild(tools);
+      tail.push(tools);
     }
+    if (opts && opts.enter) tail.forEach(function (x, i) { x.classList.add("rx-in"); x.style.setProperty("--d", i * 90 + "ms"); });
     return el;
   }
 
   // Next steps the simple builder understands too, so they always work.
   function suggestions() {
-    var s = state.spec;
+    var s = cur.spec;
     if (!s) return [];
-    var other = s.asset === "ETH" ? "BTC" : "ETH";
-    var out = [];
+    var other = s.asset === "ETH" ? "BTC" : "ETH", out = [];
     if (s.type === "rules") {
       if (!s.stop_loss_pct) out.push({ q: "Add a 10% stop-loss" });
       if (!s.take_profit_pct) out.push({ q: "Take profit at 30%" });
@@ -195,45 +299,108 @@
       out.push({ q: "DCA into " + s.asset + (s.every_days === 30 ? " every week" : " every month") });
     }
     out.push({ q: "Switch to " + other });
-    out.push(state.from === "2019-01-01" ? { q: "Compare since 2024", from: "2024-01-01" } : { q: "Compare since 2019", from: "2019-01-01" });
+    out.push(cur.from === "2019-01-01" ? { q: "Compare since 2024", from: "2024-01-01" } : { q: "Compare since 2019", from: "2019-01-01" });
     return out.slice(0, 3);
   }
-
-  function renderChat() {
-    var box = $("msgs");
-    box.innerHTML = "";
-    state.messages.forEach(function (m) { box.appendChild(m.role === "user" ? userMsg(m) : aiMsg(m)); });
-    if (busy) {
-      var t = document.createElement("div");
-      t.className = "rx-a";
-      t.innerHTML = '<div class="rx-thought live">' + ICON.spark + "<span>Thinking…</span></div>";
-      box.appendChild(t);
-    } else {
-      var sug = suggestions();
-      if (sug.length) {
-        var wrap = document.createElement("div");
-        wrap.className = "rx-sug";
-        wrap.innerHTML = '<div class="l">Suggested actions</div>' + sug.map(function (x, i) {
-          return '<button type="button" data-s="' + i + '"><span></span>' + ICON.send + "</button>";
-        }).join("");
-        sug.forEach(function (x, i) { wrap.querySelector('[data-s="' + i + '"] span').textContent = x.q; });
-        wrap.addEventListener("click", function (e) {
-          var b = e.target.closest("[data-s]");
-          if (!b) return;
-          var x = sug[+b.getAttribute("data-s")];
-          if (x.from) { setRange(x.from); return; }
-          send(x.q);
-        });
-        box.appendChild(wrap);
-      }
-    }
-    $("chat-title").textContent = state.spec ? state.spec.name : "Strategy chat";
-    $("coin-chip").innerHTML = state.spec ? U.coins([state.spec.asset]) + esc(state.spec.asset) : "No strategy yet";
-    box.scrollTop = box.scrollHeight;
+  function suggestionBlock(enter) {
+    var sug = suggestions();
+    if (!sug.length) return null;
+    var wrap = document.createElement("div");
+    wrap.className = "rx-sug";
+    wrap.innerHTML = '<div class="l">Suggested actions</div>' + sug.map(function (x, i) {
+      return '<button type="button" data-s="' + i + '"' + (enter ? ' class="rx-in" style="--d:' + (200 + i * 70) + 'ms"' : "") + "><span></span>" + ICON.send + "</button>";
+    }).join("");
+    sug.forEach(function (x, i) { wrap.querySelector('[data-s="' + i + '"] span').textContent = x.q; });
+    wrap.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-s]");
+      if (!b) return;
+      var x = sug[+b.getAttribute("data-s")];
+      if (x.from) { setRange(x.from); return; }
+      send(x.q);
+    });
+    return wrap;
   }
 
-  async function post(path, body) {
-    var res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  var STEPS = ["Reading your idea…", "Building the rules…", "Running the backtest…", "Checking it against holding…"];
+  var stepTimer = null;
+  function thinking() {
+    var t = document.createElement("div");
+    t.className = "rx-a rx-in";
+    t.innerHTML = '<div class="rx-thought live">' + ICON.spark + "<span>" + STEPS[0] + "</span></div>";
+    var i = 0;
+    clearInterval(stepTimer);
+    stepTimer = setInterval(function () {
+      i = Math.min(i + 1, STEPS.length - 1);
+      var span = t.querySelector("span");
+      if (span) { span.textContent = STEPS[i]; span.classList.remove("swap"); void span.offsetWidth; span.classList.add("swap"); }
+    }, 900);
+    return t;
+  }
+
+  /**
+   * Draw the thread. `enterFrom` marks the index of the first new message, which
+   * animates in; the suggestions animate with it.
+   */
+  function renderChat(enterFrom) {
+    var box = $("thread");
+    box.innerHTML = "";
+    cur.messages.forEach(function (m, i) {
+      var node = m.role === "user" ? userMsg(m) : aiMsg(m, { enter: enterFrom !== undefined && i >= enterFrom });
+      if (enterFrom !== undefined && i >= enterFrom && m.role === "user") node.classList.add("rx-in");
+      box.appendChild(node);
+    });
+    if (busy) box.appendChild(thinking());
+    else {
+      clearInterval(stepTimer);
+      var sug = suggestionBlock(enterFrom !== undefined);
+      if (sug) box.appendChild(sug);
+    }
+    $("chat-title").textContent = cur.messages.length ? titleOf(cur) : "New chat";
+    $("coin-chip").innerHTML = cur.spec ? U.coins([cur.spec.asset]) + esc(cur.spec.asset) : "No strategy yet";
+    toBottom(enterFrom !== undefined);
+  }
+
+  // ChatGPT's reveal: the answer arrives word by word behind a pulsing dot.
+  function stream(m, done) {
+    var box = $("thread");
+    var el = aiMsg(m, { stream: true });
+    box.appendChild(el);
+    var p = el.querySelector("p"), text = document.createTextNode(""), caret = document.createElement("span");
+    caret.className = "rx-caret";
+    p.textContent = "";
+    p.appendChild(text); p.appendChild(caret);
+    var words = m.content.split(/(\s+)/), total = Math.min(1400, Math.max(300, words.length * 22)), t0 = performance.now();
+    function finish() { streaming = null; done(); }
+    if (still || document.hidden) { text.data = m.content; finish(); return; }
+    streaming = { finish: function () { text.data = m.content; finish(); } };
+    (function tick(now) {
+      if (!streaming) return;
+      var n = Math.min(words.length, Math.ceil(words.length * (now - t0) / total));
+      text.data = words.slice(0, n).join("");
+      toBottom(false);
+      if (n < words.length) requestAnimationFrame(tick); else finish();
+    })(t0);
+  }
+
+  // Frames pause in a background tab, so an answer still arriving there just lands whole.
+  document.addEventListener("visibilitychange", function () { if (document.hidden && streaming) streaming.finish(); });
+
+  // Keep the newest message in view, unless you've scrolled up to read.
+  var pinned = true;
+  function toBottom(smooth) {
+    var s = $("msgs");
+    if (!pinned) return;
+    s.scrollTo({ top: s.scrollHeight, behavior: smooth && !still ? "smooth" : "auto" });
+  }
+  $("msgs").addEventListener("scroll", function () {
+    var s = $("msgs"), gap = s.scrollHeight - s.scrollTop - s.clientHeight;
+    pinned = gap < 80;
+    $("down").hidden = gap < 160;
+  }, { passive: true });
+  $("down").addEventListener("click", function () { pinned = true; toBottom(true); });
+
+  async function post(path, body, signal) {
+    var res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), signal: signal });
     var data = await res.json().catch(function () { return {}; });
     if (!res.ok) {
       var err = new Error(data.error || "Something went wrong (" + res.status + ").");
@@ -243,62 +410,82 @@
     return data;
   }
 
+  function setBusy(on) {
+    busy = on;
+    document.querySelectorAll(".rx-send").forEach(function (b) {
+      b.innerHTML = on ? ICON.stop : ICON.send;
+      b.classList.toggle("stop", on);
+      b.setAttribute("aria-label", on ? "Stop" : "Send");
+    });
+  }
+  function stopAll() {
+    if (ctl) ctl.abort();
+    if (streaming) streaming.finish();
+  }
+
   async function send(text) {
     text = String(text || "").trim();
     if (!text || busy) return;
-    state.messages.push({ role: "user", content: text });
-    busy = true;
+    var first = !cur.messages.length;
+    cur.messages.push({ role: "user", content: text });
     $("q").value = ""; $("q-home").value = "";
     fit($("q"));
-    lock(true);
-    mode();
-    renderChat();
+    setBusy(true);
+    pinned = true;
+    var start = cur.messages.length - 1;
+    var show = function () { layout(); renderChat(start); };
+    if (first) morph(show); else show();
     var t0 = performance.now();
+    ctl = new AbortController();
+    var reply;
     try {
       var r = await post("/api/chat", {
-        messages: state.messages.filter(function (m) { return !m.error; }).map(function (m) { return { role: m.role, content: m.content }; }),
-        spec: state.spec,
-        from: state.from,
-      });
-      if (r.specReset) { state.spec = null; result = null; }
-      if (r.spec) { state.spec = r.spec; result = { words: r.words, backtest: r.backtest }; remember(r.spec); }
-      state.messages.push({ role: "assistant", content: r.reply, source: r.source, ms: performance.now() - t0, spec: !!r.spec, specName: r.spec ? r.spec.name : null });
-      renderStrategy();
+        messages: cur.messages.filter(function (m) { return !m.error && !m.stopped; }).map(function (m) { return { role: m.role, content: m.content }; }),
+        spec: cur.spec,
+        from: cur.from,
+      }, ctl.signal);
+      var ms = performance.now() - t0;
+      // The simple builder answers in milliseconds; hold the thinking state a moment
+      // so its steps can be read. "Thought for" still reports the real time.
+      if (!still && ms < 700) await new Promise(function (res) { setTimeout(res, 700 - ms); });
+      if (ctl.signal.aborted) throw Object.assign(new Error("stopped"), { name: "AbortError" });
+      if (r.specReset) { cur.spec = null; result = null; }
+      if (r.spec) { cur.spec = r.spec; result = { words: r.words, backtest: r.backtest }; }
+      reply = { role: "assistant", content: r.reply, source: r.source, ms: ms, spec: !!r.spec, specName: r.spec ? r.spec.name : null };
     } catch (err) {
-      state.messages.push({ role: "assistant", content: err.message, error: true });
+      reply = err.name === "AbortError"
+        ? { role: "assistant", content: "Stopped.", stopped: true }
+        : { role: "assistant", content: err.message, error: true };
     }
-    busy = false;
-    lock(false);
-    save();
+    ctl = null;
+    cur.messages.push(reply);
+    persist(); // saved now, not after the reveal, so closing the tab mid-answer loses nothing
+    setBusy(false);
     renderChat();
-    renderRecent();
-    $("q").focus();
+    // Drop the static copy of the reply and let it arrive word by word instead.
+    var box = $("thread");
+    if (box.lastChild && box.lastChild.classList.contains("rx-sug")) box.removeChild(box.lastChild);
+    box.removeChild(box.lastChild);
+    stream(reply, function () {
+      renderChat(cur.messages.length - 1);
+      if (reply.spec) morph(function () { layout(); renderStrategy(true); });
+      persist();
+    });
   }
-  function lock(on) { ["q", "q-home"].forEach(function (id) { $(id).disabled = on; }); document.querySelectorAll(".rx-send").forEach(function (b) { b.disabled = on; }); }
 
-  // Boxes grow with what you type; Enter sends, Shift+Enter breaks the line.
+  // Boxes grow with what you type; Enter sends, Shift+Enter breaks the line; the send button stops while busy.
   function fit(q) { q.style.height = "auto"; q.style.height = Math.min(q.scrollHeight, 180) + "px"; }
   [["q", "form"], ["q-home", "form-home"]].forEach(function (p) {
     var q = $(p[0]);
     q.addEventListener("input", function () { fit(q); });
-    q.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(q.value); } });
-    $(p[1]).addEventListener("submit", function (e) { e.preventDefault(); send(q.value); });
-  });
-
-  $("new").addEventListener("click", function () {
-    state = { messages: [], spec: null, from: state.from };
-    result = null;
-    save();
-    mode();
-    renderChat();
-    renderStrategy();
-    $("q-home").focus();
+    q.addEventListener("keydown", function (e) { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (!busy) send(q.value); } });
+    $(p[1]).addEventListener("submit", function (e) { e.preventDefault(); if (busy) stopAll(); else send(q.value); });
   });
 
   // On a narrow screen the report sits below the chat: the report card takes you to it.
   function focusDoc() {
     var d = $("doc");
-    if (window.matchMedia("(max-width: 1100px)").matches) d.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (window.matchMedia("(max-width: 1100px)").matches) d.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
     d.classList.remove("flash"); void d.offsetWidth; d.classList.add("flash");
   }
 
@@ -352,26 +539,25 @@
     out.push("<b>Worst drop:</b> " + plainPct(st.maxDrawdown) + ", against " + plainPct(hd.maxDrawdown) + " for holding.");
     var beat = st.return > hd.return, calmer = st.maxDrawdown > hd.maxDrawdown;
     out.push("<b>In short:</b> " + (beat && calmer ? "it beat holding, with a smaller worst drop." : beat ? "it beat holding, but with a deeper worst drop." : calmer ? "it trailed holding, but with a smaller worst drop." : "holding did better on both counts."));
-    return '<h3 class="rx-h3">Summary</h3><ul class="rx-sum">' + out.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul>";
+    return '<div><h3 class="rx-h3">Summary</h3><ul class="rx-sum">' + out.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul></div>";
   }
   function stat(label, value, caption) {
     return '<div class="rx-stat"><div class="l">' + label + '</div><div class="v">' + value + '</div><div class="c">' + caption + "</div></div>";
   }
 
-  function renderStrategy() {
+  /** Draw the report; `fresh` cascades its sections in, as a new artifact does. */
+  function renderStrategy(fresh) {
     var box = $("strat");
-    $("doc-title").textContent = state.spec ? state.spec.name : "Strategy report";
-    if (!state.spec || !result) {
-      box.innerHTML = '<div class="rx-empty">' + ICON.doc + "<b>The report shows up here</b><span>Describe a strategy in the chat. It’s turned into rules and tested on real prices.</span></div>";
-      return;
-    }
-    var s = state.spec, bt = result.backtest, st = bt.strategy, hd = bt.hold, dca = s.type === "dca";
+    $("doc-title").textContent = cur.spec ? cur.spec.name : "Strategy report";
+    box.classList.toggle("fresh", !!fresh && !still);
+    if (!cur.spec || !result) { box.innerHTML = ""; return; }
+    var s = cur.spec, bt = result.backtest, st = bt.strategy, hd = bt.hold, dca = s.type === "dca";
     var ranges = [["2019-01-01", "Since 2019"], ["2021-01-01", "Since 2021"], ["2024-01-01", "Since 2024"]].map(function (r) {
-      return '<button type="button" data-r="' + r[0] + '" aria-pressed="' + (r[0] === state.from ? "true" : "false") + '">' + r[1] + "</button>";
+      return '<button type="button" data-r="' + r[0] + '" aria-pressed="' + (r[0] === cur.from ? "true" : "false") + '">' + r[1] + "</button>";
     }).join("");
     box.innerHTML =
-      '<div class="rx-hero">' + U.coins([s.asset], "xl") + "<h2>" + esc(s.name) + "</h2><p>" + (dca ? "Regular buying" : "Rules") + " · " + esc(s.asset) + " · " + niceDate(bt.from) + " – " + niceDate(bt.to) + "</p></div>" +
-      '<div class="rx-tags"><span>Backtest</span><span>Daily candles</span><span>0.1% per trade</span><span>' + (dca ? st.trades + " buys" : st.trades + (st.trades === 1 ? " trade" : " trades")) + "</span></div>" +
+      '<div class="rx-hero">' + U.coins([s.asset], "xl") + "<h2>" + esc(s.name) + "</h2><p>" + (dca ? "Regular buying" : "Rules") + " · " + esc(s.asset) + " · " + niceDate(bt.from) + " – " + niceDate(bt.to) + "</p>" +
+      '<div class="rx-tags"><span>Backtest</span><span>Daily candles</span><span>0.1% per trade</span><span>' + (dca ? st.trades + " buys" : st.trades + (st.trades === 1 ? " trade" : " trades")) + "</span></div></div>" +
       summary(s, bt) +
       '<div class="rx-stats">' +
         stat(dca ? "Value per $1 in" : "Strategy", pct(st.return), dca ? "each dollar put in" : "since " + niceDate(bt.from)) +
@@ -386,11 +572,12 @@
       rulesCard(s) +
       (bt.recent && bt.recent.length ? recentTrades(bt.recent) : "") +
       '<p class="rx-note">A backtest on ' + esc(s.asset) + " prices from Binance. On Arc today agents trade USDC and EURC; other coins arrive as pools launch, so treat this as a study for now.</p>";
+    Array.prototype.forEach.call(box.children, function (c, i) { c.style.setProperty("--d", i * 70 + "ms"); });
     $("range").addEventListener("click", function (e) {
       var b = e.target.closest("[data-r]");
       if (b) setRange(b.getAttribute("data-r"));
     });
-    renderChart();
+    renderChart(fresh);
   }
   function recentTrades(list) {
     return '<div class="rx-card"><div class="rx-card-h"><b>Recent trades</b></div><div class="dense-wrap"><table class="dense"><thead><tr><th>In</th><th>Out</th><th class="r">Result</th></tr></thead><tbody>' +
@@ -399,8 +586,8 @@
       }).join("") + "</tbody></table></div></div>";
   }
 
-  // Growth of $1 against holding, on a log scale so one big year doesn't flatten the rest.
-  function renderChart() {
+  // Growth of $1 against holding, on a log scale; a new report draws its line in.
+  function renderChart(drawIn) {
     var plot = $("plot");
     if (!plot || !result) return;
     var a = result.backtest.curve, b = result.backtest.bench;
@@ -426,38 +613,46 @@
       var ty = Date.UTC(y, 0, 1) / 1000;
       if (ty >= t0 && ty <= t1) out += '<text x="' + X(ty).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + y + "</text>";
     }
-    out += '<path d="' + path(b, bv) + '" class="l-bench"/><path d="' + path(a, av) + '" class="l-strat"/>';
+    var draw = drawIn && !still ? ' pathLength="1"' : "";
+    out += '<path d="' + path(b, bv) + '" class="l-bench"' + draw + '/><path d="' + path(a, av) + '" class="l-strat"' + draw + "/>";
     var ea = av[av.length - 1], eb = bv[bv.length - 1];
     out += '<text x="' + (W - R + 6) + '" y="' + (Y(ea) + 4).toFixed(1) + '" class="end strat">' + multiple(ea) + "</text>" +
       '<text x="' + (W - R + 6) + '" y="' + (Y(eb) + 4).toFixed(1) + '" class="end">' + multiple(eb) + "</text>";
-    plot.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(state.spec.name) + " turned $1 into $" + ea.toFixed(2) +
+    plot.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" class="' + (draw ? "draw-in" : "") + '" role="img" aria-label="' + esc(cur.spec.name) + " turned $1 into $" + ea.toFixed(2) +
       ", against $" + eb.toFixed(2) + ' for holding">' + out + "</svg>";
   }
   var resizeTimer = null;
-  window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(renderChart, 150); });
+  window.addEventListener("resize", function () { clearTimeout(resizeTimer); resizeTimer = setTimeout(function () { renderChart(false); }, 150); });
 
   function setRange(from) {
-    state.from = from;
-    save();
-    rerun();
-    renderChat();
+    cur.from = from;
+    persist();
+    rerun(true);
+    if (!busy && !streaming) renderChat();
   }
-  async function rerun() {
-    if (!state.spec) return;
+  async function rerun(drawIn) {
+    if (!cur.spec) return;
+    var id = cur.id;
     try {
-      result = await post("/api/backtest", { spec: state.spec, from: state.from });
-      renderStrategy();
+      var r = await post("/api/backtest", { spec: cur.spec, from: cur.from });
+      if (!cur || cur.id !== id) return;
+      var opening = !result;
+      result = r;
+      morph(function () { layout(); renderStrategy(opening); });
+      if (!opening && drawIn) renderChart(true);
     } catch (err) {
       // A saved strategy the server no longer accepts is dropped, so the page doesn't stay stuck on it.
       if (err.status === 400) {
-        state.spec = null;
+        cur.spec = null;
         result = null;
-        save();
+        cur.messages.push({ role: "assistant", content: "The strategy saved in this chat no longer fits the current rules, so I cleared it. Describe it again and I’ll rebuild it." });
+        persist();
+        layout();
         renderChat();
-        $("strat").innerHTML = '<div class="rx-empty"><b>Your saved strategy was cleared</b><span>It no longer fits the current rules. Describe it again in the chat.</span></div>';
         return;
       }
-      $("strat").innerHTML = '<div class="rx-empty"><b>Couldn’t run the backtest</b><span>' + esc(err.message) + "</span></div>";
+      cur.messages.push({ role: "assistant", content: "Couldn’t run the backtest: " + err.message, error: true });
+      renderChat();
     }
   }
 
@@ -467,10 +662,12 @@
     $("model-home").title = s.model ? "Free AI models, routed across providers" : "No AI model is connected, so a built-in parser reads common strategies";
   }).catch(function () { $("model-home").textContent = "Offline"; });
 
-  mode();
-  renderRecent();
+  // A reload always starts fresh.
+  newSession();
+  setBusy(false);
+  layout();
+  renderSessions();
   renderChat();
   renderStrategy();
-  if (state.spec) rerun();
 })();
 </script>

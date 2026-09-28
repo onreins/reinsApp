@@ -491,6 +491,9 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 .rx { display: grid; gap: 8px; height: calc(100vh - var(--top) - 32px); min-height: 560px; }
 .rx[data-mode="home"] { grid-template-columns: minmax(0, 1fr); }
 .rx[data-mode="session"] { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+/* Until there's a strategy, the chat has the room to itself (as Claude's chat before an artifact opens). */
+.rx[data-mode="session"][data-doc="closed"] { grid-template-columns: minmax(0, 1fr); }
+.rx[data-doc="closed"] .rx-doc { display: none; }
 .rx[data-mode="home"] .rx-chat, .rx[data-mode="home"] .rx-doc { display: none; }
 .rx[data-mode="session"] .rx-home { display: none; }
 
@@ -504,13 +507,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 .rx-card-btn:hover { background: #211f1f; }
 .rx-card-btn b { font: 500 14px var(--sans); }
 .rx-card-btn span { color: var(--ink-3); font-size: 13px; line-height: 1.45; }
-.rx-recent { list-style: none; padding: 0; display: grid; }
-.rx-recent button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-top: 1px solid var(--line); text-align: left; }
-.rx-recent li:first-child button { border-top: 0; }
-.rx-recent button:hover .n { color: var(--ink); }
-.rx-recent .tok { width: 24px; height: 24px; }
-.rx-recent .n { flex: 1; min-width: 0; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rx-recent .w { color: var(--ink-4); font-size: 12.5px; }
 
 /* The composer: a rounded box, a chip row under the text, and a round send button. */
 .rx-box { border-radius: 14px; background: var(--chip); border: 1px solid var(--line-2); padding: 10px 10px 8px 14px; }
@@ -536,8 +532,10 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 .rx-icon svg { width: 18px; height: 18px; }
 .rx-icon.sm { width: 26px; height: 26px; }
 .rx-icon.sm svg { width: 15px; height: 15px; }
-.rx-msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 18px; }
-.rx-chat .rx-box { margin: 0 12px 12px; }
+.rx-msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px; }
+.rx-thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.rx-chat { position: relative; }
+.rx-chat .rx-box { width: min(760px, calc(100% - 24px)); margin: 0 auto 12px; }
 .rx-u { align-self: flex-end; max-width: 88%; padding: 10px 14px; border-radius: 12px; background: var(--chip-2); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 .rx-a { display: grid; gap: 10px; justify-items: start; line-height: 1.55; }
 .rx-a p { color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -623,3 +621,76 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
   .rx-box-foot { justify-content: space-between; }
 }
 @media (prefers-reduced-motion: reduce) { .rx-thought.live span, .rx-doc.flash { animation: none; } }
+
+/* ------------------------------------------------ chat sessions and motion */
+/* Past chats, as ChatGPT's history: a list on the start screen and a panel
+   from the clock in the chat's header. */
+.rx-sessions { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.rx-sessions .g { padding: 10px 10px 4px; color: var(--ink-4); font: 500 12px var(--sans); }
+.rx-sessions .g:first-child { padding-top: 2px; }
+.rx-sessions .s { display: flex; align-items: center; border-radius: 10px; }
+.rx-sessions .s:hover, .rx-sessions .s.on { background: var(--chip); }
+.rx-sessions .open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 9px 10px; text-align: left; }
+.rx-sessions .tok { width: 22px; height: 22px; }
+.rx-sessions .dot { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--chip-2); }
+.rx-sessions .n { flex: 1; min-width: 0; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-sessions .s:hover .n, .rx-sessions .s.on .n { color: var(--ink); }
+.rx-sessions .del { flex: none; width: 30px; height: 30px; margin-right: 4px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-4); opacity: 0; transition: opacity .15s; }
+.rx-sessions .s:hover .del, .rx-sessions .del:focus-visible { opacity: 1; }
+.rx-sessions .del:hover { color: var(--red); background: rgba(232, 113, 107, .1); }
+.rx-sessions .del svg { width: 15px; height: 15px; }
+.rx-sessions .empty { padding: 12px 10px; color: var(--ink-3); }
+@media (hover: none) { .rx-sessions .del { opacity: 1; } }
+.rx-hist { position: absolute; top: 56px; left: 8px; z-index: 6; width: min(340px, calc(100% - 16px)); max-height: min(60vh, 520px); overflow-y: auto; padding: 8px; border-radius: 14px; background: #1f1e1e; border: 1px solid var(--line-2); box-shadow: 0 18px 48px rgba(0, 0, 0, .55); transform-origin: 20px 0; animation: rxPop .22s cubic-bezier(.2, .8, .2, 1); }
+.rx-hist[hidden] { display: none; }
+.rx-hist-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 6px 10px 8px; }
+.rx-hist-h b { font: 500 14px var(--sans); }
+.rx-hist-h span { color: var(--ink-4); font-size: 12px; }
+.rx-bar #chat-title { flex: 1; text-align: center; }
+@keyframes rxPop { from { opacity: 0; transform: translateY(-6px) scale(.97); } }
+
+/* Entrances: new messages, the report card and the suggestions fade up in turn. */
+@keyframes rxIn { from { opacity: 0; transform: translateY(8px); } }
+.rx-in { animation: rxIn .38s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0s); }
+.rx[data-mode="home"] .rx-card-btn { animation: rxIn .45s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0s); }
+.rx-doc-body.fresh > * { animation: rxIn .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: var(--d, 0s); }
+
+/* ChatGPT's streaming dot at the end of an answer as it arrives. */
+.rx-caret { display: inline-block; width: 10px; height: 10px; margin-left: 4px; border-radius: 50%; background: var(--ink); vertical-align: -1px; animation: rxCaret 1s ease-in-out infinite; }
+@keyframes rxCaret { 50% { transform: scale(.6); opacity: .5; } }
+
+/* Gemini's thinking: a turning sparkle and a shimmer over the step it's on. */
+.rx-thought.live svg { animation: rxSpin 2.4s linear infinite; }
+.rx-thought.live span { display: inline-block; background: linear-gradient(90deg, #5d7fa6 0%, #eaf5ff 45%, #5d7fa6 90%); background-size: 250% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: rxShimmer 1.6s linear infinite; }
+.rx-thought.live span.swap { animation: rxShimmer 1.6s linear infinite, rxIn .3s ease; }
+@keyframes rxSpin { to { transform: rotate(360deg); } }
+@keyframes rxShimmer { from { background-position: 100% 0; } to { background-position: -150% 0; } }
+
+/* Stop while it works; a way back down when you've scrolled up to read. */
+.rx-send.stop { background: var(--ink); }
+.rx-send.stop svg { width: 14px; height: 14px; }
+.rx-down { position: absolute; left: 50%; bottom: 128px; z-index: 4; translate: -50% 0; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #1f1e1e; border: 1px solid var(--line-2); color: var(--ink-2); box-shadow: 0 8px 20px rgba(0, 0, 0, .45); animation: rxIn .2s ease; }
+.rx-down[hidden] { display: none; }
+.rx-down svg { width: 16px; height: 16px; }
+.rx-icon.done { color: var(--green); }
+
+/* A new report's line draws itself in. */
+.plot svg.draw-in .l-strat, .plot svg.draw-in .l-bench { stroke-dasharray: 1; animation: rxDraw 1.3s cubic-bezier(.4, 0, .2, 1) .25s both; }
+.plot svg.draw-in .l-bench { animation-delay: .1s; }
+@keyframes rxDraw { from { stroke-dashoffset: 1; } }
+
+/* View transitions: the composer glides from the middle to the bottom when a chat
+   starts, and the report slides in from the right when it first has something. */
+.rx-home .rx-box, .rx-chat .rx-box { view-transition-name: rx-composer; }
+.rx-chat { view-transition-name: rx-chat; }
+.rx-doc { view-transition-name: rx-doc; }
+::view-transition-group(*) { animation-duration: .45s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+::view-transition-new(rx-doc):only-child { animation: rxDocIn .5s cubic-bezier(.2, .8, .2, 1) both; }
+::view-transition-new(rx-chat):only-child { animation: rxIn .4s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes rxDocIn { from { opacity: 0; transform: translateX(32px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rx-in, .rx-doc-body.fresh > *, .rx[data-mode="home"] .rx-card-btn, .rx-hist, .rx-down, .rx-caret,
+  .rx-thought.live svg, .rx-thought.live span, .plot svg.draw-in .l-strat, .plot svg.draw-in .l-bench { animation: none; }
+  .rx-thought.live span { color: #8fcbff; background: none; }
+}
