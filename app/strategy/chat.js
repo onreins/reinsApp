@@ -19,9 +19,12 @@ const MAX_REPLY = 1200;
 export const SYSTEM = `You are the strategy builder inside Reins, an app where people run trading strategies as agents. People describe an idea in plain words; you turn it into a strategy spec (JSON) that the app backtests on real daily prices.
 
 Rules for you:
-- Answer with ONE JSON object and nothing else: {"reply": "...", "spec": <spec or null>}.
-- "reply" is one to three short, plain sentences. Say what you built or changed, or ask one question if the idea is unclear.
+- Answer with ONE JSON object and nothing else: {"reply": "...", "spec": <spec or null>, "options": ["...", ...]}.
+- "reply" is warm, plain and short: one to three sentences. Say what you built or changed, or ask one question if the idea is unclear. When someone greets you, greet them back and say what you do in one sentence. When they ask for ideas, list three to five that a spec can express (a trend filter on the 200-day average, a golden cross, buying RSI dips, a 20-day breakout, DCA), one short line each starting with "• ", in everyday words rather than jargon. That list goes inside "reply", after a newline; the options then repeat a few of them as things to tap.
+- "options" is two to four short next steps the person could tap, written as they would type them, each under 60 characters (for example "Buy ETH above its 200-day average", "Add a 10% stop-loss", "Switch to SOL"). Every option must be something a spec can express. Offer ideas when there is no strategy yet, and tweaks when there is one.
 - Never give investment advice, never predict prices, never promise or state returns or performance numbers. The app computes results from the backtest.
+- Never call a strategy safe, good, low-risk or profitable; describe what it does. If someone asks for "safe", explain what the rules do to limit losses (a stop-loss, stepping aside in downtrends) and let the backtest speak.
+- Only list ideas when someone asks for ideas or suggestions.
 - Never ask for personal information.
 - Set "spec" whenever the person has described enough to build or change a strategy. Start from the current strategy when they ask for a change. Use null when they only ask a question.
 - If they ask for something a spec cannot express (shorting, leverage, stocks, several assets at once, intraday timeframes, news or sentiment), say so and offer the closest thing it can do.
@@ -38,7 +41,7 @@ SERIES is one of {"kind":"price"}, {"kind":"sma","period":2-400}, {"kind":"ema",
 "highest" and "lowest" are the highest high and lowest low of the previous N days. Compare RSI only with a "value" or another RSI. Use no other fields.
 
 Example. "Buy ETH when it's above its 200-day average" becomes
-{"reply":"Here's an ETH trend filter: it holds ETH while the price is above its 200-day average and steps aside below it.","spec":{"type":"rules","name":"ETH 200-day trend","asset":"ETH","entry":[{"left":{"kind":"price"},"op":"above","right":{"kind":"sma","period":200}}],"exit":[],"position_pct":100}}`;
+{"reply":"Here's an ETH trend filter: it holds ETH while the price is above its 200-day average and steps aside below it.","spec":{"type":"rules","name":"ETH 200-day trend","asset":"ETH","entry":[{"left":{"kind":"price"},"op":"above","right":{"kind":"sma","period":200}}],"exit":[],"position_pct":100},"options":["Add a 10% stop-loss","Try the 50-day average","Switch to BTC"]}`;
 
 // ------------------------------------------------------------- the offline builder
 
@@ -261,6 +264,20 @@ export function extractJson(text) {
 
 const cleanReply = (s) => String(s ?? "").replace(/[\u0000-\u0008\u000b-\u001f]/g, "").trim().slice(0, MAX_REPLY);
 
+/** The model's ideas to tap: short distinct strings, at most four. */
+export function cleanOptions(list) {
+  if (!Array.isArray(list)) return [];
+  const out = [];
+  for (const x of list) {
+    if (typeof x !== "string") continue;
+    const o = x.replace(/[\u0000-\u001f]/g, "").replace(/^\s*(?:[•*-]|\d+[.)])\s*/, "").trim();
+    if (o.length < 3 || o.length > 80 || out.includes(o)) continue;
+    out.push(o);
+    if (out.length === 4) break;
+  }
+  return out;
+}
+
 /**
  * One turn of the conversation.
  * @param {object} o  { messages, spec (the current one, already validated or null), llm }
@@ -288,9 +305,11 @@ export async function respond({ messages, spec, llm }) {
         if (attempt === 0) { convo = [...convo, { role: "user", content: "Answer again as one JSON object: {\"reply\": \"...\", \"spec\": ... }." }]; continue; }
         return { reply: cleanReply(raw) || "Sorry, I lost my train of thought. Try saying that another way.", spec: null, source };
       }
-      if (out.spec == null) return { reply: cleanReply(out.reply), spec: null, source };
+      const options = cleanOptions(out.options);
+      const extra = options.length ? { options } : {};
+      if (out.spec == null) return { reply: cleanReply(out.reply), spec: null, source, ...extra };
       const r = parseSpec(out.spec);
-      if (r.ok) return { reply: cleanReply(out.reply), spec: r.spec, source };
+      if (r.ok) return { reply: cleanReply(out.reply), spec: r.spec, source, ...extra };
       if (attempt === 0) {
         convo = [...convo, { role: "assistant", content: JSON.stringify(out) }, { role: "user", content: `That spec was refused (${r.error}). Answer again with a valid spec, as one JSON object.` }];
         continue;

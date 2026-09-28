@@ -239,6 +239,11 @@
     el.textContent = m.content;
     return el;
   }
+  // "@cf/meta/llama-3.3-70b-instruct-fp8-fast" reads as "Llama 3.3 70B".
+  function modelName(id) {
+    var base = String(id).split("/").pop().replace(/-(instruct|chat|it|fp8|fast|versatile|preview)\b.*$/i, "");
+    return base.split("-").map(function (w) { return /^\d+(\.\d+)?[bm]$/i.test(w) ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1); }).join(" ");
+  }
   function aiMsg(m, opts) {
     var el = document.createElement("div");
     el.className = "rx-a" + (m.error ? " err" : "") + (m.stopped ? " stopped" : "");
@@ -277,7 +282,7 @@
       if (m.source) {
         var s = document.createElement("span");
         s.className = "rx-src";
-        s.textContent = m.source === "offline" ? "Simple builder" : "via " + m.source;
+        s.textContent = m.source === "offline" ? "Simple builder" : "via " + modelName(m.source);
         tools.appendChild(s);
       }
       el.appendChild(tools);
@@ -703,7 +708,7 @@
 
   // ---------------------------------------------------------------- start
   U.getJson("/api/chat/status").then(function (s) {
-    $("model-home").textContent = s.model ? "AI · " + s.model : "Simple builder";
+    $("model-home").textContent = s.model ? "AI · " + modelName(s.model) : "Simple builder";
     $("model-home").title = s.model ? "Free AI models, routed across providers" : "No AI model is connected, so a built-in parser reads common strategies";
   }).catch(function () { $("model-home").textContent = "Offline"; });
 

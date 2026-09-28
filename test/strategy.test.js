@@ -268,6 +268,13 @@ describe("talking to the model", () => {
   const userSays = (text) => [{ role: "user", content: text }];
   const goodSpec = { type: "rules", name: "BTC trend", asset: "BTC", entry: [priceAboveSma(200)] };
 
+  test("passes on the model's ideas to tap, cleaned and capped at four", async () => {
+    const options = ["Buy ETH above its 200-day average", "• Golden cross on BTC  ", 42, "", "x".repeat(200), "Buy ETH above its 200-day average", "DCA into SOL every week", "Buy LINK at a 20-day high", "one too many"];
+    const llm = fakeModel([JSON.stringify({ reply: "Hi! Try one of these.", spec: null, options })]);
+    const r = await respond({ messages: userSays("hi"), spec: null, llm });
+    assert.deepEqual(r.options, ["Buy ETH above its 200-day average", "Golden cross on BTC", "DCA into SOL every week", "Buy LINK at a 20-day high"]);
+  });
+
   test("returns the model's reply and a validated spec", async () => {
     const llm = fakeModel([JSON.stringify({ reply: "Here it is.", spec: goodSpec })]);
     const r = await respond({ messages: userSays("trend on btc"), spec: null, llm });
