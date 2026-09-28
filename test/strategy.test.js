@@ -154,6 +154,20 @@ describe("the backtester", () => {
     assert.equal(r.strategy.exposure > 0.9, true);
   });
 
+  test("splits the period in half, so a result that leans on one stretch shows", () => {
+    // Rises for 20 days, then flat: the strategy (always in) gains only in the first half.
+    const closes = Array.from({ length: 40 }, (_, i) => (i < 20 ? 100 + i * 5 : 195));
+    const k = candles(closes);
+    const r = backtest(rules([{ left: { kind: "price" }, op: "above", right: { kind: "value", value: 1 } }]), k, { from: iso(k.d[0]), feeBps: 0 });
+    assert.equal(r.halves.length, 2);
+    const [a, b] = r.halves;
+    assert.equal(a.from, iso(k.d[0]));
+    assert.equal(b.to, iso(k.d[39]));
+    assert.ok(a.strategy > 0.8, `first half ${a.strategy}`);
+    near(b.strategy, 0, 1e-9);
+    near(b.hold, 0, 1e-9);
+  });
+
   test("counts what the fees cost, per $1 started with", () => {
     // In at 20, out at 5, at 1% a fill: the entry fee is 1/1.01 of 1%, the exit 1% of what's left.
     const k = candles([10, 10, 20, 20, 5, 5, 5]);

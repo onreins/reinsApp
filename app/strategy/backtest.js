@@ -153,6 +153,21 @@ function weekly(t, values, step) {
   return out;
 }
 
+/**
+ * The run split at its midpoint: each half's return for the strategy and for
+ * holding. A result that beat holding in only one half leans on one stretch of
+ * time, which the report says plainly.
+ */
+function halvesOf(t, eq, hold) {
+  const n = eq.length;
+  if (n < 4) return [];
+  const m = Math.floor((n - 1) / 2);
+  return [
+    { from: isoDate(t[0]), to: isoDate(t[m]), strategy: eq[m] / eq[0] - 1, hold: hold[m] / hold[0] - 1 },
+    { from: isoDate(t[m]), to: isoDate(t[n - 1]), strategy: eq[n - 1] / eq[m] - 1, hold: hold[n - 1] / hold[m] - 1 },
+  ];
+}
+
 /** The first index with t >= at, by binary search (minute series are long). */
 function firstAtOrAfter(t, at) {
   let lo = 0, hi = t.length;
@@ -310,6 +325,7 @@ export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}
       feesPaid: fees,
     },
     hold: summary(holdVals, days),
+    halves: halvesOf(times, equity, holdVals),
     recent: trades.slice(-10).reverse(),
     curve: weekly(times, equity, step),
     bench: weekly(times, holdVals, step),

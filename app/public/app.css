@@ -744,3 +744,26 @@ dialog::backdrop { background: rgba(0, 0, 0, .6); }
 
 /* The fee a backtest charges per trade, next to what it cost. */
 .rx-feeline { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--ink-3); font-size: 13px; }
+
+/* Consistency: the run split in half, strategy against holding in each. */
+.rx-halves { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rx-half { display: grid; gap: 4px; padding: 12px; border-radius: 10px; background: var(--chip); border: 1px solid var(--line-2); }
+.rx-half .k { font: 500 13px var(--sans); }
+.rx-half .d { color: var(--ink-4); font-size: 12px; }
+.rx-half .n { display: grid; gap: 2px; margin-top: 4px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.rx-half .n span:last-child { color: var(--ink-3); }
+.rx-half.won { border-color: rgba(102, 195, 153, .35); }
+.rx-verdict { margin-top: 12px; color: var(--ink-3); font-size: 13px; line-height: 1.5; }
+.rx-verdict.warn { color: #f0c060; }
+@media (max-width: 560px) { .rx-halves { grid-template-columns: minmax(0, 1fr); } }
+
+/* Phones: the chat and the report as two tabs instead of one long scroll. */
+.rx-tabs { display: none; }
+@media (max-width: 1100px) {
+  .rx[data-mode="session"][data-doc="open"] .rx-tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--chip); }
+  .rx-tabs button { flex: 1; height: 38px; border-radius: 9px; color: var(--ink-3); font: 500 14px var(--sans); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .rx-tabs button[aria-selected="true"] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 0 rgba(255, 255, 255, .04); }
+  .rx-tabs .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); animation: rxIn .3s ease; }
+  .rx[data-doc="open"][data-view="report"] .rx-chat { display: none; }
+  .rx[data-doc="open"]:not([data-view="report"]) .rx-doc { display: none; }
+}

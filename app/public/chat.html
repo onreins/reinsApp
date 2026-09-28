@@ -17,7 +17,11 @@
      motion after the big assistants: ChatGPT's streamed answers and gliding composer, Claude's
      report panel that slides in once there's something to show, Gemini's shimmering "thinking". -->
 <main id="main" class="rx-main">
-  <div class="rx" id="rx" data-mode="home" data-doc="closed">
+  <div class="rx" id="rx" data-mode="home" data-doc="closed" data-view="chat">
+    <div class="rx-tabs" id="tabs" role="tablist" aria-label="Chat or report">
+      <button type="button" role="tab" data-v="chat" aria-selected="true">Chat</button>
+      <button type="button" role="tab" data-v="report" aria-selected="false">Report<i class="dot" hidden></i></button>
+    </div>
 
     <section class="rx-home" aria-label="Start a strategy">
       <h1>What should your agent trade?</h1>
@@ -200,6 +204,7 @@
     // State changes now; only the drawing waits for the transition, which runs later.
     cur = JSON.parse(JSON.stringify(s));
     result = null;
+    setView("chat");
     morph(function () { layout(); renderChat(); renderStrategy(); });
     renderSessions();
     if (cur.spec) rerun();
@@ -208,6 +213,7 @@
     stopAll();
     toggleHist(false);
     newSession();
+    setView("chat");
     morph(function () { layout(); renderChat(); renderStrategy(); });
     renderSessions();
     setTimeout(function () { $("q-home").focus(); }, 50);
@@ -590,7 +596,7 @@
     box.removeChild(box.lastChild);
     stream(reply, function () {
       renderChat(cur.messages.length - 1);
-      if (reply.spec) morph(function () { layout(); renderStrategy(true); });
+      if (reply.spec) { morph(function () { layout(); renderStrategy(true); }); nudgeReport(); }
       persist();
     });
   }
@@ -605,13 +611,25 @@
   });
 
   // On a narrow screen the report sits below the chat: the report card takes you to it.
+  // On a phone the chat and the report are two tabs; a card or a new report points to the second.
+  var narrow = function () { return window.matchMedia("(max-width: 1100px)").matches; };
+  function setView(v) {
+    $("rx").setAttribute("data-view", v);
+    document.querySelectorAll("#tabs [data-v]").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-v") === v ? "true" : "false"); });
+    if (v === "report") $("tabs").querySelector(".dot").hidden = true;
+    if (narrow()) window.scrollTo(0, 0);
+    if (v === "chat") toBottom(false);
+  }
+  $("tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-v]");
+    if (b) setView(b.getAttribute("data-v"));
+  });
+  function nudgeReport() {
+    if (narrow() && $("rx").getAttribute("data-view") !== "report") $("tabs").querySelector(".dot").hidden = false;
+  }
   function focusDoc() {
     var d = $("doc");
-    if (window.matchMedia("(max-width: 1100px)").matches) {
-      d.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
-      // Some in-app browsers drop smooth scrolls; land there anyway.
-      setTimeout(function () { if (Math.abs(d.getBoundingClientRect().top) > 40) d.scrollIntoView({ block: "start" }); }, 800);
-    }
+    if (narrow()) setView("report");
     d.classList.remove("flash"); void d.offsetWidth; d.classList.add("flash");
   }
 
@@ -716,6 +734,7 @@
       '<div class="rx-card"><div class="rx-card-h"><b>Growth of $1</b><div class="rx-seg" id="range" role="group" aria-label="Backtest period">' + ranges + "</div></div>" +
         '<div class="plot" id="plot"></div>' +
         '<div class="legend"><span><i style="background:var(--blue)"></i>' + (dca ? "Your buying" : "Strategy") + '</span><span><i style="background:#8f8e8e"></i>Holding ' + esc(s.asset) + '</span><span class="muted">Log scale</span></div></div>' +
+      halvesCard(s, bt) +
       rulesCard(s) +
       (bt.recent && bt.recent.length ? recentTrades(bt.recent) : "") +
       '<p class="rx-note">A backtest on ' + esc(s.asset) + " prices from Binance. On Arc today agents trade USDC and EURC; other coins arrive as pools launch, so treat this as a study for now.</p>";
@@ -729,6 +748,22 @@
       if (b) setFee(+b.getAttribute("data-f"));
     });
     renderChart(fresh);
+  }
+  // The run split in half: a strategy that beat holding in only one half leans on one stretch of time.
+  function halvesCard(s, bt) {
+    var h = bt.halves;
+    if (!h || h.length !== 2) return "";
+    var beat = h.map(function (x) { return x.strategy > x.hold; });
+    var verdict = beat[0] && beat[1] ? "It beat holding in both halves, so the result doesn't rest on one stretch of time."
+      : !beat[0] && !beat[1] ? "It trailed holding in both halves."
+      : "It beat holding only in the " + (beat[0] ? "first" : "second") + " half, so the overall result leans on that stretch. Treat it with care.";
+    var row = function (x, i) {
+      return '<div class="rx-half' + (x.strategy > x.hold ? " won" : "") + '"><div class="k">' + (i ? "Second" : "First") + " half</div>" +
+        '<div class="d">' + niceDate(x.from) + " – " + niceDate(x.to) + "</div>" +
+        '<div class="n"><span>Strategy ' + pct(x.strategy) + "</span><span>Holding " + esc(s.asset) + " " + pct(x.hold) + "</span></div></div>";
+    };
+    return '<div class="rx-card"><div class="rx-card-h"><b>Consistency</b></div><div class="rx-halves">' + h.map(row).join("") + "</div>" +
+      '<p class="rx-verdict' + (beat[0] !== beat[1] ? " warn" : "") + '">' + verdict + "</p></div>";
   }
   function recentTrades(list) {
     return '<div class="rx-card"><div class="rx-card-h"><b>Recent trades</b></div><div class="dense-wrap"><table class="dense"><thead><tr><th>In</th><th>Out</th><th class="r">Result</th></tr></thead><tbody>' +
