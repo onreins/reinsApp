@@ -38,7 +38,13 @@ Behind a reverse proxy (nginx, a PaaS, Cloudflare), also set `TRUST_PROXY` to
 the number of proxy hops (or `loopback`). Without it every visitor shares the
 proxy's address, and one person could use up everyone's chat limit.
 
-The simplest start is **Groq directly**: its terms allow serving end users and
+**Running now:** Cloudflare Workers AI directly, with Llama 3.3 70B
+(`LLM_BASE_URL=https://api.cloudflare.com/client/v4/accounts/<account id>/ai/v1`,
+`LLM_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast`, a Workers AI token as
+`LLM_API_KEY`). The free tier is 10,000 neurons a day; past it, or when the
+model errors, the chat answers from the offline builder.
+
+Another simple start is **Groq directly**: its terms allow serving end users and
 it does not train on prompts. Put a Groq key in `LLM_API_KEY`, set the base URL
 above and pick one of its models.
 
