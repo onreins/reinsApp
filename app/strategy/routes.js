@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import { ASSETS, parseSpec } from "./spec.js";
 import { createRunner, Unavailable, Busy } from "./runner.js";
 import { respond } from "./chat.js";
-import { createLlm } from "./llm.js";
+import { createLlmFromEnv } from "./llm.js";
 
 export const RANGES = ["2019-01-01", "2021-01-01", "2024-01-01"];
 const DEFAULT_FROM = "2021-01-01";
@@ -58,7 +58,8 @@ const feeOf = (x) => (FEES.includes(Number(x)) ? Number(x) : 10);
 const rangeOf = (from) => (RANGES.includes(from) ? from : DEFAULT_FROM);
 
 export function mountStrategy(app, {
-  llm = createLlm(),
+  // Every configured provider, rotated when one is limited (see llm.js).
+  llm = createLlmFromEnv(),
   candles = loadPrices,
   perVisitor = createLimiter({ max: 20, windowMs: 10 * 60_000 }),
   modelBudget = createLimiter({ max: 400, windowMs: 60 * 60_000 }),
@@ -70,7 +71,9 @@ export function mountStrategy(app, {
   const run = (spec, body) => runner.run(spec, { from: rangeOf(body?.from), feeBps: feeOf(body?.fee) });
 
   app.get("/api/chat/status", (_req, res) => {
-    res.json({ model: llm.connected ? llm.name : null, assets: ASSETS, intraday: ASSETS.filter((a) => runner.has(a)), ranges: RANGES, fees: FEES });
+    // Which models are up right now; names only, never keys or usage.
+    const providers = llm.stats ? llm.stats().map(({ name, available }) => ({ name, available })) : [];
+    res.json({ model: llm.connected ? llm.name : null, providers, assets: ASSETS, intraday: ASSETS.filter((a) => runner.has(a)), ranges: RANGES, fees: FEES });
   });
 
   app.post("/api/chat", async (req, res) => {

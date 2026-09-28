@@ -192,7 +192,7 @@ describe("the OpenAI-compatible client", () => {
       baseUrl: "http://127.0.0.1:3001/v1/", apiKey: "k", model: "auto",
       fetchImpl: async (url, init) => { seen.push({ url, init }); return reply(200, { choices: [{ message: { content: "{}" } }] }, { "x-routed-via": "groq/llama" }); },
     });
-    assert.deepEqual(await llm.complete([{ role: "user", content: "hi" }]), { text: "{}", route: "groq/llama" });
+    assert.deepEqual(await llm.complete([{ role: "user", content: "hi" }]), { text: "{}", route: "groq/llama", usage: null });
     assert.equal(seen[0].url, "http://127.0.0.1:3001/v1/chat/completions");
     assert.equal(seen[0].init.headers.authorization, "Bearer k");
     assert.deepEqual(JSON.parse(seen[0].init.body).response_format, { type: "json_object" });
