@@ -85,6 +85,26 @@ DOGE, AVAX and LINK from 2019. Refresh it from freqtrade's data folder:
 python scripts/export-prices.py <freqtrade>/user_data/data/binance
 ```
 
+### Minute prices (any timeframe down to 1 minute)
+
+Strategies can check their rules every 1m, 5m, 15m, 1h, 4h or 1d, and each
+average or RSI can sit on its own timeframe ("100-minute EMA crosses the 50-day
+average"). Everything under a day is built from Binance 1-minute candles, about
+60 MB per coin (457 MB for all eight), kept **outside git** in `data/candles/`
+(or `CANDLES_DIR`):
+
+```bash
+freqtrade download-data --exchange binance --trading-mode spot --timeframes 1m --timerange 20190101- --pairs BTC/USDT ETH/USDT ...
+python scripts/export-candles.py <freqtrade>/user_data/data/binance
+```
+
+The server loads a coin's minutes on first use and keeps the last three in
+memory. A full 7-year backtest on 1-minute candles takes about 0.3 s. Without
+the files, daily strategies still work and shorter ones get a plain "minute
+prices for X aren't on this server" answer. A slower series is only read once
+its candle has closed, so a minute strategy sees yesterday's 50-day average,
+never today's unfinished one.
+
 ## Limits worth knowing
 
 - These coins aren't tradeable on Arc yet (only USDC/EURC have pools), so a

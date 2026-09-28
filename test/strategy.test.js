@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 
 import { parseSpec, describeSpec } from "../app/strategy/spec.js";
 import { sma, ema, rsi, highestPrev, lowestPrev, backtest } from "../app/strategy/backtest.js";
-import { offlineDraft, respond } from "../app/strategy/chat.js";
+import { offlineDraft, respond, unitMismatch } from "../app/strategy/chat.js";
 
 const near = (a, b, eps = 1e-9) => assert.ok(Math.abs(a - b) <= eps, `${a} ≈ ${b}`);
 
@@ -281,6 +281,29 @@ describe("talking to the model", () => {
     assert.equal(r.reply, "Here it is.");
     assert.equal(r.spec.asset, "BTC");
     assert.equal(r.source, "fake/model");
+  });
+
+  test("sends a spec back when its timeframes don't match the words", async () => {
+    // "50-day" came back as a 50-period average on 1-minute candles, i.e. 50 minutes.
+    const wrong = { type: "rules", name: "ETH cross", asset: "ETH", timeframe: "1m", entry: [{ left: { kind: "sma", period: 50 }, op: "crosses_above", right: { kind: "ema", period: 100 } }] };
+    const right = { ...wrong, entry: [{ left: { kind: "sma", period: 50, tf: "1d" }, op: "crosses_above", right: { kind: "ema", period: 100 } }] };
+    const llm = fakeModel([JSON.stringify({ reply: "Built it.", spec: wrong }), JSON.stringify({ reply: "Fixed.", spec: right })]);
+    const r = await respond({ messages: userSays("golden cross on ETH with the 50-day SMA and the 100 1-minute EMA"), spec: null, llm });
+    assert.equal(llm.calls.length, 2);
+    assert.match(llm.calls[1].at(-1).content, /50-day/);
+    assert.equal(r.spec.entry[0].left.tf, "1d");
+  });
+
+  test("reads the timeframes people write", () => {
+    const s = (entry, timeframe) => parseSpec({ type: "rules", name: "x", asset: "BTC", timeframe, entry }).spec;
+    const e = (l, r) => [{ left: l, op: "above", right: r }];
+    assert.equal(unitMismatch("the 50-day SMA", s(e({ kind: "price" }, { kind: "sma", period: 50, tf: "1d" }), "1m")), null);
+    assert.match(unitMismatch("the 50-day SMA", s(e({ kind: "price" }, { kind: "sma", period: 50 }), "1m")), /50-day/);
+    assert.match(unitMismatch("20 hour ema", s(e({ kind: "price" }, { kind: "ema", period: 20 }))), /20-hour/);
+    assert.equal(unitMismatch("100 1-minute EMA", s(e({ kind: "price" }, { kind: "ema", period: 100 }), "1m")), null);
+    assert.match(unitMismatch("100 5-min ema", s(e({ kind: "price" }, { kind: "ema", period: 100 }), "1m")), /5m/);
+    // Words about something else (a 10% stop, a 3-day hold) never trip it.
+    assert.equal(unitMismatch("a 10% stop, hold 3 days", s(e({ kind: "price" }, { kind: "sma", period: 20 }))), null);
   });
 
   test("gives the model one chance to fix a spec the schema refused", async () => {

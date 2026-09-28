@@ -619,29 +619,34 @@
   var plainPct = function (x) { var v = Math.round(x * 100); return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + "%"; };
   var multiple = function (v) { return v >= 10 ? v.toFixed(0) + "×" : v >= 2 ? v.toFixed(1) + "×" : v.toFixed(2) + "×"; };
   var niceDate = function (iso) { return new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { month: "short", year: "numeric", timeZone: "UTC" }); };
-  var SERIES = {
-    price: function () { return "Price"; },
-    sma: function (s) { return s.period + "-day average"; },
-    ema: function (s) { return s.period + "-day EMA"; },
-    rsi: function (s) { return "RSI (" + s.period + ")"; },
-    highest: function (s) { return s.period + "-day high"; },
-    lowest: function (s) { return s.period + "-day low"; },
-    value: function (s) { return String(s.value); },
-  };
+  // A series on its own candles: "50-day average", "100-minute EMA", "20-candle EMA · 5m".
+  var UNIT = { "1m": "minute", "1h": "hour", "1d": "day" };
+  var NOUN = { sma: "average", ema: "EMA", highest: "high", lowest: "low" };
+  var CANDLES = { "1m": "1-minute candles", "5m": "5-minute candles", "15m": "15-minute candles", "1h": "Hourly candles", "4h": "4-hour candles", "1d": "Daily candles" };
+  var EVERY = { "1m": "Every minute", "5m": "Every 5 minutes", "15m": "Every 15 minutes", "1h": "Every hour", "4h": "Every 4 hours", "1d": "Once a day" };
+  function seriesLabel(s, base) {
+    if (s.kind === "price") return "Price";
+    if (s.kind === "value") return String(s.value);
+    var tf = s.tf || base || "1d";
+    if (s.kind === "rsi") return "RSI (" + s.period + ")" + (tf === "1d" ? "" : " · " + tf);
+    return UNIT[tf] ? s.period + "-" + UNIT[tf] + " " + NOUN[s.kind] : s.period + "-candle " + NOUN[s.kind] + " · " + tf;
+  }
   var OPS = { above: "is above", below: "is below", crosses_above: "crosses above", crosses_below: "crosses below" };
   // Pipedrive-style condition rows: each rule as three pills.
-  function condRow(c) {
-    return '<div class="rx-cond"><span class="p">' + esc(SERIES[c.left.kind](c.left)) + '</span><span class="op">' + OPS[c.op] +
-      '</span><span class="p">' + esc(SERIES[c.right.kind](c.right)) + "</span></div>";
+  function condRow(c, base) {
+    return '<div class="rx-cond"><span class="p">' + esc(seriesLabel(c.left, base)) + '</span><span class="op">' + OPS[c.op] +
+      '</span><span class="p">' + esc(seriesLabel(c.right, base)) + "</span></div>";
   }
   function rulesCard(s) {
-    var rows = "";
+    var rows = "", base = s.timeframe || "1d";
+    var cond = function (c) { return condRow(c, base); };
     if (s.type === "dca") {
       rows += '<div class="rx-rule"><div class="k">Buy</div><div class="v"><div class="rx-cond"><span class="p">Every ' + s.every_days + (s.every_days === 1 ? " day" : " days") + "</span></div></div></div>";
-      if (s.only_when.length) rows += '<div class="rx-rule"><div class="k">Only when</div><div class="v">' + s.only_when.map(condRow).join('<span class="and">and</span>') + "</div></div>";
+      if (s.only_when.length) rows += '<div class="rx-rule"><div class="k">Only when</div><div class="v">' + s.only_when.map(cond).join('<span class="and">and</span>') + "</div></div>";
     } else {
-      rows += '<div class="rx-rule"><div class="k">Buy when</div><div class="v">' + s.entry.map(condRow).join('<span class="and">and</span>') + "</div></div>";
-      rows += '<div class="rx-rule"><div class="k">Sell when</div><div class="v">' + (s.exit.length ? s.exit.map(condRow).join('<span class="and">or</span>') : '<div class="rx-cond"><span class="op">the buy rule stops holding</span></div>') + "</div></div>";
+      rows += '<div class="rx-rule"><div class="k">Checks</div><div class="v"><div class="rx-cond"><span class="p">' + EVERY[base] + "</span></div></div></div>";
+      rows += '<div class="rx-rule"><div class="k">Buy when</div><div class="v">' + s.entry.map(cond).join('<span class="and">and</span>') + "</div></div>";
+      rows += '<div class="rx-rule"><div class="k">Sell when</div><div class="v">' + (s.exit.length ? s.exit.map(cond).join('<span class="and">or</span>') : '<div class="rx-cond"><span class="op">the buy rule stops holding</span></div>') + "</div></div>";
       var risk = [];
       if (s.stop_loss_pct) risk.push('<span class="p">Stop-loss ' + s.stop_loss_pct + "%</span>");
       if (s.take_profit_pct) risk.push('<span class="p">Take profit ' + s.take_profit_pct + "%</span>");
@@ -687,7 +692,7 @@
     }).join("");
     box.innerHTML =
       '<div class="rx-hero">' + U.coins([s.asset], "xl") + "<h2>" + esc(s.name) + "</h2><p>" + (dca ? "Regular buying" : "Rules") + " · " + esc(s.asset) + " · " + niceDate(bt.from) + " – " + niceDate(bt.to) + "</p>" +
-      '<div class="rx-tags"><span>Backtest</span><span>Daily candles</span><span>0.1% per trade</span><span>' + (dca ? st.trades + " buys" : st.trades + (st.trades === 1 ? " trade" : " trades")) + "</span></div></div>" +
+      '<div class="rx-tags"><span>Backtest</span><span>' + CANDLES[bt.timeframe || "1d"] + '</span><span>0.1% per trade</span><span>' + (dca ? st.trades + " buys" : st.trades + (st.trades === 1 ? " trade" : " trades")) + "</span></div></div>" +
       summary(s, bt) +
       '<div class="rx-stats">' +
         stat(dca ? "Value per $1 in" : "Strategy", pct(st.return), dca ? "each dollar put in" : "since " + niceDate(bt.from)) +

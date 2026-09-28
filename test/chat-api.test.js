@@ -9,6 +9,7 @@ import assert from "node:assert/strict";
 import { createApp } from "../app/server.js";
 import { createLimiter } from "../app/strategy/routes.js";
 import { createLlm } from "../app/strategy/llm.js";
+import { minuteFeed } from "../app/strategy/candles.js";
 
 const deployment = {
   network: "testnet",
@@ -117,6 +118,45 @@ describe("the backtest endpoint", () => {
     const r = await post(s.base, "/api/backtest", { spec: { ...trend, asset: "PEPE" } });
     assert.equal(r.status, 400);
     assert.match(r.body.error, /asset/);
+  });
+});
+
+describe("strategies shorter than a day", () => {
+  const hourly = { ...trend, name: "BTC hourly trend", timeframe: "1h", entry: [{ left: { kind: "price" }, op: "above", right: { kind: "ema", period: 20 } }] };
+  // Ten days of minutes, rising: enough for a 20-hour EMA.
+  const T0 = Date.UTC(2024, 0, 1) / 1000, n = 10 * 1440;
+  const c = Float32Array.from({ length: n }, (_, i) => 100 + i / 100);
+  const fakeMinutes = { has: (a) => a === "BTC", feed: (a) => (a === "BTC" ? minuteFeed({ start: T0, o: c, h: c, l: c, c }) : null) };
+
+  test("run on minute prices when the server has them", async () => {
+    const s = await start({ llm: fakeModel(), minutes: fakeMinutes });
+    try {
+      const r = await post(s.base, "/api/backtest", { spec: hourly, from: "2024-01-01" });
+      assert.equal(r.status, 200);
+      assert.equal(r.body.backtest.timeframe, "1h");
+      assert.match(r.body.words.at(-1), /every hour/);
+      const st = await (await fetch(`${s.base}/api/chat/status`)).json();
+      assert.deepEqual(st.intraday, ["BTC"]);
+    } finally { s.server.close(); }
+  });
+
+  test("say plainly when a coin's minute prices aren't on this server", async () => {
+    const s = await start({ llm: fakeModel(), minutes: fakeMinutes });
+    try {
+      const r = await post(s.base, "/api/backtest", { spec: { ...hourly, asset: "ETH" } });
+      assert.equal(r.status, 400);
+      assert.match(r.body.error, /minute prices for ETH/);
+      // In the chat, the reply says so instead of failing the turn.
+      const model = fakeModel();
+      model.next = JSON.stringify({ reply: "Here's an hourly ETH trend.", spec: { ...hourly, asset: "ETH" } });
+      const s2 = await start({ llm: model, minutes: fakeMinutes });
+      try {
+        const chat = await post(s2.base, "/api/chat", say("hourly eth trend"));
+        assert.equal(chat.status, 200);
+        assert.equal(chat.body.spec, null);
+        assert.match(chat.body.reply, /minute prices for ETH/);
+      } finally { s2.server.close(); }
+    } finally { s.server.close(); }
   });
 });
 

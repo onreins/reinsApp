@@ -1,23 +1,31 @@
 /**
- * A plain daily backtester for chat-built strategies.
+ * A plain backtester for chat-built strategies, on any timeframe from one
+ * minute to one day.
  *
- * Deliberately simple and honest: long-only spot, one asset, daily candles.
- * Signals are read at a day's close and filled at the next day's open, so a
- * strategy never trades on a price it couldn't have seen. Every fill pays
- * `feeBps` (pool fee plus slippage). Stop-losses and take-profits fill at
- * their level, or at the open if the price gapped through it. Indicators warm
- * up on the days before the chosen start, so the first day already has them.
+ * Deliberately simple and honest: long-only spot, one asset. Signals are read
+ * at a candle's close and filled at the next candle's open, so a strategy never
+ * trades on a price it couldn't have seen. Every fill pays `feeBps` (pool fee
+ * plus slippage). Stop-losses and take-profits fill at their level, or at the
+ * open if the price gapped through it. Indicators warm up on the candles before
+ * the chosen start, so the first candle already has them.
+ *
+ * A series can live on another timeframe than the strategy (a 50-day average
+ * read every minute); it is built on its own candles and read only once they
+ * have closed (see candles.js `align`).
  *
  * Every number the chat shows comes from here, never from the model.
  */
+import { align, dailyFeed } from "./candles.js";
 
 const DAY = 86_400;
 
 // ---------------------------------------------------------------- indicators
 
+const nans = (n) => new Float64Array(n).fill(NaN);
+
 /** Simple moving average; NaN until n values exist. */
 export function sma(x, n) {
-  const out = new Array(x.length).fill(NaN);
+  const out = nans(x.length);
   let sum = 0;
   for (let i = 0; i < x.length; i++) {
     sum += x[i];
@@ -29,7 +37,7 @@ export function sma(x, n) {
 
 /** Exponential moving average, seeded with the SMA of its first n values. */
 export function ema(x, n) {
-  const out = new Array(x.length).fill(NaN);
+  const out = nans(x.length);
   if (x.length < n) return out;
   const k = 2 / (n + 1);
   let e = 0;
@@ -42,7 +50,7 @@ export function ema(x, n) {
 
 /** Wilder's RSI; NaN for the first n values. */
 export function rsi(x, n) {
-  const out = new Array(x.length).fill(NaN);
+  const out = nans(x.length);
   if (x.length <= n) return out;
   let gain = 0, loss = 0;
   for (let i = 1; i <= n; i++) {
@@ -61,51 +69,44 @@ export function rsi(x, n) {
   return out;
 }
 
-/** Highest value of the previous n days, today excluded, so a close can break above it. */
-export function highestPrev(x, n) {
-  const out = new Array(x.length).fill(NaN);
-  for (let i = n; i < x.length; i++) {
-    let m = -Infinity;
-    for (let j = i - n; j < i; j++) if (x[j] > m) m = x[j];
-    out[i] = m;
+/**
+ * The extreme of the previous n values, the current one left out so a close can
+ * break above (or below) it. A monotonic queue keeps it linear, which minute
+ * candles need: 3.7M candles × a 400-candle window would otherwise be 1.5B steps.
+ */
+function extremePrev(x, n, better) {
+  const len = x.length, out = nans(len), q = new Int32Array(len);
+  let head = 0, tail = 0;
+  for (let i = 0; i < len; i++) {
+    if (i >= n) {
+      while (q[head] < i - n) head++;
+      out[i] = x[q[head]];
+    }
+    while (tail > head && !better(x[q[tail - 1]], x[i])) tail--;
+    q[tail++] = i;
   }
   return out;
 }
+/** Highest value of the previous n candles. */
+export const highestPrev = (x, n) => extremePrev(x, n, (kept, next) => kept > next);
+/** Lowest value of the previous n candles. */
+export const lowestPrev = (x, n) => extremePrev(x, n, (kept, next) => kept < next);
 
-/** Lowest value of the previous n days, today excluded. */
-export function lowestPrev(x, n) {
-  const out = new Array(x.length).fill(NaN);
-  for (let i = n; i < x.length; i++) {
-    let m = Infinity;
-    for (let j = i - n; j < i; j++) if (x[j] < m) m = x[j];
-    out[i] = m;
-  }
-  return out;
-}
-
-function seriesOf(s, k) {
+function indicator(s, k) {
   switch (s.kind) {
-    case "price": return k.c;
     case "sma": return sma(k.c, s.period);
     case "ema": return ema(k.c, s.period);
     case "rsi": return rsi(k.c, s.period);
     case "highest": return highestPrev(k.h, s.period);
     case "lowest": return lowestPrev(k.l, s.period);
-    case "value": return new Array(k.c.length).fill(s.value);
     default: throw new Error(`unknown series ${s.kind}`);
   }
 }
 
-/** Conditions compiled to (i) => boolean over the candles; unknown values are never true. */
-function compile(conditions, k) {
-  const cache = new Map();
-  const get = (s) => {
-    const key = JSON.stringify(s);
-    if (!cache.has(key)) cache.set(key, seriesOf(s, k));
-    return cache.get(key);
-  };
+/** Conditions compiled to (i) => boolean over the base candles; unknown values are never true. */
+function compile(conditions, series) {
   return conditions.map((c) => {
-    const L = get(c.left), R = get(c.right);
+    const L = series(c.left), R = series(c.right);
     const ok = (i) => Number.isFinite(L[i]) && Number.isFinite(R[i]);
     switch (c.op) {
       case "above": return (i) => ok(i) && L[i] > R[i];
@@ -121,8 +122,8 @@ const any = (fs, i) => fs.some((f) => f(i));
 
 // ------------------------------------------------------------------ metrics
 
-const isoDay = (day) => new Date(day * DAY * 1000).toISOString().slice(0, 10);
-const dayOf = (iso) => Math.floor(Date.parse(iso + "T00:00:00Z") / 1000 / DAY);
+const isoDate = (t) => new Date(t * 1000).toISOString().slice(0, 10);
+const isoMinute = (t) => new Date(t * 1000).toISOString().slice(0, 16).replace("T", " ");
 
 function maxDrawdown(values) {
   let peak = -Infinity, worst = 0;
@@ -142,41 +143,80 @@ function summary(values, days) {
   };
 }
 
-/** Weekly points (plus the last day) as { t, index }, t in unix seconds. */
-function weekly(days, values) {
+/** About one point a week (plus the last), as { t, index }, t in unix seconds. */
+function weekly(t, values, step) {
+  const every = Math.max(1, Math.round((7 * DAY) / step));
   const out = [];
   for (let i = 0; i < values.length; i++) {
-    if (i % 7 === 0 || i === values.length - 1) out.push({ t: days[i] * DAY, index: values[i] });
+    if (i % every === 0 || i === values.length - 1) out.push({ t: t[i], index: values[i] });
   }
   return out;
+}
+
+/** The first index with t >= at, by binary search (minute series are long). */
+function firstAtOrAfter(t, at) {
+  let lo = 0, hi = t.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (t[mid] < at) lo = mid + 1; else hi = mid;
+  }
+  return lo;
 }
 
 // ----------------------------------------------------------------- the run
 
 /**
  * @param {object} spec     a parsed spec (see spec.js)
- * @param {object} k        { d, o, h, l, c } daily candles, d = days since 1970
+ * @param {object} source   a feed ({ frame(tf) } from candles.js), or daily
+ *                          candles { d, o, h, l, c } with d = days since 1970
  * @param {object} [opts]   { from: "YYYY-MM-DD", feeBps }
  */
-export function backtest(spec, k, { from = "2021-01-01", feeBps = 10 } = {}) {
-  const n = k.c.length;
-  const fromDay = dayOf(from);
-  const start = k.d.findIndex((d) => d >= fromDay);
-  if (start < 0 || start >= n - 1) throw new Error(`no prices for ${spec.asset} from ${from}`);
+export function backtest(spec, source, { from = "2021-01-01", feeBps = 10 } = {}) {
+  const feed = typeof source.frame === "function" ? source : dailyFeed(source);
+  // DCA schedules in days; rules check on their own timeframe.
+  const baseTf = spec.type === "dca" ? "1d" : spec.timeframe ?? "1d";
+  const frameOf = (tf) => {
+    const f = feed.frame(tf);
+    if (!f || f.t.length < 2) throw new Error(`no ${tf} prices for ${spec.asset}`);
+    return f;
+  };
+  const k = frameOf(baseTf);
+  const n = k.c.length, step = k.step;
+  const stamp = step < DAY ? isoMinute : isoDate;
+
+  const start = firstAtOrAfter(k.t, Date.parse(from + "T00:00:00Z") / 1000);
+  if (start >= n - 1) throw new Error(`no prices for ${spec.asset} from ${from}`);
   const fee = feeBps / 10_000;
-  const days = k.d[n - 1] - k.d[start] + 1;
+  const days = (k.t[n - 1] - k.t[start] + step) / DAY;
+
+  // Each series once, on its own candles, then read at the base candles' closes.
+  const cache = new Map();
+  const series = (s) => {
+    if (s.kind === "price") return k.c;
+    if (s.kind === "value") return new Float64Array(n).fill(s.value);
+    const key = JSON.stringify(s);
+    if (!cache.has(key)) {
+      const tf = s.tf ?? baseTf;
+      if (tf === baseTf) cache.set(key, indicator(s, k));
+      else {
+        const src = frameOf(tf);
+        cache.set(key, align(indicator(s, src), src, k));
+      }
+    }
+    return cache.get(key);
+  };
 
   // Holding: buy at the first open, pay the same entry fee.
-  const holdVals = [];
-  for (let i = start; i < n; i++) holdVals.push(k.c[i] / (k.o[start] * (1 + fee)));
+  const holdVals = new Float64Array(n - start);
+  for (let i = start; i < n; i++) holdVals[i - start] = k.c[i] / (k.o[start] * (1 + fee));
 
-  const base = { asset: spec.asset, from: isoDay(k.d[start]), to: isoDay(k.d[n - 1]), days, feeBps };
-  const dayList = k.d.slice(start);
+  const base = { asset: spec.asset, timeframe: baseTf, from: isoDate(k.t[start]), to: isoDate(k.t[n - 1]), days, feeBps };
+  const times = k.t.subarray(start);
 
   if (spec.type === "dca") {
-    const when = compile(spec.only_when, k);
+    const when = compile(spec.only_when, series);
     let units = 0, invested = 0, buys = 0;
-    const ratio = [];
+    const ratio = new Float64Array(n - start);
     for (let i = start; i < n; i++) {
       const due = (i - start) % spec.every_days === 0;
       // The filter reads yesterday's close, like every other signal.
@@ -185,7 +225,7 @@ export function backtest(spec, k, { from = "2021-01-01", feeBps = 10 } = {}) {
         invested += 1;
         buys += 1;
       }
-      ratio.push(invested > 0 ? (units * k.c[i]) / invested : 1);
+      ratio[i - start] = invested > 0 ? (units * k.c[i]) / invested : 1;
     }
     return {
       ...base,
@@ -193,18 +233,18 @@ export function backtest(spec, k, { from = "2021-01-01", feeBps = 10 } = {}) {
       hold: summary(holdVals, days),
       dca: { buys, invested, value: units * k.c[n - 1] },
       recent: [],
-      curve: weekly(dayList, ratio),
-      bench: weekly(dayList, holdVals),
+      curve: weekly(times, ratio, step),
+      bench: weekly(times, holdVals, step),
     };
   }
 
-  const entry = compile(spec.entry, k);
-  const exit = compile(spec.exit, k);
+  const entry = compile(spec.entry, series);
+  const exit = compile(spec.exit, series);
   const size = spec.position_pct / 100;
-  let cash = 1, units = 0, entryPx = 0, entryDay = 0, cost = 0;
-  let pending = null, armed = true, inDays = 0;
+  let cash = 1, units = 0, entryPx = 0, entryT = 0, cost = 0;
+  let pending = null, armed = true, inBars = 0;
   const trades = [];
-  const equity = [];
+  const equity = new Float64Array(n - start);
 
   const buy = (i, px) => {
     const spend = cash * size;
@@ -212,11 +252,11 @@ export function backtest(spec, k, { from = "2021-01-01", feeBps = 10 } = {}) {
     cash -= spend;
     cost = spend;
     entryPx = px;
-    entryDay = k.d[i];
+    entryT = k.t[i];
   };
   const sell = (i, px) => {
     const proceeds = units * px * (1 - fee);
-    trades.push({ in: isoDay(entryDay), out: isoDay(k.d[i]), ret: proceeds / cost - 1, open: false });
+    trades.push({ in: stamp(entryT), out: stamp(k.t[i]), ret: proceeds / cost - 1, open: false });
     cash += proceeds;
     units = 0;
   };
@@ -235,7 +275,7 @@ export function backtest(spec, k, { from = "2021-01-01", feeBps = 10 } = {}) {
     else if (pending === "sell" && units > 0) sell(i, k.o[i]);
     pending = null;
 
-    // Stops first: when both levels sit inside the day's range, assume the worse happened.
+    // Stops first: when both levels sit inside the candle's range, assume the worse happened.
     if (units > 0 && spec.stop_loss_pct) {
       const stop = entryPx * (1 - spec.stop_loss_pct / 100);
       if (k.l[i] <= stop) { sell(i, Math.min(k.o[i], stop)); armed = false; }
@@ -245,26 +285,27 @@ export function backtest(spec, k, { from = "2021-01-01", feeBps = 10 } = {}) {
       if (k.h[i] >= target) { sell(i, Math.max(k.o[i], target)); armed = false; }
     }
 
-    equity.push(cash + units * k.c[i]);
-    if (units > 0) inDays += 1;
+    equity[i - start] = cash + units * k.c[i];
+    if (units > 0) inBars += 1;
     if (i < n - 1) pending = signal(i);
   }
   if (units > 0) {
-    trades.push({ in: isoDay(entryDay), out: null, ret: (units * k.c[n - 1]) / cost - 1, open: true });
+    trades.push({ in: stamp(entryT), out: null, ret: (units * k.c[n - 1]) / cost - 1, open: true });
   }
 
-  const closed = trades.filter((t) => !t.open);
+  let wins = 0, closedCount = 0;
+  for (const t of trades) if (!t.open) { closedCount += 1; if (t.ret > 0) wins += 1; }
   return {
     ...base,
     strategy: {
       ...summary(equity, days),
       trades: trades.length,
-      winRate: closed.length ? closed.filter((t) => t.ret > 0).length / closed.length : null,
-      exposure: inDays / equity.length,
+      winRate: closedCount ? wins / closedCount : null,
+      exposure: inBars / equity.length,
     },
     hold: summary(holdVals, days),
     recent: trades.slice(-10).reverse(),
-    curve: weekly(dayList, equity),
-    bench: weekly(dayList, holdVals),
+    curve: weekly(times, equity, step),
+    bench: weekly(times, holdVals, step),
   };
 }

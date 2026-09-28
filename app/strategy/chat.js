@@ -27,18 +27,27 @@ Rules for you:
 - Only list ideas when someone asks for ideas or suggestions.
 - Never ask for personal information.
 - Set "spec" whenever the person has described enough to build or change a strategy. Start from the current strategy when they ask for a change. Use null when they only ask a question.
-- If they ask for something a spec cannot express (shorting, leverage, stocks, several assets at once, intraday timeframes, news or sentiment), say so and offer the closest thing it can do.
+- If they ask for something a spec cannot express (shorting, leverage, stocks, several assets at once, order books, news or sentiment), say so and offer the closest thing it can do.
 
 A spec is one of:
-1. {"type":"rules","name":"<short name>","asset":ASSET,"entry":[CONDITION,...],"exit":[CONDITION,...],"stop_loss_pct":1-50,"take_profit_pct":1-500,"position_pct":5-100}
+1. {"type":"rules","name":"<short name>","asset":ASSET,"timeframe":TIMEFRAME,"entry":[CONDITION,...],"exit":[CONDITION,...],"stop_loss_pct":1-50,"take_profit_pct":1-500,"position_pct":5-100}
    Buys when ALL entry conditions hold (1-4 of them). Sells when ANY exit condition holds (0-4); with no exit conditions it sells when the entry stops holding. stop_loss_pct and take_profit_pct are optional. position_pct defaults to 100.
+   "timeframe" is how often the rules are checked and trades fill: at each candle's close, filled at the next candle's open. Leave it out for daily. Only use a shorter one when the person asks for it (hourly, 15-minute, scalping, "on the 5m chart").
 2. {"type":"dca","name":"<short name>","asset":ASSET,"every_days":1-90,"only_when":[CONDITION,...]}
    Buys a fixed amount every N days, optionally only when 0-2 conditions hold.
 
-ASSET is one of ${ASSETS.join(", ")}. Daily candles only.
+ASSET is one of ${ASSETS.join(", ")}.
+TIMEFRAME is one of "1m", "5m", "15m", "1h", "4h", "1d". Every coin has real 1-minute prices, so all of them work.
 CONDITION is {"left":SERIES,"op":"above"|"below"|"crosses_above"|"crosses_below","right":SERIES}.
-SERIES is one of {"kind":"price"}, {"kind":"sma","period":2-400}, {"kind":"ema","period":2-400}, {"kind":"rsi","period":2-100}, {"kind":"highest","period":2-400}, {"kind":"lowest","period":2-400}, {"kind":"value","value":<number>}.
-"highest" and "lowest" are the highest high and lowest low of the previous N days. Compare RSI only with a "value" or another RSI. Use no other fields.
+SERIES is one of {"kind":"price"}, {"kind":"sma","period":2-400,"tf":TIMEFRAME}, {"kind":"ema","period":2-400,"tf":TIMEFRAME}, {"kind":"rsi","period":2-100,"tf":TIMEFRAME}, {"kind":"highest","period":2-400,"tf":TIMEFRAME}, {"kind":"lowest","period":2-400,"tf":TIMEFRAME}, {"kind":"value","value":<number>}.
+A period counts candles of the series' "tf"; leave "tf" out to use the strategy's timeframe. Set "tf" to mix timeframes: in a "1m" strategy, {"kind":"sma","period":50,"tf":"1d"} is the 50-day average and {"kind":"ema","period":100,"tf":"1m"} the 100-minute EMA. A slower series only counts once its candle has closed.
+"highest" and "lowest" are the highest high and lowest low of the previous N candles. Compare RSI only with a "value" or another RSI. Use no other fields.
+
+In a golden cross the faster series (the shorter span of time) crosses above the slower one, so it goes on the left of "crosses_above": a 100-minute EMA is faster than a 50-day average. A death cross is the reverse.
+Short timeframes trade far more often, and every trade pays 0.1%; the backtest counts it, so don't avoid them, but say so in a few words when someone picks 1m or 5m.
+
+Example. "Buy BTC when the 100-minute EMA crosses above the 50-day SMA, sell when it crosses back" becomes
+{"reply":"Here's that cross on BTC, checked every minute: it buys when the 100-minute EMA crosses above the 50-day average and sells when it crosses back below. Minute strategies trade a lot, so fees add up.","spec":{"type":"rules","name":"BTC minute cross","asset":"BTC","timeframe":"1m","entry":[{"left":{"kind":"ema","period":100,"tf":"1m"},"op":"crosses_above","right":{"kind":"sma","period":50,"tf":"1d"}}],"exit":[{"left":{"kind":"ema","period":100,"tf":"1m"},"op":"crosses_below","right":{"kind":"sma","period":50,"tf":"1d"}}]},"options":["Check it every hour instead","Add a 5% stop-loss","Try it on ETH"]}
 
 Example. "Buy ETH when it's above its 200-day average" becomes
 {"reply":"Here's an ETH trend filter: it holds ETH while the price is above its 200-day average and steps aside below it.","spec":{"type":"rules","name":"ETH 200-day trend","asset":"ETH","entry":[{"left":{"kind":"price"},"op":"above","right":{"kind":"sma","period":200}}],"exit":[],"position_pct":100},"options":["Add a 10% stop-loss","Try the 50-day average","Switch to BTC"]}`;
@@ -264,6 +273,45 @@ export function extractJson(text) {
 
 const cleanReply = (s) => String(s ?? "").replace(/[\u0000-\u0008\u000b-\u001f]/g, "").trim().slice(0, MAX_REPLY);
 
+// ------------------------------------------------------- timeframe check
+
+const TF_WORD = { "1m": "minute", "1h": "hour", "1d": "day" };
+const unitTf = (u) => (/^m/.test(u) ? "1m" : /^h/.test(u) ? "1h" : "1d");
+
+/**
+ * Periods the person gave a unit for: "50-day", "20 hour", "100 1-minute",
+ * "100 5-min", "20 4h". Each as { period, tf }.
+ */
+function periodsIn(text) {
+  const t = text.toLowerCase(), out = [];
+  for (const m of t.matchAll(/(\d+)\s*[- ]?\s*(1|5|15|4)\s*[- ]?\s*(minutes?|mins?|m|hours?|hrs?|h)\b/g)) {
+    out.push({ period: Number(m[1]), tf: m[2] + (/^h/.test(m[3]) ? "h" : "m") });
+  }
+  for (const m of t.matchAll(/(\d+)\s*[- ]?\s*(minutes?|mins?|hours?|hrs?|days?)\b/g)) {
+    out.push({ period: Number(m[1]), tf: unitTf(m[2]) });
+  }
+  return out;
+}
+
+/**
+ * Where the spec's timeframes contradict the words: "50-day" came back as a
+ * 50-period average on minute candles. Returns a correction to send back to
+ * the model, or null. Only periods the spec actually uses are checked, so a
+ * "10% stop" or "hold 3 days" never trips it.
+ */
+export function unitMismatch(text, spec) {
+  const base = spec.type === "dca" ? "1d" : spec.timeframe ?? "1d";
+  const conds = spec.type === "dca" ? spec.only_when : [...spec.entry, ...spec.exit];
+  const series = conds.flatMap((c) => [c.left, c.right]).filter((s) => s.period);
+  for (const { period, tf } of periodsIn(text)) {
+    const same = series.filter((s) => s.period === period);
+    if (!same.length || same.some((s) => (s.tf ?? base) === tf)) continue;
+    const said = TF_WORD[tf] ? `${period}-${TF_WORD[tf]}` : `${period} × ${tf}`;
+    return `The person said "${said}", but no ${period}-period series in your spec is on ${tf} candles. Set "tf":"${tf}" on that series (a series without "tf" uses the strategy's timeframe)`;
+  }
+  return null;
+}
+
 /** The model's ideas to tap: short distinct strings, at most four. */
 export function cleanOptions(list) {
   if (!Array.isArray(list)) return [];
@@ -309,6 +357,12 @@ export async function respond({ messages, spec, llm }) {
       const extra = options.length ? { options } : {};
       if (out.spec == null) return { reply: cleanReply(out.reply), spec: null, source, ...extra };
       const r = parseSpec(out.spec);
+      // A valid spec can still say something else than the person did ("50-day" built as 50 minutes).
+      const miss = r.ok ? unitMismatch(last, r.spec) : null;
+      if (miss && attempt === 0) {
+        convo = [...convo, { role: "assistant", content: JSON.stringify(out) }, { role: "user", content: `${miss}. Answer again with the corrected spec, as one JSON object.` }];
+        continue;
+      }
       if (r.ok) return { reply: cleanReply(out.reply), spec: r.spec, source, ...extra };
       if (attempt === 0) {
         convo = [...convo, { role: "assistant", content: JSON.stringify(out) }, { role: "user", content: `That spec was refused (${r.error}). Answer again with a valid spec, as one JSON object.` }];
