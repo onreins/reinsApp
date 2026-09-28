@@ -13,6 +13,11 @@
  * It starts in shadow mode: signals are recorded, nothing is sent. Set
  * BRIDGE_MODE=live to trade. Either way, the mandate enforces every rule.
  *
+ * A risk engine (risk.js) sits in front of every trade and is on by default: sells only
+ * once half the loss budget is used, nothing at 80 %, and each asset held to about a third
+ * of equity. Tune it with RISK_REDUCE_AT, RISK_HALT_AT, RISK_MAX_ASSET_PCT and
+ * RISK_MAX_GROSS_PCT (fractions), or switch it off with RISK_OFF=1.
+ *
  *   BRIDGE_SECRET=... MANDATE_ADDRESS=0x... MANDATE_AGENT_KEY=0x... \
  *     MANDATE_NETWORK=testnet npm run bridge
  */
@@ -30,6 +35,7 @@ import { createRegistry } from "./registry.js";
 import { fromFreqtrade, fromDecision } from "./signals.js";
 import { createExecutor } from "./executor.js";
 import { fileLedger } from "./ledger.js";
+import { createRiskEngine } from "./risk.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -105,13 +111,28 @@ async function main() {
 
   const registry = createRegistry(JSON.parse(readFileSync(process.env.BRIDGE_ASSETS ?? join(here, "assets.json"), "utf8")));
   const ledger = fileLedger(process.env.BRIDGE_LEDGER ?? join(here, "data", "ledger.jsonl"));
-  const executor = createExecutor({ client, registry, ledger, mode });
+  const risk = riskFromEnv(process.env);
+  const executor = createExecutor({ client, registry, ledger, mode, risk });
   const app = createBridgeApp({ executor, secret, ledger });
 
   const port = Number(process.env.BRIDGE_PORT ?? 4300);
   app.listen(port, "127.0.0.1", () => {
     console.log(`bridge: ${mode} mode, mandate ${address} on ${chain.name}, listening on 127.0.0.1:${port}`);
+    console.log(risk ? `bridge: risk engine on ${JSON.stringify(risk.config)}` : "bridge: risk engine OFF (RISK_OFF=1)");
   });
+}
+
+/** The risk engine from environment settings; unset values keep the tested defaults. */
+export function riskFromEnv(env) {
+  if (env.RISK_OFF === "1") return null;
+  const num = (name) => {
+    if (env[name] === undefined || env[name] === "") return undefined;
+    const v = Number(env[name]);
+    if (!Number.isFinite(v)) throw new Error(`${name} must be a number, not "${env[name]}"`);
+    return v;
+  };
+  const settings = { reduceAt: num("RISK_REDUCE_AT"), haltAt: num("RISK_HALT_AT"), maxAssetPct: num("RISK_MAX_ASSET_PCT"), maxGrossPct: num("RISK_MAX_GROSS_PCT") };
+  return createRiskEngine(Object.fromEntries(Object.entries(settings).filter(([, v]) => v !== undefined)));
 }
 
 const invokedDirectly = process.argv[1] && resolvePath(process.argv[1]) === resolvePath(fileURLToPath(import.meta.url));

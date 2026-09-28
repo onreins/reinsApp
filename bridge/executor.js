@@ -9,6 +9,7 @@
  *   refused    the contract said no; `rule` names which one
  *   unknown    sent, but not confirmed; `hash` says where to check. Never resent.
  *   skipped    nothing to do: frozen, no cash, nothing to sell
+ *   risk       the risk engine (bridge/risk.js) held it back; `rule` names which rule
  *   shadow     the asset isn't in this mandate yet, or mode is "shadow"
  *   hold/none  the brain said hold, or asked for something impossible
  *   duplicate  this signal id was already handled
@@ -28,9 +29,10 @@ function floorAmount(x, dp = DECIMALS) {
  * @param {ReturnType<import("./registry.js").createRegistry>} p.registry
  * @param {{ append(r: any): void, has(id: string): boolean }} p.ledger
  * @param {"live"|"shadow"} [p.mode]  shadow: record intended trades, send none
+ * @param {ReturnType<import("./risk.js").createRiskEngine>} [p.risk]  optional rules that can only narrow a trade
  * @param {() => Date} [p.now]
  */
-export function createExecutor({ client, registry, ledger, mode = "shadow", now = () => new Date() }) {
+export function createExecutor({ client, registry, ledger, mode = "shadow", risk = null, now = () => new Date() }) {
   if (mode !== "live" && mode !== "shadow") throw new Error(`mode must be "live" or "shadow", not ${mode}`);
   const inFlight = new Set();
 
@@ -63,6 +65,11 @@ export function createExecutor({ client, registry, ledger, mode = "shadow", now 
       return { outcome: "skipped", reason: status.frozen ? "the mandate is frozen" : "the mandate can't trade right now (expired or stale price)" };
     }
 
+    // The risk engine can only hold a signal back or shrink a buy; it never widens a rule.
+    const verdict = risk ? await risk.review(signal, symbol, status) : null;
+    const riskNote = verdict ? { level: verdict.level, used: verdict.used } : undefined;
+    if (verdict && !verdict.allow) return { outcome: "risk", rule: verdict.rule, reason: verdict.reason, risk: riskNote };
+
     const held = (sym) => status.holdings.find((h) => h.symbol === sym) ?? { amount: 0, valueUsd: 0 };
     const cap = status.rules.maxTradeUsd;
 
@@ -72,23 +79,23 @@ export function createExecutor({ client, registry, ledger, mode = "shadow", now 
     if (signal.side === "buy") {
       const cash = held(base).amount;
       const want = signal.sizeUsd ?? cap;
-      const size = Math.min(want, cap, cash);
+      const size = Math.min(want, cap, cash, verdict?.maxBuyUsd ?? Infinity);
       const amount = floorAmount(size);
-      if (!worthSending(amount)) return { outcome: "skipped", reason: "no cash left to buy with" };
-      return { trade: { from: base, to: symbol, amount }, clamped: size < want };
+      if (!worthSending(amount)) return { outcome: "skipped", reason: "no cash left to buy with", risk: riskNote };
+      return { trade: { from: base, to: symbol, amount }, clamped: size < want, risk: riskNote };
     }
 
     // sell
     const pos = held(symbol);
     const amount = pos.amount * (signal.fraction ?? 1);
-    if (!worthSending(floorAmount(amount))) return { outcome: "skipped", reason: `no ${symbol} to sell` };
+    if (!worthSending(floorAmount(amount))) return { outcome: "skipped", reason: `no ${symbol} to sell`, risk: riskNote };
     // Without a price the per-trade cap can't be applied, so don't sell blind.
     const price = pos.valueUsd ? pos.valueUsd / pos.amount : null;
-    if (price === null) return { outcome: "skipped", reason: `no price for ${symbol} right now, so it won't sell without knowing the value` };
+    if (price === null) return { outcome: "skipped", reason: `no price for ${symbol} right now, so it won't sell without knowing the value`, risk: riskNote };
     if (amount * price > cap) {
-      return { trade: { from: symbol, to: base, amount: floorAmount(cap / price) }, clamped: true };
+      return { trade: { from: symbol, to: base, amount: floorAmount(cap / price) }, clamped: true, risk: riskNote };
     }
-    return { trade: { from: symbol, to: base, amount: floorAmount(amount) }, clamped: false };
+    return { trade: { from: symbol, to: base, amount: floorAmount(amount) }, clamped: false, risk: riskNote };
   }
 
   return {
@@ -103,19 +110,19 @@ export function createExecutor({ client, registry, ledger, mode = "shadow", now 
         const p = await plan(signal);
         if (p.outcome) return record(signal, p);
         if (mode === "shadow") {
-          return record(signal, { outcome: "shadow", reason: "shadow mode: nothing was sent", intended: p.trade, clamped: p.clamped });
+          return record(signal, { outcome: "shadow", reason: "shadow mode: nothing was sent", intended: p.trade, clamped: p.clamped, risk: p.risk });
         }
         try {
           const done = await client.trade(p.trade);
-          return record(signal, { outcome: "traded", trade: p.trade, clamped: p.clamped, hash: done.hash, sold: done.sold, bought: done.bought });
+          return record(signal, { outcome: "traded", trade: p.trade, clamped: p.clamped, hash: done.hash, sold: done.sold, bought: done.bought, risk: p.risk });
         } catch (err) {
           if (err.mandate) {
-            return record(signal, { outcome: "refused", trade: p.trade, rule: err.mandate.rule, reason: err.mandate.reason, hash: err.hash });
+            return record(signal, { outcome: "refused", trade: p.trade, rule: err.mandate.rule, reason: err.mandate.reason, hash: err.hash, risk: p.risk });
           }
           // Sent but not confirmed: it may have happened. Record the hash to
           // check, and never resend it; a second send could double the trade.
           if (err.hash) {
-            return record(signal, { outcome: "unknown", trade: p.trade, hash: err.hash, reason: `${err.message}. Check the hash on the explorer.` });
+            return record(signal, { outcome: "unknown", trade: p.trade, hash: err.hash, reason: `${err.message}. Check the hash on the explorer.`, risk: p.risk });
           }
           throw err;
         }

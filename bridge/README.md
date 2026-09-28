@@ -22,8 +22,35 @@ npm run bridge               # listens on 127.0.0.1:4300
 ```
 
 Every outcome is appended to `bridge/data/ledger.jsonl`:
-traded, refused (with the rule that refused it), skipped, shadow, hold,
-none, duplicate. `GET /ledger?key=<secret>` shows the latest.
+traded, refused (with the rule that refused it), risk (held back by the risk
+engine, with its rule), skipped, shadow, hold, none, duplicate.
+`GET /ledger?key=<secret>` shows the latest.
+
+## Risk engine
+
+`risk.js` sits in front of every trade and is on by default. It can hold a
+signal back or shrink a buy, never enlarge one; the contract's limits still
+apply on top.
+
+| Rule | Default | Env | What it does |
+|---|---|---|---|
+| Reduce | 50 % of the loss budget used | `RISK_REDUCE_AT=0.5` | only sells go through |
+| Halt | 80 % used | `RISK_HALT_AT=0.8` | nothing goes through until someone reviews it |
+| Per-asset cap | 34 % of equity | `RISK_MAX_ASSET_PCT=0.34` | a buy can take one asset to at most this |
+| Gross cap | 100 % of equity | `RISK_MAX_GROSS_PCT=1` | everything outside cash stays under this |
+
+The loss budget is the gap between the mandate's baseline and its freeze
+floor, so on a 20 % loss limit the bridge stops buying at −10 % and stops
+trading at −16 %, before the contract freezes at −20 %. Missing information
+halts instead of guessing: a stale feed (no readable equity) or a mandate with
+no loss budget stops all trading, and if any holding has no price, buys are
+refused because exposure can't be valued. `RISK_OFF=1`
+switches the engine off. A volatility-scaled cap exists (`volTarget` with a
+`volOf(symbol)` source) but is not wired to a live volatility feed yet.
+
+Per-trade stop-losses are deliberately absent: on the backtested swing
+strategies they cut the profit factor from about 1.9 to 1.5–1.7 (strategy
+research, 2026-09-27).
 
 ## Brain 1: NostalgiaForInfinity (or any freqtrade strategy)
 
