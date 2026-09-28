@@ -63,6 +63,21 @@ describe("the rotation", () => {
     assert.equal((await chain.complete([])).text, "a is back");
   });
 
+  test("the next provider gets the whole conversation, so the context carries over", async () => {
+    const a = scripted("a", [reply(429, {})]);
+    const b = scripted("b", [ok("{}")]);
+    const convo = [
+      { role: "system", content: "rules" },
+      { role: "system", content: "Current strategy: {...}" },
+      { role: "user", content: "golden cross on BTC" },
+      { role: "assistant", content: "Built it." },
+      { role: "user", content: "now add a 15% stop" },
+    ];
+    await createLlmChain([a.client, b.client]).complete(convo);
+    assert.deepEqual(b.calls[0].messages, a.calls[0].messages);
+    assert.deepEqual(b.calls[0].messages, convo);
+  });
+
   test("an outage or a timeout also moves on", async () => {
     const a = scripted("a", [new Error("aborted")]);
     const b = scripted("b", [reply(502, {})]);
