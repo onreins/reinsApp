@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm install --omit=dev --ignore-scripts",
+  "buildCommand": "",
+  "outputDirectory": "app/public",
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{build/Mandate.json,build/MandateFactory.json,deployments/testnet.json,deployments/mandate-testnet.json,app/data/prices.json}",
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [{ "source": "/api/(.*)", "destination": "/api/index" }]
+}

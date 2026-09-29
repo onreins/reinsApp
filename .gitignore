@@ -16,3 +16,6 @@ research/data/
 bridge/data/
 *.stackdump
 data/candles/
+.vercel
+
+.vercel

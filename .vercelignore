@@ -1,0 +1,23 @@
+# Upload only what the app needs to run; everything else (keys in .env, the
+# 457 MB of minute prices, contracts, research, tests) stays on this machine.
+/*
+!/api
+!/app
+!/arena
+!/bridge
+!/mandate
+!/scripts
+!/build
+!/deployments
+!/package.json
+!/package-lock.json
+!/vercel.json
+/scripts/*
+!/scripts/artifact.js
+/build/*
+!/build/Mandate.json
+!/build/MandateFactory.json
+/deployments/*
+!/deployments/testnet.json
+!/deployments/mandate-testnet.json
+.env*

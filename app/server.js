@@ -418,7 +418,8 @@ export function createApp({ deployment, rpcUrl, strategy } = {}) {
   return app;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Started directly (`npm run app`), not imported (tests, the Vercel function in api/).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const dep = loadDeployment();
   const app = createApp({ deployment: dep, rpcUrl: process.env.APP_RPC });
   const port = Number(process.env.PORT ?? 4100);
