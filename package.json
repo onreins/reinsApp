@@ -30,11 +30,13 @@
     "live:testnet": "node --env-file=.env scripts/live-testnet.js",
     "app": "node --env-file=.env app/server.js",
     "feed:publish": "node --env-file=.env scripts/publish-feed.js",
-    "bridge": "node --env-file=.env bridge/server.js"
+    "bridge": "node --env-file=.env bridge/server.js",
+    "build:onramp": "esbuild scripts/onramp-client.js --bundle --format=iife --global-name=CircleOnramp --platform=browser --target=es2019 --minify --legal-comments=eof --outfile=app/public/vendor/onramp-kit.js"
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",
   "dependencies": {
+    "@circle-fin/onramp-kit": "1.0.2",
     "@circle-fin/x402-batching": "^3.5.0",
     "@modelcontextprotocol/sdk": "^1.30.1",
     "@openzeppelin/contracts": "^5.6.1",
@@ -69,5 +71,8 @@
   ],
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
   }
 }

@@ -25,6 +25,8 @@ import {
   parseEventLogs,
   isAddress,
   getAddress,
+  parseAbi,
+  formatUnits,
 } from "viem";
 import { arc, arcTestnet } from "viem/chains";
 
@@ -33,6 +35,9 @@ import { ArenaIndexer } from "../arena/indexer.js";
 import { chainIndex, RESET_EVENTS } from "../arena/returns.js";
 import { createRiskEngine, snapshot } from "../bridge/risk.js";
 import { mountStrategy } from "./strategy/routes.js";
+import { mountOnramp } from "./onramp.js";
+
+const ERC20 = parseAbi(["function balanceOf(address) view returns (uint256)"]);
 
 const FACTORY = artifact("MandateFactory");
 const MANDATE = artifact("Mandate");
@@ -92,7 +97,7 @@ export function compileRules(rules) {
   };
 }
 
-export function createApp({ deployment, rpcUrl, strategy } = {}) {
+export function createApp({ deployment, rpcUrl, strategy, onramp, publicClient } = {}) {
   const dep = deployment ?? loadDeployment();
   const chain = dep.chainId === arc.id ? arc : arcTestnet;
   const explorer = dep.chainId === arc.id ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
@@ -112,7 +117,7 @@ export function createApp({ deployment, rpcUrl, strategy } = {}) {
   let client = null;
   let indexer = null;
   const getClient = () => {
-    client ??= createPublicClient({
+    client ??= publicClient ?? createPublicClient({
       chain,
       transport: http(rpcUrl, { batch: { wait: 16 }, retryCount: 5, retryDelay: 600 }),
       batch: { multicall: { wait: 16 } },
@@ -136,6 +141,22 @@ export function createApp({ deployment, rpcUrl, strategy } = {}) {
 
   // The strategy chat: plain words to a validated spec and its backtest.
   mountStrategy(app, strategy);
+
+  // Card funding: buy USDC into your own wallet with Circle's Onramp Kit.
+  mountOnramp(app, onramp);
+
+  // A wallet's USDC, so the page can show it and see a card purchase land.
+  app.get("/api/usdc/:address", async (req, res) => {
+    try {
+      const { address } = req.params;
+      if (!isAddress(address, { strict: false })) return res.status(400).json({ error: "not a wallet address" });
+      const raw = await getClient().readContract({ address: dep.external.usdc, abi: ERC20, functionName: "balanceOf", args: [address] });
+      res.set("cache-control", "no-store");
+      res.json({ address, usdc: Number(formatUnits(raw, USDC_DECIMALS)) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
 
   // ------------------------------------------------------------------ reads
   app.get("/api/config", (_req, res) => {

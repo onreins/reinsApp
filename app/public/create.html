@@ -47,6 +47,13 @@
           <div class="field"><label for="f-trade">Largest trade, USDC<small>No single trade above this</small></label>
             <input id="f-trade" type="number" inputmode="decimal" min="0" step="0.01" value="2"></div>
         </div>
+        <div class="fundline">
+          <div class="fundline-t">
+            <span id="w-usdc">Connect a wallet to see its USDC</span>
+            <small id="w-short" aria-live="polite"></small>
+          </div>
+          <button class="btn-ghost" id="buy" type="button">Buy USDC with card</button>
+        </div>
       </section>
 
       <section class="fcard" aria-labelledby="s3">
@@ -89,6 +96,8 @@
 
 <script src="/wallet.js"></script>
 <script src="/ui.js"></script>
+<script src="/vendor/onramp-kit.js"></script>
+<script src="/onramp.js"></script>
 <script>
 (function () {
   "use strict";
@@ -214,6 +223,36 @@
   }
 
   U.onAccount(function () { $("go").textContent = "Create agent"; });
+
+  // ------------------------------------------------------ card funding
+  // What the wallet holds, and a way to buy USDC into it with a card (Circle).
+  var O = window.ReinsOnramp, walletUsdc = null;
+  function shortfall() {
+    var need = Number($("f-deposit").value) - (walletUsdc || 0);
+    $("w-short").textContent = walletUsdc != null && need > 0.005 ? "You need " + money(need) + " more to fund this." : "";
+  }
+  function showBalance(v) {
+    walletUsdc = v;
+    $("w-usdc").textContent = v == null ? "Couldn’t read your wallet’s USDC" : "Your wallet holds " + money(v);
+    shortfall();
+  }
+  async function readWallet() {
+    if (W.account) showBalance(await O.usdcOf(W.account));
+  }
+  U.onAccount(readWallet);
+  $("f-deposit").addEventListener("input", shortfall);
+  O.status().then(function (st) {
+    if (st.enabled) return;
+    $("buy").disabled = true;
+    $("buy").textContent = "Card top-ups: soon";
+    $("buy").title = "Buying USDC with a card switches on once the Circle key is set up.";
+  });
+  $("buy").addEventListener("click", async function () {
+    if (!W.account) {
+      try { await U.connect(); } catch (err) { notice(W.explain(err)); return; }
+    }
+    O.open({ address: W.account, onFunded: showBalance });
+  });
   ["f-name", "f-agent", "f-deposit", "f-trade", "f-loss", "f-slip", "f-age", "f-days"].forEach(function (id) { $(id).addEventListener("input", preview); });
   $("f-agent").addEventListener("input", function () { if ($("f-agent").getAttribute("aria-invalid") === "true") setAgentError(""); });
   $("form").addEventListener("submit", create);
