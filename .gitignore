@@ -19,3 +19,4 @@ data/candles/
 .vercel
 
 .vercel
+.env*
