@@ -1,0 +1,50 @@
+/* The agent page. Its hero is the navy band shared with the Agents and
+   strategy pages (.hm-hero from home.css, .sg-hero and .sg-chartbox from
+   strategy.css): who the agent is, how much of its loss limit is used, the
+   owner's actions, and its value chart. Prefixed ag-. */
+
+.ag-hero { margin-top: 12px; }
+.ag-hero .dtitle { align-items: flex-start; }
+.ag-hero h1 { margin-top: 6px; font: 600 clamp(26px, 2.8vw, 36px)/1.1 var(--sans); letter-spacing: -.03em; overflow-wrap: anywhere; }
+.ag-state { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ag-state .tagp { background: rgba(255, 255, 255, .08); color: #c9d1f2; }
+.ag-state .tagp.live { background: rgba(102, 195, 153, .16); color: #9fe0bf; }
+.ag-state .tagp.frozen { background: rgba(124, 196, 255, .16); color: #a9d6ff; }
+.ag-state .tagp.expired { background: rgba(230, 176, 98, .16); color: #f0c98e; }
+.ag-hero .addr { margin-top: 6px; color: #8f98c4; }
+.ag-hero .copy { color: #6f78a3; }
+.ag-hero .copy:hover { color: #fff; background: rgba(255, 255, 255, .08); }
+.ag-hero .hm-lede { margin-top: 16px; }
+
+/* How much of the loss limit is gone: the number an owner watches. */
+.ag-floor { margin-top: 20px; padding: 14px 16px 16px; border-radius: 12px; background: rgba(8, 10, 32, .45); border: 1px solid rgba(170, 183, 232, .12); }
+.ag-floor .rhead span { color: #9aa3cc; font-size: 13px; }
+.ag-floor .rhead b { color: #fff; }
+.ag-floor .track { background: rgba(255, 255, 255, .1); }
+.ag-floor .tick { background: rgba(255, 255, 255, .4); }
+.ag-floor p { margin-top: 10px; color: #b4bbdc; font-size: 13px; line-height: 1.45; }
+.ag-floor-key { margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; color: #6f78a3; font-size: 11.5px; }
+
+.ag-btns { margin-top: 20px; display: flex; gap: 8px; align-items: center; position: relative; flex-wrap: wrap; }
+.ag-btns .chip { background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
+.ag-btns .chip:hover:not(:disabled) { background: rgba(255, 255, 255, .14); }
+/* The hero clips its overflow, so the actions menu opens upward from the buttons. */
+.ag-btns .menu { top: auto; bottom: 44px; left: 0; right: auto; }
+
+/* The chart's controls, restyled for the navy box. */
+.ag-hero .tabs { padding: 0; border-bottom: 1px solid rgba(170, 183, 232, .12); }
+.ag-hero .tabs button { color: #8f98c4; }
+.ag-hero .tabs button:hover { color: #fff; }
+.ag-hero .tabs button[aria-pressed="true"] { color: #fff; border-bottom-color: #aac4ff; }
+.ag-hero .modes button[aria-pressed="true"] { background: none; }
+.ag-hero .ranges button { color: #6f78a3; }
+.ag-hero .ranges button[aria-pressed="true"] { color: #fff; }
+.ag-hero .plot { margin-top: 12px; min-height: 220px; }
+.ag-hero .plot-note { color: #6f78a3; }
+
+/* The on-chain activity panel beside the info tabs. */
+.ag-feed .hm-feed { max-height: 360px; flex: 1 1 auto; }
+
+@media (max-width: 760px) {
+  .ag-floor { padding: 12px; }
+}

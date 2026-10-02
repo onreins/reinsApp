@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/home.css">
+<link rel="stylesheet" href="/strategy.css">
+<link rel="stylesheet" href="/agent.css">
 
 <a class="skip" href="#main">Skip to content</a>
 <aside id="side"></aside>
@@ -15,26 +18,48 @@
 
 <main id="main">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Agents</a><span id="crumb-ic"></span><span id="crumb-name">…</span></nav>
-  <div class="hl-head" style="margin-top:10px">
-    <div class="dtitle">
-      <span id="av"><span class="tok skel"></span></span>
-      <div>
-        <h1 id="name">Reading the chain…</h1>
-        <p class="addr" style="margin-top:4px"><span id="addr-t"></span><button class="copy" type="button" id="copy" aria-label="Copy address"></button></p>
+  <section class="hm-hero sg-hero ag-hero" aria-labelledby="name">
+    <div class="sg-copy">
+      <div class="dtitle">
+        <span id="av"><span class="tok skel"></span></span>
+        <div>
+          <p class="ag-state" id="state"></p>
+          <h1 id="name">Reading the chain…</h1>
+          <p class="addr"><span id="addr-t"></span><button class="copy" type="button" id="copy" aria-label="Copy address"></button></p>
+        </div>
+      </div>
+      <p class="hm-lede" id="desc"></p>
+      <div class="ag-floor">
+        <div class="rhead"><span>Loss limit used</span><b id="floor-pct">—</b></div>
+        <span class="track"><span class="fill" id="floor-fill" style="width:0"></span><span class="tick" style="left:50%" title="Sells only from here"></span><span class="tick" style="left:80%" title="Trading paused from here"></span></span>
+        <p id="floor-sub"></p>
+        <div class="ag-floor-key"><span>Marks: sells only from 50%, paused from 80%, frozen at 100%</span></div>
+      </div>
+      <div class="ag-btns">
+        <button class="chip" type="button" id="a-withdraw"><span id="ic-w"></span>Withdraw</button>
+        <button class="btn-white" type="button" id="a-fund"><span id="ic-f"></span>Fund</button>
+        <button class="chip round" type="button" id="a-more" aria-label="More actions" aria-haspopup="true" aria-expanded="false" aria-controls="menu"><span id="ic-m"></span></button>
+        <div class="menu" id="menu" hidden>
+          <a id="explorer" href="#" target="_blank" rel="noopener"><span id="ic-e"></span>View contract</a>
+          <button type="button" id="l-agent"><span id="ic-a"></span>Change or revoke the trading key</button>
+          <button type="button" id="l-freeze"><span id="ic-z"></span><span id="l-freeze-t">Freeze</span></button>
+          <button type="button" id="l-all" class="danger"><span id="ic-x"></span>Withdraw everything and close</button>
+        </div>
       </div>
     </div>
-    <div class="hbtns">
-      <button class="chip" type="button" id="a-withdraw"><span id="ic-w"></span>Withdraw</button>
-      <button class="btn-white" type="button" id="a-fund"><span id="ic-f"></span>Fund</button>
-      <button class="chip round" type="button" id="a-more" aria-label="More actions" aria-haspopup="true" aria-expanded="false" aria-controls="menu"><span id="ic-m"></span></button>
-      <div class="menu" id="menu" hidden>
-        <a id="explorer" href="#" target="_blank" rel="noopener"><span id="ic-e"></span>View contract</a>
-        <button type="button" id="l-agent"><span id="ic-a"></span>Change or revoke the trading key</button>
-        <button type="button" id="l-freeze"><span id="ic-z"></span><span id="l-freeze-t">Freeze</span></button>
-        <button type="button" id="l-all" class="danger"><span id="ic-x"></span>Withdraw everything and close</button>
+
+    <div class="sg-chartbox">
+      <div class="tabs" id="modes" role="group" aria-label="Chart shows">
+        <button type="button" data-m="value" aria-pressed="false">Account value</button>
+        <button type="button" data-m="performance" aria-pressed="true">Performance</button>
+        <span class="grow"></span>
+        <div class="ranges" id="ranges" role="group" aria-label="Time range" style="align-self:center"></div>
       </div>
+      <div class="plot" id="plot" tabindex="0" aria-describedby="plot-help"><span class="skel" style="height:220px"></span></div>
+      <p class="plot-note">Flow-free: deposits and withdrawals don’t move performance. Dots mark events: blue a trade, grey a deposit or withdrawal, red a freeze.</p>
+      <p class="sr-only" id="plot-help">Use the left and right arrow keys to read each point.</p>
     </div>
-  </div>
+  </section>
 
   <div class="scards">
     <div class="scard"><div class="lbl">Value</div><div class="val" id="s-eq"><span class="skel line" style="width:90px;height:26px"></span></div><div class="sub2">at oracle prices</div></div>
@@ -51,18 +76,13 @@
         <button type="button" role="tab" aria-selected="false" data-tab="risk">Risk engine</button>
       </div>
       <div class="tbody" data-panel="about">
-        <h3>Description</h3>
-        <p class="desc" id="desc"></p>
-        <dl class="kv" id="about" style="margin-top:12px"></dl>
+        <dl class="kv" id="about"></dl>
       </div>
       <div class="tbody" data-panel="perf" hidden>
         <div class="big" id="c-big">—</div><div class="chg" id="c-chg"></div><div class="when" id="c-when"></div>
         <dl class="kv" id="periods" style="margin-top:12px"></dl>
       </div>
       <div class="tbody" data-panel="risk" hidden>
-        <div class="rhead"><span class="muted">Loss limit used</span><b id="floor-pct">—</b></div>
-        <span class="track"><span class="fill" id="floor-fill" style="width:0"></span><span class="tick" style="left:50%" title="Sells only from here"></span><span class="tick" style="left:80%" title="Trading paused from here"></span></span>
-        <p class="desc" id="floor-sub" style="margin-top:10px;color:var(--ink-3)"></p>
         <div id="risk-panel" aria-live="polite">
           <p class="desc" id="risk-sub" style="margin-top:12px"></p>
           <dl class="kv" id="risk-assets" style="margin-top:6px"></dl>
@@ -70,19 +90,12 @@
       </div>
     </div>
 
-    <div class="tpanel">
-      <div class="tabs" id="modes" role="group" aria-label="Chart shows">
-        <button type="button" data-m="value" aria-pressed="false">Account value</button>
-        <button type="button" data-m="performance" aria-pressed="true">Performance</button>
-        <span class="grow"></span>
-        <div class="ranges" id="ranges" role="group" aria-label="Time range" style="align-self:center"></div>
+    <section class="tpanel ag-feed" aria-labelledby="feed-h">
+      <div class="tbody" style="display:flex;flex-direction:column">
+        <div class="hm-panel-h"><h2 id="feed-h"><i class="pulse" aria-hidden="true"></i>On-chain activity</h2><span id="feed-sub"></span></div>
+        <ol class="hm-feed" id="feed"><li class="hm-ev"><span class="ei"></span><div><span class="skel line"></span></div></li></ol>
       </div>
-      <div class="tbody">
-        <div class="plot" id="plot" tabindex="0" aria-describedby="plot-help"><span class="skel" style="height:220px"></span></div>
-        <p class="plot-note">Flow-free: deposits and withdrawals don’t move performance. Dots mark events: blue a trade, grey a deposit or withdrawal, red a freeze.</p>
-        <p class="sr-only" id="plot-help">Use the left and right arrow keys to read each point.</p>
-      </div>
-    </div>
+    </section>
   </div>
 
   <div class="tpanel htable" style="min-height:0">
@@ -146,6 +159,7 @@
 
 <script src="/wallet.js"></script>
 <script src="/ui.js"></script>
+<script src="/home.js"></script>
 <script>
 (function () {
   "use strict";
@@ -207,6 +221,7 @@
     var name = d.name || "unnamed agent";
     document.title = name + " · Reins";
     $("av").innerHTML = U.avatar(d);
+    $("state").innerHTML = '<span class="tagp ' + st[0] + '">' + st[1] + "</span>" + (risk && !d.closed ? risk.html : "");
     $("name").textContent = name;
     $("crumb-name").textContent = name;
     var since = points && points.length ? fmtDate(points[0].t * 1000) : null;
@@ -283,7 +298,20 @@
     $("l-freeze").disabled = !canFreeze;
     $("explorer").href = cfg.explorer + "/address/" + address;
     $("a-withdraw").disabled = !!d.closed;
+    renderFeed();
     renderSide();
+  }
+
+  // Every event this agent has made on-chain, newest first, in the Agents page's feed.
+  function renderFeed() {
+    var hist = data.history || [];
+    var at = function (e) {
+      var hit = (points || []).filter(function (p) { return String(p.block) === String(e.block); })[0];
+      return hit ? hit.t : null;
+    };
+    var events = hist.map(function (e) { return Object.assign({}, e, { mandate: address, name: data.name || "This agent", t: at(e) }); });
+    window.ReinsHome.activity($("feed"), { explorer: cfg.explorer, events: events });
+    $("feed-sub").textContent = events.length ? events.length + (events.length === 1 ? " event" : " events") : "";
   }
 
   // ------------------------------------------------ fund / withdraw dialog
@@ -541,6 +569,7 @@
   }
   function fail(msg) {
     $("name").textContent = "Agent not found";
+    $("feed").innerHTML = "";
     $("crumb-name").textContent = "Not found";
     $("desc").textContent = msg;
     $("s-eq").textContent = "—";
