@@ -596,6 +596,175 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 /* Card rows can be dragged with a mouse: a grab hand, and no text selection mid-drag. */
 @media (hover: hover) and (pointer: fine) { .carousel { cursor: grab; } .carousel.dragging { cursor: grabbing; } }
 .carousel.dragging, .carousel.dragging * { user-select: none; }
+
+/* Reins next to a typical agent wallet, on a dark panel like the benefit
+   panels: the usual wallet as dim glass, Reins as bright white tiles. */
+.vs { margin-top: clamp(48px, 7vw, 88px); scroll-margin-top: 90px; }
+.vs-h { text-align: center; font: 500 clamp(30px, 4.4vw, 52px)/1.06 var(--display); letter-spacing: -.035em; margin: 0 auto 28px; max-width: 18ch; text-wrap: balance; }
+.vs-art { min-height: 0; }
+.vs-grid { width: min(860px, 100%); display: grid; gap: 2px; }
+.vs-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.vs-row:first-child { margin-bottom: 8px; }
+.vs-t { min-width: 0; display: grid; gap: 8px; align-content: start; padding: 18px 20px; border-radius: 16px; }
+.vs-t.us { background: #fff; color: #151513; }
+.vs-t.them { background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09); color: #b4b8cf; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.vs-t.them .bn-l { color: #7f84a5; }
+.vs-v { font: 500 17px/1.35 var(--sans); letter-spacing: -.005em; }
+.vs-t.them .vs-v { font-weight: 400; }
+.vs-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.vs-head b { flex: 1; min-width: 0; font: 500 17px var(--sans); letter-spacing: -.01em; }
+.vs-head.them b { color: #d4d7e8; }
+.vs-head.us { background: #14173a; color: #fff; }
+.vs-head.us .bn-av { background: #fff; color: #14173a; box-shadow: none; }
+.vs-head.us .bn-chip { background: rgba(255, 255, 255, .1); color: #d9def7; }
+.vs-ic { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .08); color: #b4b8cf; }
+.vs-ic svg { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: no-preference) {
+  .ben-art.arm .vs-t { opacity: 0; translate: 0 16px; }
+  .ben-art.arm .vs-t.us { scale: .96; }
+  .ben-art.go .vs-t { opacity: 1; translate: 0 0; scale: 1; transition: opacity .5s ease, translate .9s var(--sp-soft), scale .9s var(--sp-pop); transition-delay: calc(var(--i) * 110ms); }
+  .ben-art.go .vs-t.us { transition-delay: calc(var(--i) * 110ms + 80ms); }
+}
+@media (max-width: 560px) {
+  .vs-row { gap: 6px; }
+  .vs-t { padding: 12px; gap: 6px; border-radius: 12px; }
+  .vs-v { font-size: 14px; }
+  .vs-head { padding: 10px; gap: 8px; }
+  .vs-head b { font-size: 14px; }
+  .vs-head .bn-av, .vs-ic { width: 28px; height: 28px; }
+  .vs-head .bn-chip { display: none; }
+}
+
+/* What has been checked: each card shows its evidence above the words. */
+.checked { padding-block: clamp(72px, 9vw, 112px) 8px; scroll-margin-top: 90px; }
+.checked h2 { text-align: center; font: 500 clamp(30px, 4.4vw, 52px)/1.06 var(--display); letter-spacing: -.035em; max-width: 18ch; margin: 0 auto 32px; text-wrap: balance; }
+.ck { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.ck article { display: grid; grid-template-rows: auto 1fr; overflow: hidden; border-radius: 22px; background: var(--card); border: 1px solid var(--well-edge); }
+.ck-art { position: relative; height: 204px; overflow: hidden; }
+.ck-copy { display: flex; flex-direction: column; gap: 8px; padding: 20px 22px 22px; }
+.ck b { font: 600 19px/1.25 var(--display); letter-spacing: -.01em; color: var(--ink); }
+.ck p { flex: 1; font-size: 15px; line-height: 1.5; color: var(--ink-3); }
+.ck p code { font: 500 13.5px var(--mono); color: #8a4b00; background: #fff1d6; padding: 1px 5px; border-radius: 5px; }
+.ck a { display: inline-flex; align-items: center; gap: 5px; font: 600 14px var(--sans); color: var(--blue-ink); text-decoration: none; transition: gap .2s var(--ease); }
+.ck a:hover { gap: 8px; }
+.ck a svg { width: 12px; height: 12px; }
+.ck .warn { background: #fffaf1; border-color: #f3e2c2; }
+.ck .warn b { color: #8a4b00; }
+
+/* 1. A test run: real test names scrolling past, all passing. */
+.ck-tests { display: flex; flex-direction: column; background: #0e0f22; color: #cfd2ea; font: 400 12.5px var(--mono); }
+.tst-bar, .code-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 18px 11px; color: #8f93b8; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+.tst-pass { color: #7fe0a6; }
+.tst-win { flex: 1; overflow: hidden; padding-inline: 18px; -webkit-mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(transparent, #000 22%, #000 78%, transparent); }
+.tst-roll { display: grid; }
+.tst-roll span { display: flex; gap: 10px; padding-block: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tst-roll i { font-style: normal; color: #7fe0a6; }
+@media (prefers-reduced-motion: no-preference) { .tst-roll { animation: tstRoll 30s linear infinite; } }
+@keyframes tstRoll { to { transform: translateY(-50%); } }
+
+/* 2. The review's three findings, struck through and fixed. */
+.rev { display: grid; align-content: center; gap: 8px; padding: 18px; background: #fff; }
+.rev-h { display: flex; justify-content: space-between; margin-bottom: 2px; font: 500 12px var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.rev-z { color: var(--green); }
+.rev-i { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--well); font-size: 13.5px; }
+.rev-i s { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-3); text-decoration-color: rgba(194, 53, 15, .55); text-decoration-thickness: 1.5px; }
+.rev-ok { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding-inline: 9px; border-radius: 7px; background: var(--green-soft); color: var(--green); font: 600 12px var(--sans); }
+.rev-ok small { font-weight: 500; opacity: .75; }
+
+/* 3. The contract's own lines: the limits are immutable. */
+.ck-code { display: flex; flex-direction: column; background: #0e0f22; }
+.code-bar { font: 400 12.5px var(--mono); }
+.code-lock { display: inline-flex; align-items: center; gap: 6px; color: #ffc56b; }
+.code-lock svg { width: 12px; height: 12px; }
+.ck-code pre { margin: 0; padding: 12px 18px; overflow: hidden; font: 400 12.5px/1.75 var(--mono); color: #cfd2ea; white-space: pre; }
+.ck-code .ln { display: inline-block; width: 3ch; margin-right: 14px; text-align: right; color: #4f537a; user-select: none; }
+.ck-code em { font-style: normal; color: #241600; background: #ffc56b; border-radius: 4px; padding: 0 3px; }
+.ck-code .kw { color: #b9a6ff; }
+.ck-code .er { color: #ff9a87; }
+
+/* 4. Not audited: a seal that says when the audit comes. */
+.seal { display: grid; place-items: center; background: radial-gradient(circle at 50% 50%, #fff4de, #fbe5bb); }
+.seal-svg { width: 172px; height: 172px; overflow: visible; }
+.seal-spin text { font: 600 11px var(--mono); letter-spacing: 2px; fill: #a3610b; }
+.seal-svg .seal-big { font: 600 22px var(--display); letter-spacing: -.01em; fill: #8a4b00; }
+.seal-svg .seal-small { font: 500 11px var(--sans); letter-spacing: .04em; fill: #a3610b; }
+.seal-spin { transform-origin: 100px 100px; }
+@media (prefers-reduced-motion: no-preference) { .seal-spin { animation: sealSpin 48s linear infinite; } }
+@keyframes sealSpin { to { transform: rotate(360deg); } }
+
+@media (max-width: 720px) { .ck { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .ck-art { height: 184px; }
+  .code pre { font-size: 11.5px; }
+}
+
+/* MCP install: the copy on the left; on the right a terminal window floating
+   on a dark panel, with Install, Config and Try it tabs. */
+.mcp { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 5vw, 64px); align-items: center; margin-top: clamp(80px, 10vw, 128px); scroll-margin-top: 90px; }
+.mcp h2 { font: 500 clamp(30px, 4.4vw, 52px)/1.06 var(--display); letter-spacing: -.035em; text-wrap: balance; }
+.mcp-copy > p { margin-top: 14px; color: var(--ink-2); font-size: 17px; line-height: 1.55; max-width: 52ch; }
+.tools { display: grid; gap: 12px; margin-top: 24px; }
+.tools div { display: grid; gap: 2px; }
+.tools code { font: 500 14px var(--mono); color: #4b33b5; }
+.tools dd { margin: 0; font-size: 15px; color: var(--ink-3); }
+.mcp .ctas { justify-content: flex-start; }
+.mcp-art { min-height: 0; padding: clamp(48px, 6vw, 76px) clamp(16px, 3vw, 40px); border-radius: 20px; }
+.mcp-chip { position: absolute; right: clamp(14px, 2.4vw, 28px); bottom: clamp(14px, 2vw, 22px); z-index: 2; display: flex; align-items: center; gap: 10px; padding: 9px 14px 9px 9px; border-radius: 14px; background: #fff; rotate: 3deg; box-shadow: 0 18px 40px rgba(4, 4, 20, .45); }
+.mcp-chip .bn-av { width: 30px; height: 30px; }
+.mcp-chip .bn-av svg { width: 14px; height: 14px; }
+.mcp-chip b { display: block; font: 500 13.5px var(--sans); color: #151513; }
+.mcp-chip small { display: flex; align-items: center; gap: 6px; font: 400 12px var(--mono); color: #6f6d68; }
+.mcp-chip small i { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+.term { position: relative; width: min(560px, 100%); overflow: hidden; border-radius: 16px; background: rgba(14, 15, 34, .92); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 30px 80px rgba(0, 0, 0, .5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #e8e9f5; }
+.term-top { display: flex; align-items: center; gap: 14px; padding: 9px 10px 9px 16px; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+.dots { display: flex; gap: 6px; flex: none; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: #3a3c5c; }
+.tabs { display: flex; gap: 2px; flex: 1; min-width: 0; }
+.tabs button { height: 30px; padding-inline: 12px; border: 0; border-radius: 8px; background: none; color: #8f93b8; font: 500 13px var(--sans); cursor: pointer; transition: background .15s ease, color .15s ease; }
+.tabs button:hover { color: #d9def7; }
+.tabs [aria-selected="true"] { background: rgba(255, 255, 255, .1); color: #fff; }
+.tabs button:focus-visible, .cp:focus-visible { outline: 2px solid #8fb4ff; outline-offset: 2px; }
+.cp { flex: none; height: 28px; padding-inline: 10px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, .08); color: #d9def7; font: 600 12px var(--sans); cursor: pointer; transition: background .15s ease; }
+.cp:hover { background: rgba(255, 255, 255, .16); }
+.term pre { margin: 0; min-height: 300px; padding: 18px 20px 24px; overflow-x: auto; font: 400 13px/1.7 var(--mono); white-space: pre; }
+.term pre.out { white-space: pre-wrap; overflow-wrap: anywhere; }
+.term .pr, .term .c { color: #6c7099; }
+.term .pr { user-select: none; }
+.term .k { color: #b9a6ff; }
+.term .s { color: #9fe0b8; }
+.term .no { color: #ff9a87; }
+.term .call { color: #fff; }
+.term .res { display: block; margin-top: 8px; padding: 10px 12px; border-radius: 10px; background: rgba(229, 83, 61, .1); box-shadow: inset 2px 0 0 #e5533d; }
+.term .res[hidden] { display: none; }
+.term .caret::after { content: ""; display: inline-block; width: 7px; height: 1.1em; margin-left: 2px; vertical-align: -2px; background: #e8e9f5; animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+@media (max-width: 900px) { .mcp { grid-template-columns: 1fr; } }
+@media (max-width: 560px) {
+  .mcp-chip { display: none; }
+  .term pre { min-height: 0; font-size: 12px; padding: 14px 14px 18px; }
+  .term-top { gap: 8px; padding-left: 12px; }
+  .dots { display: none; }
+  .tabs button { padding-inline: 9px; }
+}
+
+/* Phone: the question goes once above each pair instead of inside both
+   tiles; review rows wrap; the code drops line numbers so lines fit. */
+.rev { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 560px) {
+  .vs-grid { gap: 4px; }
+  .vs-row[data-q]::before { content: attr(data-q); grid-column: 1 / -1; padding: 10px 2px 0; font: 500 11px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #9aa0c4; }
+  .vs-t .bn-l { display: none; }
+  .vs-art { padding: 22px 12px 16px; }
+  .rev { padding: 14px; }
+  .rev-i { padding: 9px 10px; font-size: 13px; }
+  .rev-i s { white-space: normal; }
+  .ck-art.rev { height: auto; }
+  .ck-code pre { padding-inline: 12px; font-size: 10.2px; }
+  .ck-code .ln { display: none; }
+  .ck-tests { font-size: 11.5px; }
+  .mcp-art { padding: 14px 10px; border-radius: 16px; }
+  .term pre { font-size: 11px; padding-inline: 12px; }
+}
 </style>
 
 <div class="wrap">
@@ -898,9 +1067,125 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
     <section class="center">
       <h2>No custody. No database. No trust required.</h2>
       <p>Your funds never touch Reins. Our pages read the chain directly, so anyone can check every number against the explorer, including the trades an agent tried and was refused.</p>
-      <div class="ctas">
-        <a class="see" href="https://app.reins.one/">See live strategies <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
-        <a class="see ghost" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">Open the explorer</a>
+    </section>
+
+    <!-- Reins next to the usual agent wallet. Built from what those providers
+         say on their own sites (Oct 2026): limits run on their servers or in
+         secure hardware, and they are spending-shaped. -->
+    <div class="vs" id="compare">
+      <h2 class="vs-h">Where an agent&rsquo;s limits live</h2>
+      <div class="ben-art b3 vs-art" data-ben>
+      <svg class="bn-bg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="bb3-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="46"/></filter>
+          <filter id="bb3-brush" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.0016 0.11" numOctaves="3" seed="11"/>
+            <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.9 0.9 0.9 0 -1.05"/>
+          </filter>
+          <mask id="bb3-light"><g filter="url(#bb3-blur)"><ellipse cx="980" cy="200" rx="540" ry="72" fill="#fff" opacity="0.8" transform="rotate(-18 980 200)"/><ellipse cx="420" cy="470" rx="560" ry="48" fill="#fff" opacity="0.41600000000000004" transform="rotate(-18 420 470)"/><ellipse cx="180" cy="160" rx="280" ry="33.6" fill="#fff" opacity="0.384" transform="rotate(-18 180 160)"/><ellipse cx="700" cy="840" rx="640" ry="264" fill="#fff" opacity="1" transform="rotate(-18 700 840)"/></g></mask>
+          <radialGradient id="bb3-vig" cx="50%" cy="45%" r="70%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>
+        </defs>
+        <rect width="1200" height="720" fill="#040b18"/>
+        <g class="bn-beams" filter="url(#bb3-blur)"><ellipse cx="980" cy="200" rx="540" ry="60" fill="#9fd0ff" opacity="0.5" transform="rotate(-18 980 200)"/><ellipse cx="420" cy="470" rx="560" ry="40" fill="#ffffff" opacity="0.26" transform="rotate(-18 420 470)"/><ellipse cx="180" cy="160" rx="280" ry="28" fill="#bfe3ff" opacity="0.24" transform="rotate(-18 180 160)"/><ellipse cx="700" cy="840" rx="640" ry="220" fill="#1f6fe0" opacity="0.72" transform="rotate(-18 700 840)"/></g>
+        <g mask="url(#bb3-light)"><rect x="-400" y="-400" width="2000" height="1520" filter="url(#bb3-brush)" transform="rotate(-18 600 360)" opacity=".4"/></g>
+        <rect width="1200" height="720" fill="url(#bb3-vig)"/>
+      </svg>
+        <div class="vs-grid" role="table" aria-label="Reins compared with a typical agent wallet">
+          <div role="row" class="vs-row">
+            <div class="vs-t vs-head them" role="columnheader" style="--i:0"><span class="vs-ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="14" height="6" rx="2"/><rect x="3" y="11" width="14" height="6" rx="2"/><path d="M6.5 6h.01M6.5 14h.01"/></svg></span><b>A typical agent wallet</b></div>
+            <div class="vs-t vs-head us" role="columnheader" style="--i:0"><span class="bn-av"><svg><use href="#i-r"/></svg></span><b>Reins</b><span class="bn-chip"><i></i>On-chain</span></div>
+          </div>
+          <div role="row" class="vs-row" data-q="Where the rules run">
+            <div class="vs-t them" role="cell" style="--i:1"><span class="bn-l">Where the rules run</span><span class="vs-v">On the provider&rsquo;s servers or secure hardware</span></div>
+            <div class="vs-t us" role="cell" style="--i:1"><span class="bn-l">Where the rules run</span><span class="vs-v">In a public contract on Arc</span></div>
+          </div>
+          <div role="row" class="vs-row" data-q="Who can loosen them">
+            <div class="vs-t them" role="cell" style="--i:2"><span class="bn-l">Who can loosen them</span><span class="vs-v">Whoever runs the account settings</span></div>
+            <div class="vs-t us" role="cell" style="--i:2"><span class="bn-l">Who can loosen them</span><span class="vs-v">Nobody. They&rsquo;re fixed in the contract&rsquo;s code</span></div>
+          </div>
+          <div role="row" class="vs-row" data-q="Who can check them">
+            <div class="vs-t them" role="cell" style="--i:3"><span class="bn-l">Who can check them</span><span class="vs-v">You take the provider&rsquo;s word</span></div>
+            <div class="vs-t us" role="cell" style="--i:3"><span class="bn-l">Who can check them</span><span class="vs-v">Anyone, on the explorer</span></div>
+          </div>
+          <div role="row" class="vs-row" data-q="What they&rsquo;re built for">
+            <div class="vs-t them" role="cell" style="--i:4"><span class="bn-l">What they&rsquo;re built for</span><span class="vs-v">Spending: caps and allowlists</span></div>
+            <div class="vs-t us" role="cell" style="--i:4"><span class="bn-l">What they&rsquo;re built for</span><span class="vs-v">Trading: a loss limit and a fair-price check</span></div>
+          </div>
+          <div role="row" class="vs-row" data-q="Who holds the money">
+            <div class="vs-t them" role="cell" style="--i:5"><span class="bn-l">Who holds the money</span><span class="vs-v">A wallet the provider signs for, or helps sign for</span></div>
+            <div class="vs-t us" role="cell" style="--i:5"><span class="bn-l">Who holds the money</span><span class="vs-v">Your own contract. Withdraw anytime</span></div>
+          </div>
+          <div role="row" class="vs-row" data-q="If the company goes away">
+            <div class="vs-t them" role="cell" style="--i:6"><span class="bn-l">If the company goes away</span><span class="vs-v">Depends on the provider</span></div>
+            <div class="vs-t us" role="cell" style="--i:6"><span class="bn-l">If the company goes away</span><span class="vs-v">The contract keeps working without us</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- What has been checked, said plainly, including what hasn't. Each card
+         shows its evidence: real test names, the review's findings, the
+         contract's own lines. -->
+    <section class="checked" id="security">
+      <h2>What&rsquo;s been checked, and what hasn&rsquo;t</h2>
+      <div class="ck">
+        <article>
+          <div class="ck-art ck-tests" aria-hidden="true">
+            <div class="tst-bar"><span>npm test</span><span class="tst-pass">32 passing</span></div>
+            <div class="tst-win"><div class="tst-roll"><span><i>&#10003;</i>an exchange that takes the tokens and sends nothing is caught</span><span><i>&#10003;</i>an exchange can&rsquo;t call back into the mandate mid-trade</span><span><i>&#10003;</i>the agent has no way to take money out</span><span><i>&#10003;</i>no trade larger than the size limit</span><span><i>&#10003;</i>small losses per trade can&rsquo;t add up past the loss limit</span><span><i>&#10003;</i>when the market drops past the limit, anyone can freeze the agent</span><span><i>&#10003;</i>a broken feed doesn&rsquo;t block withdrawals</span><span><i>&#10003;</i>the owner can&rsquo;t also be the agent</span><span><i>&#10003;</i>no trading on stale prices</span><span><i>&#10003;</i>an exchange that takes the tokens and sends nothing is caught</span><span><i>&#10003;</i>an exchange can&rsquo;t call back into the mandate mid-trade</span><span><i>&#10003;</i>the agent has no way to take money out</span><span><i>&#10003;</i>no trade larger than the size limit</span><span><i>&#10003;</i>small losses per trade can&rsquo;t add up past the loss limit</span><span><i>&#10003;</i>when the market drops past the limit, anyone can freeze the agent</span><span><i>&#10003;</i>a broken feed doesn&rsquo;t block withdrawals</span><span><i>&#10003;</i>the owner can&rsquo;t also be the agent</span><span><i>&#10003;</i>no trading on stale prices</span></div></div>
+          </div>
+          <div class="ck-copy">
+            <b>32 tests, most of them hostile</b>
+            <p>Exchanges that keep the tokens, call back in mid-trade or underpay. None of them gets money out.</p>
+            <a href="https://github.com/onreins/reins-contracts/tree/main/test" target="_blank" rel="noopener">Read the tests <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 2.5 3.5 3.5-3.5 3.5"/></svg></a>
+          </div>
+        </article>
+        <article>
+          <div class="ck-art rev" aria-hidden="true">
+            <div class="rev-h"><span>Adversarial review</span><span class="rev-z">0 critical</span></div>
+            <div class="rev-i" style="--k:0"><s>A broken price feed could block a withdrawal</s><span class="rev-ok">Fixed<small>+ test</small></span></div>
+            <div class="rev-i" style="--k:1"><s>A venue could trip the stop-loss mid-swap</s><span class="rev-ok">Fixed<small>+ test</small></span></div>
+            <div class="rev-i" style="--k:2"><s>Rounding on dust-sized trades</s><span class="rev-ok">Fixed<small>+ test</small></span></div>
+          </div>
+          <div class="ck-copy">
+            <b>Reviewed before it went live</b>
+            <p>Nothing critical, three smaller issues. All three are fixed, each with a test so it can&rsquo;t come back.</p>
+            <a href="https://github.com/onreins/reins-contracts#security" target="_blank" rel="noopener">What it found <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 2.5 3.5 3.5-3.5 3.5"/></svg></a>
+          </div>
+        </article>
+        <article>
+          <div class="ck-art ck-code" aria-hidden="true">
+            <div class="code-bar"><span>Mandate.sol</span><span class="code-lock"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="5.5" width="7" height="5" rx="1.2"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg>set once</span></div>
+<pre><span class="ln">78</span>uint256 public <em>immutable</em> maxTradeValue;
+<span class="ln">79</span>uint16  public <em>immutable</em> maxDrawdownBps;
+<span class="ln">80</span>uint16  public <em>immutable</em> maxSlippageBps;
+<span class="ln"> &#8942;</span>
+<span class="ln">255</span><span class="kw">if</span> (valueIn &gt; maxTradeValue)
+<span class="ln"></span>  <span class="kw">revert</span> <span class="er">TradeTooLarge</span>(valueIn, maxTradeValue);</pre>
+          </div>
+          <div class="ck-copy">
+            <b>Open source, on-chain</b>
+            <p>The limits are <code>immutable</code>: written once, when the agent is created. The factory and every agent can be read on the Arc explorer.</p>
+            <a href="https://explorer.testnet.arc.io/address/0x09e45d5b84d9c7cf4e8cdf5d5f1ff2b7d3589f82" target="_blank" rel="noopener">Open the factory <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 2.5 3.5 3.5-3.5 3.5"/></svg></a>
+          </div>
+        </article>
+        <article class="warn">
+          <div class="ck-art seal" aria-hidden="true">
+            <svg class="seal-svg" viewBox="0 0 200 200">
+              <defs><path id="seal-ring" d="M100 100m-74 0a74 74 0 1 1 148 0a74 74 0 1 1-148 0"/></defs>
+              <circle cx="100" cy="100" r="92" fill="none" stroke="#e7b766" stroke-width="1.2" stroke-dasharray="3 5"/>
+              <circle cx="100" cy="100" r="58" fill="#fff6e3" stroke="#e7b766" stroke-width="1.2"/>
+              <g class="seal-spin"><text><textPath href="#seal-ring" startOffset="0" textLength="458" lengthAdjust="spacing">AUDIT &#183; BEFORE MAINNET &#183; AUDIT &#183; BEFORE MAINNET &#183;</textPath></text></g>
+              <text x="100" y="96" text-anchor="middle" class="seal-big">Pending</text>
+              <text x="100" y="116" text-anchor="middle" class="seal-small">testnet only</text>
+            </svg>
+          </div>
+          <div class="ck-copy">
+            <b>Not audited yet</b>
+            <p>A review and tests are not an audit. Reins runs on Arc testnet with test money, and an audit comes before mainnet.</p>
+            <a href="https://app.reins.one/">Try it on testnet <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 2.5 3.5 3.5-3.5 3.5"/></svg></a>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -912,6 +1197,73 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       <article><span class="est" aria-hidden="true"><span class="f"><span class="pl sm" style="padding-left:12px">Live price<span class="live"></span></span></span></span><span class="mark logo" style="background:#375BD2"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M12 0L9.798 1.266l-6 3.468L1.596 6v12l2.202 1.266 6.055 3.468L12.055 24l2.202-1.266 5.945-3.468L22.404 18V6l-2.202-1.266-6-3.468zM6 15.468V8.532l6-3.468 6 3.468v6.936l-6 3.468z"/></svg></span><b>Chainlink</b><span class="sub">The price referee</span><p>Oracle prices decide what a fair fill is and when a loss limit is hit. Stale prices stop trading.</p></article>
       <article class="dashed"><span class="est" aria-hidden="true"><span class="f"><span class="code">trade()<i></i></span></span></span><span class="mark" style="background:#ffc53d;color:#2a2a29" aria-hidden="true">+</span><b>Build with Reins</b><span class="sub">MCP server and SDK</span><p>Plug any AI or bot into a Reins agent. It gets status, prices and trades, and nothing more.</p></article>
     </div>
+
+    <!-- ------------------------------------------------------------- mcp -->
+    <section class="mcp" id="mcp">
+      <div class="mcp-copy">
+        <h2>Connect Claude to a Reins agent</h2>
+        <p>The Reins MCP server works with Claude Desktop, Claude Code or any agent that speaks MCP. It gets three tools and nothing more, and it trades with its own key. Your wallet never leaves you.</p>
+        <dl class="tools">
+          <div><dt><code>mandate_status</code></dt><dd>Money, holdings, the rules, and how much loss headroom is left</dd></div>
+          <div><dt><code>mandate_price</code></dt><dd>The Chainlink price every trade is checked against</dd></div>
+          <div><dt><code>mandate_trade</code></dt><dd>A trade, or a plain sentence naming the rule that refused it</dd></div>
+        </dl>
+        <div class="ctas">
+          <a class="see" href="https://github.com/onreins/reins-mcp" target="_blank" rel="noopener">Get the MCP server <svg width="13" height="13" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 11 11 4m0 0H5.5M11 4v5.5"/></svg></a>
+          <a class="see ghost" href="https://app.reins.one/create.html">Create an agent first</a>
+        </div>
+      </div>
+      <div class="ben-art b4 mcp-art" data-ben>
+      <svg class="bn-bg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="bb4-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="46"/></filter>
+          <filter id="bb4-brush" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.0016 0.11" numOctaves="3" seed="5"/>
+            <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.9 0.9 0.9 0 -1.05"/>
+          </filter>
+          <mask id="bb4-light"><g filter="url(#bb4-blur)"><ellipse cx="860" cy="220" rx="560" ry="67.2" fill="#fff" opacity="0.7360000000000001" transform="rotate(30 860 220)"/><ellipse cx="380" cy="470" rx="520" ry="48" fill="#fff" opacity="0.41600000000000004" transform="rotate(30 380 470)"/><ellipse cx="200" cy="150" rx="300" ry="36" fill="#fff" opacity="0.41600000000000004" transform="rotate(30 200 150)"/><ellipse cx="620" cy="830" rx="620" ry="252" fill="#fff" opacity="1" transform="rotate(30 620 830)"/></g></mask>
+          <radialGradient id="bb4-vig" cx="50%" cy="45%" r="70%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>
+        </defs>
+        <rect width="1200" height="720" fill="#0b0716"/>
+        <g class="bn-beams" filter="url(#bb4-blur)"><ellipse cx="860" cy="220" rx="560" ry="56" fill="#d9c6ff" opacity="0.46" transform="rotate(30 860 220)"/><ellipse cx="380" cy="470" rx="520" ry="40" fill="#ffffff" opacity="0.26" transform="rotate(30 380 470)"/><ellipse cx="200" cy="150" rx="300" ry="30" fill="#ffd7a8" opacity="0.26" transform="rotate(30 200 150)"/><ellipse cx="620" cy="830" rx="620" ry="210" fill="#7a4cf0" opacity="0.7" transform="rotate(30 620 830)"/></g>
+        <g mask="url(#bb4-light)"><rect x="-400" y="-400" width="2000" height="1520" filter="url(#bb4-brush)" transform="rotate(30 600 360)" opacity=".4"/></g>
+        <rect width="1200" height="720" fill="url(#bb4-vig)"/>
+      </svg>
+        <div class="mcp-chip" aria-hidden="true"><span class="bn-av ai"><svg viewBox="0 0 24 24"><use href="#i-star"/></svg></span><span><b>Claude Desktop</b><small><i></i>mandate &middot; 3 tools</small></span></div>
+        <div class="term">
+          <div class="term-top">
+            <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <div class="tabs" role="tablist" aria-label="Set up the MCP server">
+              <button type="button" role="tab" id="tab-install" aria-controls="t-install" aria-selected="true">Install</button>
+              <button type="button" role="tab" id="tab-config" aria-controls="t-config" aria-selected="false" tabindex="-1">Config</button>
+              <button type="button" role="tab" id="tab-try" aria-controls="t-try" aria-selected="false" tabindex="-1">Try it</button>
+            </div>
+            <button type="button" class="cp" data-copy="t-install">Copy</button>
+          </div>
+<pre id="t-install" role="tabpanel" aria-labelledby="tab-install"><span class="c"># the server and its SDK</span>
+<span class="pr">$</span> git clone https://github.com/onreins/reins-mcp
+<span class="pr">$</span> cd reins-mcp &amp;&amp; npm install</pre>
+<pre id="t-config" role="tabpanel" aria-labelledby="tab-config" hidden><span class="c">// claude_desktop_config.json</span>
+{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"mandate"</span>: {
+      <span class="k">"command"</span>: <span class="s">"node"</span>,
+      <span class="k">"args"</span>: [<span class="s">"/path/to/reins-mcp/src/mcp-server.js"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"MANDATE_ADDRESS"</span>: <span class="s">"0xYourAgent"</span>,
+        <span class="k">"MANDATE_AGENT_KEY"</span>: <span class="s">"0xItsOwnTradingKey"</span>,
+        <span class="k">"MANDATE_NETWORK"</span>: <span class="s">"testnet"</span>
+      }
+    }
+  }
+}</pre>
+<pre id="t-try" class="out" role="tabpanel" aria-labelledby="tab-try" hidden><span class="c">// you: put everything into EURC. All $50.</span>
+<span class="call">mandate_trade { from: "USDC", to: "EURC", amount: "50" }</span>
+<span class="res">{ <span class="k">"ok"</span>: <span class="no">false</span>, <span class="k">"rule"</span>: <span class="s">"TradeTooLarge"</span>,
+  <span class="k">"reason"</span>: <span class="s">"the trade is larger than the mandate's per-trade limit"</span> }</span></pre>
+        </div>
+      </div>
+    </section>
 
     <!-- ------------------------------------------------------- community -->
     <section class="community">
@@ -933,7 +1285,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       <p class="fine">Running on Arc testnet. Not investment advice.</p>
     </div>
     <div><h4>Product</h4><ul><li><a href="https://app.reins.one/">Explore</a></li><li><a href="https://app.reins.one/create.html">Create an agent</a></li></ul></div>
-    <div><h4>Build</h4><ul><li>MCP server</li><li>SDK</li><li><a href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">First agent ↗</a></li></ul></div>
+    <div><h4>Build</h4><ul><li><a href="https://github.com/onreins/reins-mcp" target="_blank" rel="noopener">MCP server ↗</a></li><li><a href="https://github.com/onreins/reins-contracts" target="_blank" rel="noopener">Contracts ↗</a></li><li><a href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">First agent ↗</a></li></ul></div>
     <div><h4>Connect</h4><ul><li><a href="https://x.com/onreins" target="_blank" rel="noopener">X @onreins</a></li></ul></div>
     <div class="legal">
       <p>Reins is software. Funds placed with a Reins agent sit in a smart contract controlled by its owner; Reins never has custody of, or access to, user funds. The agents shown in the cards are examples: tokenized equities such as SPYx are not yet issued on Arc.</p>
@@ -1259,6 +1611,88 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
     }, true);
     // No ghost images or links trailing the cursor.
     row.addEventListener("dragstart", function (e) { e.preventDefault(); });
+  });
+})();
+</script>
+<script>
+// Copy buttons on the MCP install steps. Falls back to selecting the text when
+// the clipboard is refused.
+(function () {
+  document.querySelectorAll(".cp[data-copy]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var pre = document.getElementById(btn.dataset.copy);
+      if (!pre) return;
+      var text = pre.innerText.replace(/^\$ /gm, "");
+      var done = function (label) {
+        btn.textContent = label;
+        setTimeout(function () { btn.textContent = "Copy"; }, 1600);
+      };
+      var select = function () {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var sel = getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        done("Selected");
+      };
+      if (!navigator.clipboard) return select();
+      navigator.clipboard.writeText(text).then(function () { done("Copied"); }, select);
+    });
+  });
+})();
+</script>
+<script>
+// MCP terminal tabs: Install, Config, Try it. The copy button follows the open
+// tab (hidden on Try it), and Try it types the call before the refusal lands.
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tabs [role="tab"]'));
+  var copy = document.querySelector(".term .cp");
+  if (!tabs.length || !copy) return;
+  var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var typer = 0;
+
+  function play(pre) {
+    var call = pre.querySelector(".call");
+    var res = pre.querySelector(".res");
+    var full = call.dataset.full || (call.dataset.full = call.textContent);
+    clearInterval(typer);
+    if (still) { call.textContent = full; res.hidden = false; return; }
+    var n = 0;
+    call.textContent = "";
+    call.classList.add("caret");
+    res.hidden = true;
+    typer = setInterval(function () {
+      n += 2;
+      call.textContent = full.slice(0, n);
+      if (n < full.length) return;
+      clearInterval(typer);
+      setTimeout(function () { call.classList.remove("caret"); res.hidden = false; }, 380);
+    }, 28);
+  }
+
+  function open(tab, focus) {
+    tabs.forEach(function (t) {
+      var on = t === tab;
+      t.setAttribute("aria-selected", on ? "true" : "false");
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    var pre = document.getElementById(tab.getAttribute("aria-controls"));
+    var isTry = pre.classList.contains("out");
+    copy.hidden = isTry;
+    copy.dataset.copy = pre.id;
+    if (isTry) play(pre);
+    if (focus) tab.focus();
+  }
+
+  tabs.forEach(function (t, k) {
+    t.addEventListener("click", function () { open(t); });
+    t.addEventListener("keydown", function (e) {
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      var next = tabs[(k + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      open(next, true);
+    });
   });
 })();
 </script>
