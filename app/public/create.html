@@ -271,7 +271,7 @@
       if (!s) return;
       var dd = Math.abs(s.stats.max_drawdown) * 100;
       $("f-name").value = s.name.toLowerCase() + " agent";
-      $("f-loss").value = Math.min(50, Math.max(10, Math.ceil((dd + 5) / 5) * 5));
+      $("f-loss").value = Math.min(50, Math.max(10, Math.ceil((Math.round(dd * 1e6) / 1e6 + 5) / 5) * 5)); // rounded: 0.15 * 100 isn't exactly 15
       $("f-trade").value = Math.max(1, Number($("f-deposit").value) / 5).toFixed(2);
       $("f-days").value = 90;
       $("template").innerHTML = "Template: <b>" + esc(s.name) + "</b>. The rules below are filled in from its backtest (worst drop " + Math.round(dd) + "%); change any of them. " +

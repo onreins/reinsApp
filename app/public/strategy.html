@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/home.css">
+<link rel="stylesheet" href="/strategy.css">
 
 <a class="skip" href="#main">Skip to content</a>
 <aside id="side"></aside>
@@ -15,258 +17,96 @@
 
 <main id="main">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/#strategies">Strategies</a><span id="crumb-ic"></span><span id="crumb-name">…</span></nav>
-  <div class="hl-head" style="margin-top:10px">
-    <div class="dtitle">
-      <span id="av"><span class="tok skel"></span></span>
-      <div>
-        <h1 id="name">Loading…</h1>
-        <p id="by" style="margin-top:6px"></p>
-      </div>
-    </div>
-    <div class="hbtns">
-      <span class="tagp" title="Results come from historical prices, not live trading">Backtest</span>
-      <a class="btn-white" id="u-go" href="/create.html">Use this strategy</a>
-    </div>
-  </div>
 
-  <div class="scards">
-    <div class="scard"><div class="lbl">APR, since 2024</div><div class="val" id="s-since">—</div><div class="sub2" id="s-all"></div></div>
+  <section class="hm-hero sg-hero" aria-labelledby="name">
+    <div class="sg-copy">
+      <div class="sg-tags"><span id="av"><span class="tok skel"></span></span><span id="tags" class="sg-tags"></span></div>
+      <h1 id="name">Loading…</h1>
+      <p class="hm-lede" id="tagline"></p>
+      <p class="sg-head" id="headline"><span class="skel line" style="width:260px;height:30px"></span></p>
+      <p class="sg-vs" id="vs"></p>
+      <div class="hm-cta">
+        <a class="btn-white" id="u-go" href="/create.html">Use this strategy</a>
+        <a class="chip" href="/chat.html">Describe your own</a>
+      </div>
+      <p class="sg-fine" id="fine"></p>
+    </div>
+
+    <div class="sg-chartbox">
+      <div class="sg-chart-h">
+        <div class="sg-seg" role="group" aria-label="Start date">
+          <button type="button" data-r="2024" aria-pressed="true">Since 2024</button>
+          <button type="button" data-r="2021" aria-pressed="false">Since 2021</button>
+        </div>
+        <div class="sg-read" id="read" aria-live="off"></div>
+      </div>
+      <div class="plot" id="plot" tabindex="0" role="group" aria-label="Growth of $1 in the backtest" aria-describedby="plot-help"><span class="skel" style="height:260px"></span></div>
+      <p class="sr-only" id="plot-help">Use the left and right arrow keys to step through the chart.</p>
+      <div class="legend"><span><i style="background:#5aaeff"></i><span id="lg-strat">Strategy</span></span><span><i style="background:#7d84a8"></i><span id="lg-bench">Holding</span></span><span class="muted">Growth of $1, log scale</span></div>
+    </div>
+  </section>
+
+  <div class="scards sg-stats">
+    <div class="scard"><div class="lbl">APR, since 2024</div><div class="val" id="s-since">—</div><div class="sub2">the more realistic guide</div></div>
+    <div class="scard"><div class="lbl">APR, since 2021</div><div class="val" id="s-all">—</div><div class="sub2">2021 was an exceptional year</div></div>
     <div class="scard"><div class="lbl">Worst drop</div><div class="val" id="s-dd">—</div><div class="sub2" id="s-wm"></div></div>
     <div class="scard"><div class="lbl">Sharpe</div><div class="val" id="s-sharpe">—</div><div class="sub2" id="s-pf"></div></div>
     <div class="scard"><div class="lbl">Trades a month</div><div class="val" id="s-tpm">—</div><div class="sub2" id="s-hold"></div></div>
   </div>
 
-  <div class="duo">
-    <div class="tpanel">
-      <div class="tabs" role="tablist" aria-label="About this strategy" data-group="info">
-        <button type="button" role="tab" aria-selected="true" data-tab="about">About</button>
-        <button type="button" role="tab" aria-selected="false" data-tab="perf">Performance</button>
-        <button type="button" role="tab" aria-selected="false" data-tab="use">Use it</button>
-      </div>
-      <div class="tbody" data-panel="about">
-        <h3>Style</h3>
-        <p class="desc" id="tagline"></p>
-        <dl class="kv" id="facts" style="margin-top:12px"></dl>
-        <p class="desc muted" style="margin-top:12px;font-size:13px">The exact rules stay private. What the agent may do is still bounded by the contract’s limits and the risk engine.</p>
-      </div>
-      <div class="tbody" data-panel="perf" hidden>
-        <div class="big" id="c-big">—</div><div class="chg" id="c-chg"></div><div class="when" id="c-when"></div>
-        <dl class="kv" id="meta" style="margin-top:12px"></dl>
-      </div>
-      <div class="tbody" data-panel="use" hidden>
-        <p class="desc" id="u-arc"></p>
-        <dl class="kv" id="u-rules" style="margin-top:8px"></dl>
-        <div style="margin-top:14px;display:grid;gap:10px;justify-items:start">
-          <a class="btn-white" id="u-go2" href="/create.html">Create an agent with it</a>
-          <small class="muted" id="u-foot"></small>
+  <div class="sg-row">
+    <section class="hm-panel" aria-labelledby="k-h">
+      <div class="hm-panel-h"><h2 id="k-h">What your money would have done <small>backtest</small></h2></div>
+      <div class="sg-amt">
+        <label><span aria-hidden="true">$</span><span class="sr-only">Amount in dollars</span><input id="k-amt" type="number" inputmode="decimal" min="1" max="10000000" step="any" value="1000" title="From $1 to $10 million"></label>
+        <button type="button" class="chip" data-amt="100">$100</button>
+        <button type="button" class="chip" data-amt="1000">$1K</button>
+        <button type="button" class="chip" data-amt="10000">$10K</button>
+        <span class="grow"></span>
+        <div class="sg-seg" role="group" aria-label="Start date">
+          <button type="button" data-r="2024" aria-pressed="true">2024</button>
+          <button type="button" data-r="2021" aria-pressed="false">2021</button>
         </div>
       </div>
-    </div>
+      <div class="sg-vs-bars">
+        <div class="sg-bar strat"><span id="k-strat-l">Strategy</span><span class="tr"><i id="k-strat-bar" style="width:0"></i></span><b id="k-strat">—</b></div>
+        <div class="sg-bar"><span>Just holding</span><span class="tr"><i id="k-bench-bar" style="width:0"></i></span><b id="k-bench">—</b></div>
+      </div>
+      <dl class="sg-facts" id="k-facts"></dl>
+    </section>
 
-    <div class="tpanel">
-      <div class="tabs" id="c-range" role="group" aria-label="Time range">
-        <button type="button" data-r="2024" aria-pressed="true">Since 2024</button>
-        <button type="button" data-r="2021" aria-pressed="false">Since 2021</button>
-      </div>
-      <div class="tbody">
-        <div class="plot" id="plot"><span class="skel" style="height:240px"></span></div>
-        <div class="legend"><span><i style="background:var(--blue)"></i><span id="lg-strat">Strategy</span></span><span><i style="background:#8f8e8e"></i><span id="lg-bench">Held</span></span><span class="muted">Growth of $1, log scale</span></div>
-      </div>
-    </div>
+    <section class="hm-panel" aria-labelledby="y-h">
+      <div class="hm-panel-h"><h2 id="y-h">Year by year <small>against holding</small></h2></div>
+      <ol class="sg-years" id="years"></ol>
+      <div class="sg-key"><span><i style="background:var(--blue)"></i>Strategy</span><span><i style="background:#7d7c7c"></i>Holding BTC, ETH and SOL</span><span>A faded end means the bar runs off the scale</span></div>
+    </section>
   </div>
 
-  <div class="tpanel htable" style="min-height:0">
-    <div class="tabs" role="tablist" aria-label="Details" data-group="table">
-      <button type="button" role="tab" aria-selected="true" data-tab="trades">Trade statistics</button>
-      <button type="button" role="tab" aria-selected="false" data-tab="years">Returns by year</button>
-      <button type="button" role="tab" aria-selected="false" data-tab="controls">Risk controls</button>
-    </div>
-    <div class="tbody" data-panel="trades">
-      <dl class="pcard" id="trades" style="box-shadow:none;background:none;padding:12px 4px"></dl>
-    </div>
-    <div class="tbody" data-panel="years" hidden>
-      <div class="dense-wrap"><table class="dense">
-        <thead><tr><th>Year</th><th>Strategy</th><th>Holding BTC, ETH and SOL</th><th class="r">Difference</th></tr></thead>
-        <tbody id="years"></tbody>
-      </table></div>
-    </div>
-    <div class="tbody" data-panel="controls" hidden>
-      <dl class="pcard" id="controls" style="box-shadow:none;background:none;padding:12px 4px"></dl>
-    </div>
-  </div>
+  <section class="hm-panel sg-wide" aria-labelledby="d-h">
+    <div class="hm-panel-h"><h2 id="d-h">Drawdowns <small>how far below its last high</small></h2></div>
+    <div class="sg-dd" id="dd"></div>
+    <p class="sg-note" id="dd-note"></p>
+  </section>
+
+  <section class="hm-panel sg-wide" aria-labelledby="r-h">
+    <div class="hm-panel-h"><h2 id="r-h">Rules your agent would run under</h2></div>
+    <ul class="sg-rules" id="rules"></ul>
+    <div class="sg-rules-key"><span><i style="background:var(--green)"></i>Enforced by the contract</span><span><i style="background:var(--blue)"></i>Checked by the risk engine before a trade is sent</span></div>
+  </section>
+
+  <section class="hm-panel sg-trades-card" aria-labelledby="t-h">
+    <div class="hm-panel-h"><h2 id="t-h">Trade statistics <small>across the whole backtest</small></h2></div>
+    <dl class="pcard" id="trades"></dl>
+  </section>
 
   <footer class="foot">
-    <span id="foot-note">Backtests on historical prices, after costs. Past results do not predict future returns.</span>
+    <span>Backtests on historical prices, after costs. Past results do not predict future returns. The exact rules stay private.</span>
     <span>Not investment advice</span>
   </footer>
 </main>
 
 <script src="/wallet.js"></script>
 <script src="/ui.js"></script>
-<script>
-(function () {
-  "use strict";
-  var U = window.ReinsUI;
-  var $ = function (id) { return document.getElementById(id); };
-  var esc = U.esc;
-  var id = new URLSearchParams(location.search).get("s") || "";
-  var T2024 = Date.UTC(2024, 0, 1) / 1000;
-  var doc = null, s = null, range = "2024";
-
-  U.topbar("strategies");
-  $("crumb-ic").outerHTML = U.icon("right");
-  document.querySelectorAll(".tabs[data-group]").forEach(function (bar) {
-    var box = bar.parentNode;
-    bar.querySelectorAll("[data-tab]").forEach(function (b) {
-      b.addEventListener("click", function () {
-        bar.querySelectorAll("[data-tab]").forEach(function (x) { x.setAttribute("aria-selected", x === b ? "true" : "false"); });
-        box.querySelectorAll(":scope > [data-panel]").forEach(function (p) { p.hidden = p.getAttribute("data-panel") !== b.getAttribute("data-tab"); });
-      });
-    });
-  });
-
-  var multiple = function (v) { return v >= 10 ? v.toFixed(0) + "×" : v >= 2 ? v.toFixed(1) + "×" : v.toFixed(2) + "×"; };
-  // A loss limit a little beyond the worst backtested drop, so ordinary swings don't freeze the agent.
-  var lossLimit = function (x) { return Math.min(50, Math.max(10, Math.ceil((Math.abs(x.stats.max_drawdown) * 100 + 5) / 5) * 5)); };
-
-  function render() {
-    var st = s.stats, valid = s.status === "validated";
-    document.title = s.name + " · Reins";
-    $("av").innerHTML = U.coins(s.universe);
-    $("name").textContent = s.name;
-    $("crumb-name").textContent = s.name;
-    $("by").style.cssText = "margin-top:6px;display:flex;flex-wrap:wrap;gap:4px 12px;color:var(--ink-2)";
-    $("by").innerHTML = '<span class="tagp' + (valid ? " ok" : "") + '">' + (valid ? "Validated" : "Candidate") + "</span>" +
-      "<span>" + esc(s.universe.join(" · ")) + "</span><span>" + esc(s.timeframe) + "</span>";
-    $("tagline").textContent = s.tagline;
-    $("s-since").innerHTML = U.pctHtml(st.cagr_since_2024 * 100, 0);
-    $("s-all").innerHTML = "Since 2021 " + U.pctHtml(st.cagr * 100, 0);
-    $("s-dd").textContent = U.pct(st.max_drawdown * 100, 0);
-    $("s-wm").textContent = "Worst month " + U.pct(st.worst_month * 100, 0);
-    $("s-sharpe").textContent = st.sharpe.toFixed(2);
-    $("s-pf").textContent = st.trade_pf != null ? "Profit factor " + st.trade_pf.toFixed(2) : "";
-    $("s-tpm").textContent = st.trades_per_month != null ? String(st.trades_per_month) : "—";
-    $("s-hold").textContent = "Holds " + s.hold.toLowerCase();
-
-    var meta = [];
-    if (st.trade_pf != null) meta.push(["Profit factor", st.trade_pf.toFixed(2)]);
-    if (st.win_rate != null) meta.push(["Winning trades", Math.round(st.win_rate * 100) + "%"]);
-    meta.push(["Positive months", Math.round(st.positive_months * 100) + "%"], ["Worst month", U.pct(st.worst_month * 100, 0)], ["Coins", String(U.coinCount(s.universe))]);
-    $("meta").innerHTML = meta.map(function (m) { return "<div><dt>" + m[0] + "</dt><dd>" + esc(m[1]) + "</dd></div>"; }).join("");
-
-    $("facts").innerHTML = [["Coins", esc(s.universe.join(", "))], ["Timeframe", esc(s.timeframe)], ["Typical hold", esc(s.hold)],
-      ["Trades a month", st.trades_per_month != null ? String(st.trades_per_month) : "—"]]
-      .map(function (f) { return "<div><dt>" + f[0] + "</dt><dd>" + f[1] + "</dd></div>"; }).join("");
-    $("controls").innerHTML = [
-      ["Stops buying", "At half the loss budget", "sells are still allowed"],
-      ["Pauses all trading", "At 80% of the loss budget", "before the contract freezes it"],
-      ["Per-coin cap", "About a third", "no coin above it"],
-      ["Per-trade cap and loss limit", "Set in the contract", "the trading key can’t change them"],
-      ["Price check", "Every fill", "checked against an oracle price"],
-      ["Withdrawals", "Owner only", "any time, even mid-trade"],
-    ].map(function (c) { return "<div><dt>" + c[0] + "</dt><dd>" + c[1] + "<small>" + c[2] + "</small></dd></div>"; }).join("");
-
-    $("trades").innerHTML = [
-      ["Trades", st.trades != null ? st.trades.toLocaleString("en-US") : "—", "in the backtest"],
-      ["Trades a month", st.trades_per_month != null ? String(st.trades_per_month) : "—"],
-      ["Winning trades", st.win_rate != null ? Math.round(st.win_rate * 100) + "%" : "—"],
-      ["Profit factor", st.trade_pf != null ? st.trade_pf.toFixed(2) : "—", "gains ÷ losses"],
-      ["Average trade", st.avg_trade != null ? U.pct(st.avg_trade * 100, 2) : "—", "after costs"],
-      ["Positive months", Math.round(st.positive_months * 100) + "%"],
-    ].map(function (c) { return "<div><dt>" + c[0] + "</dt><dd>" + c[1] + (c[2] ? "<small>" + c[2] + "</small>" : "") + "</dd></div>"; }).join("");
-
-    var loss = lossLimit(s);
-    $("u-rules").innerHTML = [
-      ["Risk", U.strategyRisk(s)],
-      ["Loss limit", loss + "% <small>its worst drop was " + Math.round(Math.abs(st.max_drawdown) * 100) + "%</small>"],
-      ["Largest trade", "A fifth of the deposit"],
-      ["Runs for", "90 days, renewable"],
-    ].map(function (r) { return "<div><dt>" + r[0] + "</dt><dd>" + r[1] + "</dd></div>"; }).join("");
-    $("u-arc").textContent = s.onArc;
-    $("u-go").href = $("u-go2").href = "/create.html?s=" + encodeURIComponent(s.id);
-    $("u-foot").textContent = "Backtest " + doc.period[0] + " to " + doc.period[1] + ". Costs: " + doc.costs + ".";
-    $("lg-strat").textContent = s.name;
-    $("lg-bench").textContent = s.bench.name;
-    renderYears();
-    renderChart();
-  }
-
-  function renderYears() {
-    var by = s.years, bench = s.bench.years || {};
-    $("years").innerHTML = Object.keys(by).map(function (y) {
-      var diff = bench[y] != null ? (by[y] - bench[y]) * 100 : null;
-      return "<tr><td>" + y + (y === "2026" ? " (to Sep)" : "") + "</td><td>" + U.pctHtml(by[y] * 100, 0) + "</td><td>" +
-        (bench[y] != null ? U.pctHtml(bench[y] * 100, 0) : "—") + '</td><td class="r">' + (diff === null ? "—" : U.pctHtml(diff, 0)) + "</td></tr>";
-    }).join("");
-  }
-
-  // Growth of $1 on a log scale, so 2021's run doesn't flatten everything after it.
-  function renderChart() {
-    var from = range === "2024" ? T2024 : 0;
-    var a = s.curve.filter(function (p) { return p.t >= from; }), b = s.bench.curve.filter(function (p) { return p.t >= from; });
-    if (a.length < 2 || b.length < 2) { $("plot").innerHTML = '<div class="plot-empty">Not enough history for this range.</div>'; return; }
-    var a0 = a[0].index, b0 = b[0].index;
-    var av = a.map(function (p) { return p.index / a0; }), bv = b.map(function (p) { return p.index / b0; });
-    // Drawn at the plot's own width, so labels stay at their CSS size on any screen.
-    var W = Math.max(300, Math.round($("plot").clientWidth || 800)), H = W < 520 ? 220 : 260, L = 46, R = 44, T = 10, B = 26;
-    var lo = Math.log(Math.min.apply(null, av.concat(bv))), hi = Math.log(Math.max.apply(null, av.concat(bv)));
-    var pad = (hi - lo) * 0.08 || 0.1; lo -= pad; hi += pad;
-    var t0 = a[0].t, t1 = a[a.length - 1].t;
-    var X = function (t) { return L + ((t - t0) / (t1 - t0)) * (W - L - R); };
-    var Y = function (v) { return T + (1 - (Math.log(v) - lo) / (hi - lo)) * (H - T - B); };
-    var path = function (pts, vals) { return pts.map(function (p, i) { return (i ? "L" : "M") + X(p.t).toFixed(1) + " " + Y(vals[i]).toFixed(1); }).join(" "); };
-    var ticks = [0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10, 20, 50, 100, 200, 500].filter(function (v) { var l = Math.log(v); return l >= lo && l <= hi; });
-    if (ticks.length > 6) ticks = ticks.filter(function (v, i) { return i % 2 === 0 || v === 1; });
-    var out = "";
-    ticks.forEach(function (v) {
-      out += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '" class="g' + (v === 1 ? " one" : "") + '"/>' +
-        '<text x="' + (L - 8) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + multiple(v) + "</text>";
-    });
-    for (var y = 2021; y <= 2026; y++) {
-      var ty = Date.UTC(y, 0, 1) / 1000;
-      if (ty >= t0 && ty <= t1) out += '<text x="' + X(ty).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle">' + y + "</text>";
-    }
-    out += '<path d="' + path(b, bv) + '" class="l-bench"/><path d="' + path(a, av) + '" class="l-strat"/>';
-    var ea = av[av.length - 1], eb = bv[bv.length - 1];
-    out += '<text x="' + (W - R + 6) + '" y="' + (Y(ea) + 4).toFixed(1) + '" class="end strat">' + multiple(ea) + "</text>" +
-      '<text x="' + (W - R + 6) + '" y="' + (Y(eb) + 4).toFixed(1) + '" class="end">' + multiple(eb) + "</text>";
-    $("plot").innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(s.name) + " turned $1 into $" + ea.toFixed(2) +
-      ", against $" + eb.toFixed(2) + ' for holding">' + out + "</svg>";
-    $("c-big").innerHTML = '<span class="' + (ea >= 1 ? "up" : "down") + '">$1 → $' + ea.toFixed(2) + "</span>";
-    $("c-chg").textContent = "Holding BTC, ETH and SOL: $1 → $" + eb.toFixed(2);
-    $("c-when").textContent = range === "2024" ? "January 2024 to September 2026" : "January 2021 to September 2026";
-  }
-
-  var resizeTimer = null;
-  window.addEventListener("resize", function () {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { if (s) renderChart(); }, 150);
-  });
-
-  $("c-range").querySelectorAll("button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      $("c-range").querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
-      b.setAttribute("aria-pressed", "true");
-      range = b.getAttribute("data-r");
-      if (s) renderChart();
-    });
-  });
-
-  U.getJson("/data/strategies.json").then(function (d) {
-    doc = d;
-    s = (d.strategies || []).filter(function (x) { return x.id === id; })[0];
-    if (!s) {
-      $("name").textContent = "Strategy not found";
-      $("crumb-name").textContent = "Not found";
-      $("by").innerHTML = '<a class="chip" href="/#strategies">See all strategies</a>';
-      $("plot").innerHTML = "";
-      return;
-    }
-    render();
-  }).catch(function () {
-    $("name").textContent = "Couldn’t load strategies";
-    $("by").textContent = "Reload the page to try again.";
-  });
-})();
-</script>
+<script src="/strategy-math.js"></script>
+<script src="/strategy-page.js"></script>
 </html>

@@ -1,0 +1,152 @@
+/* The strategy page. Its hero is the Agents page's navy band (.hm-hero, from
+   home.css) with the growth chart as its right half; under it, the stats,
+   the money calculator beside the year bars, drawdowns beside the rules an
+   agent would run under, and the trade statistics. Prefixed sg-. */
+
+/* ---------------------------------------------------------------- hero */
+.sg-hero { margin-top: 12px; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); align-items: stretch; gap: 32px; padding: 32px; }
+.sg-copy { display: flex; flex-direction: column; min-width: 0; }
+.sg-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.sg-tags .tok { margin-right: 4px; }
+.sg-tags .tagp { background: rgba(255, 255, 255, .08); color: #c9d1f2; }
+.sg-tags .tagp.ok { background: rgba(30, 155, 255, .2); color: #a9d6ff; }
+.sg-tags .risk { font-size: 12px; }
+.sg-hero h1 { margin-top: 14px; }
+.sg-head { margin-top: 22px; }
+.sg-head .from { display: block; color: #8f98c4; font: 500 14px var(--sans); }
+.sg-head .to { display: block; margin-top: 4px; font: 600 clamp(32px, 3.4vw, 44px)/1 var(--sans); letter-spacing: -.035em; }
+.sg-vs { margin-top: 8px; color: #b4bbdc; font-size: 14px; }
+.sg-vs b { color: #fff; font-weight: 500; }
+.sg-fine { margin-top: auto; padding-top: 20px; color: #7d89bd; font-size: 12px; line-height: 1.5; max-width: 52ch; }
+
+.sg-chartbox { min-width: 0; padding: 16px; border-radius: 14px; background: rgba(8, 10, 32, .55); border: 1px solid rgba(170, 183, 232, .12); display: flex; flex-direction: column; }
+.sg-chart-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sg-seg { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .06); }
+.sg-seg button { height: 26px; padding: 0 12px; border-radius: 999px; color: #9aa3cc; font: 500 12.5px var(--sans); transition: background-color .15s, color .15s; }
+.sg-seg button:hover { color: #fff; }
+.sg-seg button[aria-pressed="true"] { background: rgba(255, 255, 255, .14); color: #fff; }
+.sg-read { color: #9aa3cc; font: 400 12px var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sg-read b { font-weight: 400; color: #8fcbff; }
+.sg-read i { font-style: normal; color: #dfe4fb; }
+.sg-hero .plot { min-height: 0; cursor: crosshair; touch-action: pan-y; }
+.sg-hero .plot .g { stroke: rgba(170, 183, 232, .12); }
+.sg-hero .plot .g.one { stroke: rgba(170, 183, 232, .35); }
+.sg-hero .plot text { fill: #6f78a3; }
+.sg-hero .plot .l-strat { stroke: #5aaeff; stroke-width: 2.2; }
+.sg-hero .plot .l-bench { stroke: #7d84a8; }
+.sg-hero .plot .a-strat { fill: url(#sg-fill); }
+.sg-hero .plot text.end { fill: #c9d1f2; }
+.sg-hero .plot text.end.strat { fill: #8fcbff; }
+.sg-hero .plot .cur line { stroke: rgba(255, 255, 255, .35); stroke-dasharray: 3 3; }
+.sg-hero .plot .cur circle { stroke: #111433; stroke-width: 2; }
+.sg-hero .legend { color: #b4bbdc; font-size: 12.5px; }
+.sg-hero .legend .muted { color: #6f78a3; }
+
+/* --------------------------------------------------------------- stats */
+.sg-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 8px; }
+
+/* ---------------------------------------------------------------- rows */
+.sg-row { margin-top: 8px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.sg-row > .hm-panel, .sg-wide { padding: 18px; }
+.sg-wide { margin-top: 8px; }
+.hm-panel h2 small { color: var(--ink-3); font-weight: 400; }
+
+/* What your money would have done. */
+.sg-amt { margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sg-amt label { position: relative; display: inline-flex; align-items: center; }
+.sg-amt label span { position: absolute; left: 14px; color: var(--ink-3); font-size: 15px; pointer-events: none; }
+.sg-amt input { width: 150px; height: 40px; padding: 0 12px 0 28px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); font: 500 16px var(--sans); outline: 0; -moz-appearance: textfield; }
+.sg-amt input::-webkit-outer-spin-button, .sg-amt input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.sg-amt input:focus { border-color: rgba(30, 155, 255, .6); }
+.sg-amt .chip { height: 30px; padding: 0 11px; font-size: 12.5px; }
+.sg-amt .grow { flex: 1; }
+.sg-amt .sg-seg { background: var(--chip); }
+.sg-amt .sg-seg button { color: var(--ink-3); }
+.sg-amt .sg-seg button:hover { color: var(--ink); }
+.sg-amt .sg-seg button[aria-pressed="true"] { background: var(--chip-2); color: var(--ink); }
+.sg-vs-bars { margin-top: 18px; display: grid; gap: 10px; }
+.sg-bar { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 13px; color: var(--ink-2); }
+.sg-bar .tr { height: 10px; border-radius: 999px; background: var(--chip-2); overflow: hidden; }
+.sg-bar .tr i { display: block; height: 100%; border-radius: inherit; background: #7d7c7c; transition: width .5s cubic-bezier(.2, .7, .2, 1); }
+.sg-bar.strat .tr i { background: linear-gradient(90deg, #1e6fff, var(--blue)); }
+.sg-bar b { font-weight: 600; color: var(--ink); min-width: 92px; text-align: right; }
+.sg-bar.strat b { font-size: 16px; }
+.sg-facts { margin-top: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.sg-fact { padding: 12px; border-radius: 10px; background: var(--chip); box-shadow: inset 0 0 0 1px var(--line); }
+.sg-fact dt { color: var(--ink-3); font-size: 12px; }
+.sg-fact dd { margin: 6px 0 0; font: 500 18px/1.2 var(--sans); }
+.sg-fact dd small { display: block; margin-top: 4px; color: var(--ink-3); font: 400 12px/1.4 var(--sans); }
+.sg-fact.hit { box-shadow: inset 0 0 0 1px rgba(232, 113, 107, .4); }
+
+/* Year by year. */
+.sg-years { list-style: none; margin: 14px 0 0; display: grid; gap: 4px; }
+.sg-years li { display: grid; grid-template-columns: 76px minmax(0, 1fr) 118px; gap: 12px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.sg-years li:last-child { border-bottom: 0; }
+.sg-years .y { color: var(--ink-2); font-size: 13px; }
+.sg-years .y small { display: block; color: var(--ink-4); font-size: 11px; }
+.sg-years .bars { position: relative; display: grid; gap: 3px; }
+.sg-years .bars::before { content: ""; position: absolute; top: -3px; bottom: -3px; left: var(--zero); width: 1px; background: rgba(255, 255, 255, .18); }
+.sg-years .b { position: relative; height: 9px; }
+.sg-years .b i { position: absolute; top: 0; height: 100%; border-radius: 3px; background: #7d7c7c; }
+.sg-years .b.s i { background: var(--blue); }
+.sg-years .b.s i.neg { background: var(--red); }
+.sg-years .b i.neg { background: #8a5c59; }
+.sg-years .b i.clip { -webkit-mask-image: linear-gradient(90deg, #000 80%, transparent); mask-image: linear-gradient(90deg, #000 80%, transparent); }
+.sg-years .v { text-align: right; font-size: 13px; line-height: 1.35; }
+.sg-years .v small { display: block; color: var(--ink-3); font-size: 12px; }
+.sg-key { margin-top: 10px; display: flex; gap: 14px; color: var(--ink-3); font-size: 12px; }
+.sg-key span { display: inline-flex; align-items: center; gap: 6px; }
+.sg-key i { width: 10px; height: 4px; border-radius: 2px; }
+
+/* Drawdowns. */
+.sg-dd { margin-top: 10px; }
+.sg-dd svg { width: 100%; height: auto; overflow: visible; }
+.sg-dd .g { stroke: var(--line-2); stroke-dasharray: 2 4; }
+.sg-dd text { fill: var(--ink-4); font: 400 11.5px var(--sans); }
+.sg-dd .a-strat { fill: rgba(232, 113, 107, .16); }
+.sg-dd .l-strat { fill: none; stroke: var(--red); stroke-width: 1.6; stroke-linejoin: round; }
+.sg-dd .l-bench { fill: none; stroke: #8f8e8e; stroke-width: 1.2; stroke-dasharray: 3 3; stroke-linejoin: round; }
+.sg-dd text.low { fill: var(--red); font-weight: 500; }
+.sg-note { margin-top: 8px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
+
+/* The rules an agent would run under. */
+.sg-rules { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px; }
+.sg-rules li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; align-items: start; padding: 10px; border-radius: 10px; transition: background-color .15s; }
+.sg-rules li:hover { background: var(--chip); }
+.sg-rules .ri { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: rgba(30, 155, 255, .13); color: #8fcbff; }
+.sg-rules .ri .ic { width: 15px; height: 15px; }
+.sg-rules li.chain .ri { background: rgba(102, 195, 153, .13); color: var(--green); }
+.sg-rules b { display: block; font-weight: 500; font-size: 13.5px; }
+.sg-rules small { display: block; margin-top: 3px; color: var(--ink-3); font-size: 12.5px; line-height: 1.4; }
+.sg-rules-key { margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; color: var(--ink-3); font-size: 12px; }
+.sg-rules-key span { display: inline-flex; align-items: center; gap: 6px; }
+.sg-rules-key i { width: 8px; height: 8px; border-radius: 3px; }
+
+/* Trade statistics. */
+.sg-trades-card { margin-top: 8px; }
+.sg-trades-card .pcard { box-shadow: none; background: none; padding: 16px 2px 4px; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+@media (max-width: 1200px) {
+  .sg-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sg-trades-card .pcard { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 1100px) {
+  .sg-hero { grid-template-columns: minmax(0, 1fr); }
+  .sg-row { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .sg-hero { padding: 20px 16px; }
+  .sg-chartbox { padding: 10px; }
+  .sg-read { flex-basis: 100%; white-space: normal; }
+  .sg-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sg-facts { grid-template-columns: minmax(0, 1fr); }
+  .sg-bar { grid-template-columns: 84px minmax(0, 1fr) auto; }
+  .sg-years li { grid-template-columns: 52px minmax(0, 1fr) 96px; }
+  .sg-trades-card .pcard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .sg-bar .tr i { transition: none; } }
+
+/* No strategy to show: only the title and a way back. */
+.sg-missing .sg-chartbox, .sg-missing .sg-stats, .sg-missing .sg-row, .sg-missing .sg-wide, .sg-missing .sg-trades-card,
+.sg-missing #headline, .sg-missing #vs, .sg-missing #u-go, .sg-missing #fine, .sg-missing #tags, .sg-missing #av { display: none; }
+.sg-missing .sg-hero { grid-template-columns: minmax(0, 1fr); }
