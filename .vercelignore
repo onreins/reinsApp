@@ -1,11 +1,14 @@
-# Upload only what the app needs to run; everything else (keys in .env, the
-# 457 MB of minute prices, contracts, research, tests) stays on this machine.
+# Upload only what the app needs to build and run; everything else (keys in
+# .env, the 457 MB of minute prices, research, tests) stays on this machine.
+# The build step (`npm run build` in vercel.json) compiles contracts/ into
+# build/, so the contracts and the compile script have to come along.
 /*
 !/api
 !/app
 !/arena
 !/bridge
 !/mandate
+!/contracts
 !/scripts
 !/build
 !/deployments
@@ -14,6 +17,7 @@
 !/vercel.json
 /scripts/*
 !/scripts/artifact.js
+!/scripts/compile.js
 /build/*
 !/build/Mandate.json
 !/build/MandateFactory.json
