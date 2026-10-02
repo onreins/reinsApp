@@ -8,20 +8,61 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/home.css">
 
 <a class="skip" href="#main">Skip to content</a>
 <aside id="side"></aside>
 <header id="top"></header>
 
 <main id="main">
-  <div class="hl-head">
-    <h1>Agents</h1>
-    <a class="btn-white" href="/create.html">Create agent</a>
-  </div>
+  <section class="hm-hero" aria-labelledby="hero-h">
+    <div>
+      <p class="hm-kick"><i class="pulse" aria-hidden="true"></i>Live on Arc testnet</p>
+      <h1 id="hero-h">Agents that trade <em>under rules</em></h1>
+      <p class="hm-lede">Each agent holds its owner’s USDC in its own contract and can trade inside the rules it was given, and nothing else. It has no way to withdraw. Every agent figure here is read straight from the chain.</p>
+      <div class="hm-cta">
+        <a class="btn-white" href="/create.html">Create agent</a>
+        <a class="chip" href="/chat.html" id="cta-chat">Describe a strategy</a>
+      </div>
+      <dl class="hm-stats">
+        <div><dt>Value locked</dt><dd id="st-value"><span class="skel line" style="width:90px;height:24px"></span></dd></div>
+        <div><dt>Live agents</dt><dd id="st-live">—</dd></div>
+        <div><dt id="st-trades-l">Trades settled</dt><dd id="st-trades">—</dd></div>
+        <div><dt id="st-freezes-l">Stop-losses fired</dt><dd id="st-freezes">—</dd></div>
+      </dl>
+    </div>
 
-  <div class="scards two">
-    <div class="scard"><div class="lbl">Total Value Locked</div><div class="val" id="st-value"><span class="skel line" style="width:120px;height:26px"></span></div></div>
-    <div class="scard"><div class="lbl">Live agents</div><div class="val" id="st-live">—</div></div>
+    <figure class="hm-rc" id="rc" aria-label="Rule check: real trades from the testnet run, and how the contract answered each">
+      <figcaption><b><span id="rc-ic"></span>Rule check</b><span>replaying the testnet run <button type="button" class="hm-pause" id="rc-pause" aria-pressed="false">Pause</button></span></figcaption>
+      <div class="hm-ask"><b id="rc-ask">Buy $0.50 of EURC</b><span id="rc-who">signed by its agent</span></div>
+      <ol class="hm-checks" id="rc-list"></ol>
+      <div class="hm-out" id="rc-out"></div>
+      <div class="hm-dots" id="rc-dots"></div>
+    </figure>
+  </section>
+
+  <div class="hm-row">
+    <section class="hm-panel" aria-labelledby="f-h">
+      <div class="hm-panel-h">
+        <h2 id="f-h">Top strategy templates <small>backtests</small></h2>
+        <a href="#strategies" id="f-all">All templates</a>
+      </div>
+      <div class="hm-feats" id="feats">
+        <div class="hm-feat skel-card"><span class="skel line"></span></div>
+        <div class="hm-feat skel-card"><span class="skel line"></span></div>
+        <div class="hm-feat skel-card"><span class="skel line"></span></div>
+      </div>
+    </section>
+    <section class="hm-panel" aria-labelledby="feed-h">
+      <div class="hm-panel-h">
+        <h2 id="feed-h"><i class="pulse" aria-hidden="true"></i>On-chain activity</h2>
+        <span id="feed-sub"></span>
+      </div>
+      <ol class="hm-feed" id="feed">
+        <li class="hm-ev"><span class="ei"></span><div><span class="skel line"></span><span class="skel line" style="width:50%"></span></div></li>
+        <li class="hm-ev"><span class="ei"></span><div><span class="skel line"></span><span class="skel line" style="width:40%"></span></div></li>
+      </ol>
+    </section>
   </div>
 
   <div class="hcard">
@@ -77,10 +118,11 @@
 
 <script src="/wallet.js"></script>
 <script src="/ui.js"></script>
+<script src="/home.js"></script>
 <script>
 (function () {
   "use strict";
-  var U = window.ReinsUI, W = window.ReinsWallet;
+  var U = window.ReinsUI, W = window.ReinsWallet, H = window.ReinsHome;
   var $ = function (id) { return document.getElementById(id); };
   var esc = U.esc;
   var PAGE = 10;
@@ -153,8 +195,9 @@
     var live = board.filter(function (r) { return !r.closed; });
     var priced = live.filter(function (r) { return r.equityUsd != null; });
     // Unknown, not zero, while every live agent's price feed is stale.
-    $("st-value").textContent = priced.length || !live.length ? U.money(priced.reduce(function (s, r) { return s + r.equityUsd; }, 0)) : "—";
-    $("st-live").textContent = String(live.length);
+    if (priced.length || !live.length) H.countUp($("st-value"), priced.reduce(function (s, r) { return s + r.equityUsd; }, 0), U.money);
+    else $("st-value").textContent = "—";
+    H.countUp($("st-live"), live.length, Math.round);
   }
 
   // -------------------------------------------------------------- strategies
@@ -185,8 +228,33 @@
     .then(function (d) {
       strats = (d.strategies || []).slice().sort(function (a, b) { return b.stats.cagr_since_2024 - a.stats.cagr_since_2024; });
       renderStrats();
+      H.featured($("feats"), strats);
     })
-    .catch(function () { strats = []; renderStrats(); });
+    .catch(function () { strats = []; renderStrats(); H.featured($("feats"), strats); });
+
+  // ---------------------------------------------------------- top half
+  H.ruleCheck($("rc"));
+  $("f-all").insertAdjacentHTML("beforeend", U.icon("right"));
+  var feedShown = false;
+  function loadActivity() {
+    if (document.hidden && feedShown) return Promise.resolve(); // a background tab needn't keep the RPC busy
+    return U.getJson("/api/activity").then(function (d) {
+      H.activity($("feed"), d);
+      feedShown = true;
+      H.countUp($("st-trades"), d.totals.trades, Math.round);
+      H.countUp($("st-freezes"), d.totals.freezes, Math.round);
+      // Trades and freezes are counted over the newest agents only once there are many.
+      var some = d.scanned < d.totals.agents ? " (newest " + d.scanned + " agents)" : "";
+      $("st-trades-l").textContent = "Trades settled" + some;
+      $("st-freezes-l").textContent = "Stop-losses fired" + some;
+      // A cold server reads each agent's history in turn; say so until it has them all.
+      $("feed-sub").textContent = d.partial ? "Still reading the chain…" : d.events.length ? "Latest " + d.events.length : "";
+    }).catch(function () {
+      if (!feedShown) $("feed").innerHTML = '<li class="hm-empty"><b>Couldn’t read the chain’s activity</b>Retrying every 30 seconds.</li>';
+    });
+  }
+  loadActivity();
+  setInterval(loadActivity, 30000);
 
   // ---------------------------------------------------------------- controls
   $("filter").addEventListener("change", function () { view.filter = $("filter").value; view.page = 0; renderBoard(); });

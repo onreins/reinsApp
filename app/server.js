@@ -36,6 +36,7 @@ import { chainIndex, RESET_EVENTS } from "../arena/returns.js";
 import { createRiskEngine, snapshot } from "../bridge/risk.js";
 import { mountStrategy } from "./strategy/routes.js";
 import { mountOnramp } from "./onramp.js";
+import { buildActivity } from "./activity.js";
 
 const ERC20 = parseAbi(["function balanceOf(address) view returns (uint256)"]);
 
@@ -194,20 +195,91 @@ export function createApp({ deployment, rpcUrl, strategy, onramp, publicClient }
     return boardInFlight;
   };
 
+  // Each agent's whole history is cached; callers take the newest `limit`.
+  // The activity totals need all of it, the pages need the latest 50.
   const historyCache = new Map();
-  const getHistory = async (address) => {
+  const HISTORY_SHOWN = 50;
+  const getHistory = async (address, limit = HISTORY_SHOWN) => {
     const key = address.toLowerCase();
     const hit = historyCache.get(key);
-    if (hit && Date.now() - hit.at < BOARD_TTL) return hit.data;
+    if (hit && Date.now() - hit.at < BOARD_TTL) return hit.data.slice(0, limit);
     try {
-      const data = await getIndexer().history(address);
+      const data = await getIndexer().history(address, { limit: Infinity });
       historyCache.set(key, { at: Date.now(), data });
-      return data;
+      return data.slice(0, limit);
     } catch (err) {
-      if (hit) return hit.data;
+      if (hit) return hit.data.slice(0, limit);
       throw err;
     }
   };
+
+  // A block's timestamp never changes, so each is read once.
+  const blockTimes = new Map();
+  const timeOf = async (block) => {
+    if (!blockTimes.has(block)) {
+      try {
+        const header = await getClient().getBlock({ blockNumber: BigInt(block) });
+        blockTimes.set(block, Number(header.timestamp));
+      } catch {
+        return null; // try again next time
+      }
+    }
+    return blockTimes.get(block);
+  };
+
+  // The home page's feed: the latest events across every agent, and totals.
+  // Agents are read one at a time: each history is a paged eth_getLogs scan,
+  // and the public RPC rate-limits bursts of them. A cold scan can take
+  // minutes, so the route answers after ACTIVITY_BUDGET_MS with what is ready
+  // ("partial": true) and the scan carries on for the page's next refresh.
+  const ACTIVITY_AGENTS = 25;
+  const ACTIVITY_BUDGET_MS = 8_000;
+  let warming = null;
+  const warmHistories = (list) => {
+    warming ??= (async () => {
+      for (const m of list) {
+        try {
+          await getHistory(m.address, Infinity);
+        } catch {
+          // left out until a later refresh reads it
+        }
+      }
+    })().finally(() => { warming = null; });
+    return warming;
+  };
+  app.get("/api/activity", async (_req, res) => {
+    try {
+      const board = await getBoard();
+      const newest = [...board.mandates]
+        .sort((a, b) => Number(b.createdAtBlock) - Number(a.createdAtBlock))
+        .slice(0, ACTIVITY_AGENTS);
+      let budget;
+      await Promise.race([
+        warmHistories(newest),
+        new Promise((resolve) => { budget = setTimeout(resolve, ACTIVITY_BUDGET_MS); }),
+      ]);
+      clearTimeout(budget);
+      const histories = new Map();
+      for (const m of newest) {
+        const hit = historyCache.get(m.address.toLowerCase());
+        if (hit) histories.set(m.address.toLowerCase(), hit.data);
+      }
+      // A stale cache entry is still served; only a history never read makes this partial.
+      const { events, totals, partial } = buildActivity({ mandates: newest, histories });
+      const times = await Promise.all(events.map((e) => timeOf(e.block)));
+      res.json({
+        explorer,
+        block: board.block ?? null,
+        events: events.map((e, i) => ({ ...e, t: times[i] })),
+        // agents and live cover every agent; trades and freezes cover the `scanned` newest.
+        totals: { ...totals, agents: board.mandates.length, live: board.mandates.filter((m) => !m.closed).length },
+        scanned: newest.length,
+        partial,
+      });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
 
   app.get("/api/leaderboard", async (_req, res) => {
     try {
