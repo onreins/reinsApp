@@ -135,6 +135,8 @@ window.ReinsUI = (function () {
     [null, [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["chat", "Strategy chat", "/chat.html"], ["create", "Create agent", "/create.html"]]],
     ["ARC", [["window", "Block explorer", "#", "nav-explorer"]]],
   ];
+  // On a phone the sidebar is hidden, so the main pages move to a bar along the bottom.
+  var TABS = [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["chat", "Chat", "/chat.html"], ["create", "Create", "/create.html"]];
   function topbar(page) {
     var nav = NAV.map(function (g) {
       return (g[0] ? '<div class="grp">' + g[0] + "</div>" : "") + g[1].map(function (it) {
@@ -155,10 +157,18 @@ window.ReinsUI = (function () {
         '<button class="x" id="promo-x" type="button" aria-label="Hide">' + icon("minus") + "</button><b>Tokenized stocks</b><span>Coming to Arc</span></div>");
     $("top").className = "top";
     $("top").innerHTML =
+      '<a class="top-brand" href="/" aria-label="Reins home">' + MARK + "</a>" +
       '<label class="search">' + icon("search") + '<span class="sr-only">Search agents and strategies</span>' +
       '<input id="gsearch" type="search" placeholder="Search agents and strategies" autocomplete="off"><kbd>/</kbd></label>' +
       '<div class="top-r"><span class="net" id="net"><i></i><span id="net-text">Arc</span></span>' +
       '<button class="btn-white" id="wallet" type="button">Connect Wallet</button></div>';
+    var tabbar = document.createElement("nav");
+    tabbar.className = "tabbar";
+    tabbar.setAttribute("aria-label", "Main");
+    tabbar.innerHTML = TABS.map(function (t) {
+      return '<a href="' + t[2] + '"' + (t[0] === page ? ' aria-current="page"' : "") + ">" + icon(t[0]) + "<span>" + t[1] + "</span></a>";
+    }).join("");
+    document.body.appendChild(tabbar);
     if ($("promo-x")) $("promo-x").addEventListener("click", function () {
       $("promo").remove();
       try { localStorage.setItem("reins-promo", "hidden"); } catch (e) { /* storage off */ }

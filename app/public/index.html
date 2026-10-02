@@ -280,9 +280,10 @@
   $("gsearch").addEventListener("input", function () { $("q").value = $("gsearch").value; onQuery($("gsearch").value); });
   U.onAccount(renderBoard);
   window.addEventListener("hashchange", function () {
-    document.querySelectorAll(".side a.item").forEach(function (a) { a.removeAttribute("aria-current"); });
-    var cur = document.querySelector('.side a.item[href="' + (location.hash === "#strategies" ? "/#strategies" : "/") + '"]');
-    if (cur) cur.setAttribute("aria-current", "page");
+    // Both the sidebar and the phone tab bar mark the current page.
+    document.querySelectorAll(".side a.item, .tabbar a").forEach(function (a) { a.removeAttribute("aria-current"); });
+    var href = location.hash === "#strategies" ? "/#strategies" : "/";
+    document.querySelectorAll('.side a.item[href="' + href + '"], .tabbar a[href="' + href + '"]').forEach(function (a) { a.setAttribute("aria-current", "page"); });
   });
 
   // ----------------------------------------------------------------- loading
