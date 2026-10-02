@@ -1,0 +1,48 @@
+# Keeps the testnet price feed fresh.
+#
+# Testnet mandates price EURC through PinnedFeed, a copy of the mainnet
+# Chainlink answer that only moves when someone publishes it. Agents refuse a
+# price older than their limit (24 hours by default), so without this job every
+# agent's value reads "—" after a quiet day. Every 6 hours leaves a 4x margin.
+#
+# Needs one repository secret, FEED_PUBLISHER_KEY: the key PinnedFeed accepts
+# as its publisher. Until it is set the job skips without failing. Better than
+# the deployer key: a fresh key with a little testnet USDC for gas, handed the
+# role with PinnedFeed.setPublisher, so CI never holds the deployer.
+#
+# GitHub runs scheduled workflows from the default branch only.
+name: Refresh testnet price feed
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-feed
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --omit=dev --ignore-scripts
+      - run: npm run build
+      - name: Publish the mainnet answer to the testnet feed
+        env:
+          RATCHET_DEPLOYER_KEY: ${{ secrets.FEED_PUBLISHER_KEY }}
+        run: |
+          if [ -z "$RATCHET_DEPLOYER_KEY" ]; then
+            echo "::warning::FEED_PUBLISHER_KEY is not set, so the feed was not refreshed."
+            exit 0
+          fi
+          node scripts/publish-feed.js
