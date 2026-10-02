@@ -43,6 +43,23 @@ export function windows(from, to, size = LOG_WINDOW) {
   return out;
 }
 
+/**
+ * A log as JSON: bigint fields (blockNumber, and blockTimestamp where the RPC
+ * returns one) become strings, and are listed so they can be turned back.
+ */
+function logToJson(log) {
+  const big = Object.keys(log).filter((k) => typeof log[k] === "bigint");
+  const out = { ...log };
+  for (const k of big) out[k] = log[k].toString();
+  return big.length ? { ...out, $bigints: big } : out;
+}
+
+function logFromJson(json) {
+  const { $bigints: big = [], ...log } = json;
+  for (const k of big) log[k] = BigInt(log[k]);
+  return log;
+}
+
 export class ArenaIndexer {
   /**
    * @param {object} p
@@ -90,6 +107,41 @@ export class ArenaIndexer {
       }
     }
     return toBlock >= entry.to ? entry.logs.slice() : entry.logs.filter((l) => l.blockNumber <= toBlock);
+  }
+
+  /**
+   * Everything read so far, in a form that survives JSON. Logs from past blocks
+   * never change, so a server seeded with this (seedLogs) reads only the blocks
+   * after it instead of scanning from the factory's deployment.
+   */
+  exportLogs() {
+    const entries = {};
+    for (const [key, e] of this.logCache) {
+      entries[key] = {
+        from: e.from.toString(),
+        to: e.to.toString(),
+        logs: e.logs.map(logToJson),
+      };
+    }
+    return { factory: this.factory.toLowerCase(), fromBlock: this.fromBlock.toString(), entries };
+  }
+
+  /**
+   * Load a saved exportLogs(). Ignored unless it is for this factory and start
+   * block, and never replaces a cache that has already read further.
+   * @returns {number} how many addresses it seeded
+   */
+  seedLogs(saved) {
+    if (!saved?.entries || saved.factory !== this.factory.toLowerCase() || saved.fromBlock !== this.fromBlock.toString()) return 0;
+    let seeded = 0;
+    for (const [key, e] of Object.entries(saved.entries)) {
+      const to = BigInt(e.to);
+      if ((this.logCache.get(key)?.to ?? -1n) >= to) continue;
+      const logs = e.logs.map(logFromJson);
+      this.logCache.set(key, { from: BigInt(e.from), to, logs });
+      seeded += 1;
+    }
+    return seeded;
   }
 
   /** Every mandate the factory has ever created. */

@@ -30,6 +30,7 @@
     "live:testnet": "node --env-file=.env scripts/live-testnet.js",
     "app": "node --env-file=.env app/server.js",
     "feed:publish": "node --env-file=.env scripts/publish-feed.js",
+    "snapshot:index": "node scripts/snapshot-index.js",
     "bridge": "node --env-file=.env bridge/server.js",
     "build:onramp": "esbuild scripts/onramp-client.js --bundle --format=iife --global-name=CircleOnramp --platform=browser --target=es2019 --minify --legal-comments=eof --outfile=app/public/vendor/onramp-kit.js"
   },

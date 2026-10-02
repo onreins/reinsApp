@@ -95,3 +95,71 @@ describe("concurrent readers", () => {
     assert.equal(b.length, 3, "the second reader gets the same logs, not a doubled list");
   });
 });
+
+describe("a saved snapshot of what was read", () => {
+  test("a server seeded from a snapshot rereads nothing it covers", async () => {
+    const first = new ArenaIndexer({ publicClient: stubClient(), factory: ADDRESS, fromBlock: 0n });
+    const original = await first._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_000n });
+    const saved = JSON.parse(JSON.stringify(first.exportLogs())); // through JSON, as on disk
+
+    const client = stubClient();
+    const fresh = new ArenaIndexer({ publicClient: client, factory: ADDRESS, fromBlock: 0n });
+    assert.equal(fresh.seedLogs(saved), 1);
+    const logs = await fresh._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_000n });
+
+    assert.equal(client.calls.length, 0, "covered by the snapshot");
+    assert.deepEqual(logs, original);
+    assert.equal(typeof logs[0].blockNumber, "bigint");
+  });
+
+  test("blocks after the snapshot cost only their own windows", async () => {
+    const first = new ArenaIndexer({ publicClient: stubClient(), factory: ADDRESS, fromBlock: 0n });
+    await first._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_000n });
+
+    const client = stubClient();
+    const fresh = new ArenaIndexer({ publicClient: client, factory: ADDRESS, fromBlock: 0n });
+    fresh.seedLogs(JSON.parse(JSON.stringify(first.exportLogs())));
+    await fresh._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_600n });
+
+    assert.deepEqual(client.calls, [[25_001n, 25_600n]]);
+  });
+
+  test("a snapshot from another factory or start block is ignored", async () => {
+    const first = new ArenaIndexer({ publicClient: stubClient(), factory: ADDRESS, fromBlock: 0n });
+    await first._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_000n });
+    const saved = JSON.parse(JSON.stringify(first.exportLogs()));
+
+    const other = new ArenaIndexer({ publicClient: stubClient(), factory: "0x0000000000000000000000000000000000000001", fromBlock: 0n });
+    assert.equal(other.seedLogs(saved), 0);
+    const later = new ArenaIndexer({ publicClient: stubClient(), factory: ADDRESS, fromBlock: 5n });
+    assert.equal(later.seedLogs(saved), 0);
+    assert.equal(other.seedLogs(null), 0);
+  });
+
+  test("every bigint field of a real log survives the round trip", async () => {
+    const log = { blockNumber: 7n, blockTimestamp: 1790000000n, logIndex: 2, transactionHash: "0xab", data: "0x", topics: [] };
+    const client = { getLogs: async () => [log] };
+    const first = new ArenaIndexer({ publicClient: client, factory: ADDRESS, fromBlock: 0n });
+    await first._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 10n });
+    const saved = JSON.parse(JSON.stringify(first.exportLogs()));
+
+    const fresh = new ArenaIndexer({ publicClient: stubClient(), factory: ADDRESS, fromBlock: 0n });
+    fresh.seedLogs(saved);
+    const [back] = await fresh._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 10n });
+    assert.deepEqual(back, log);
+  });
+
+  test("seeding never replaces a cache that has already read further", async () => {
+    const old = new ArenaIndexer({ publicClient: stubClient(), factory: ADDRESS, fromBlock: 0n });
+    await old._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 5_000n });
+    const saved = JSON.parse(JSON.stringify(old.exportLogs()));
+
+    const client = stubClient();
+    const live = new ArenaIndexer({ publicClient: client, factory: ADDRESS, fromBlock: 0n });
+    await live._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_000n });
+    assert.equal(live.seedLogs(saved), 0);
+    const calls = client.calls.length;
+    await live._logs({ address: ADDRESS, fromBlock: 0n, toBlock: 25_000n });
+    assert.equal(client.calls.length, calls);
+  });
+});

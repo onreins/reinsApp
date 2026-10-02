@@ -59,6 +59,20 @@ export function loadDeployment(network = process.env.APP_NETWORK ?? "testnet") {
   throw new Error(`no Mandate deployment found for "${network}" — run the deploy script first`);
 }
 
+const SNAPSHOT_FILE = fileURLToPath(new URL("./data/index-snapshot.json", import.meta.url));
+
+/** The indexer's saved log reads (npm run snapshot:index), if there is one for this chain. */
+export function loadIndexSnapshot(dep, file = SNAPSHOT_FILE) {
+  if (!existsSync(file)) return null;
+  try {
+    const saved = JSON.parse(readFileSync(file, "utf8"));
+    return saved.chainId === dep.chainId ? saved : null;
+  } catch (err) {
+    console.error("[app] index snapshot unreadable, scanning from the deployment block:", err.message);
+    return null;
+  }
+}
+
 const refuse = (message) => {
   const err = new Error(message);
   err.status = 400;
@@ -98,7 +112,7 @@ export function compileRules(rules) {
   };
 }
 
-export function createApp({ deployment, rpcUrl, strategy, onramp, publicClient } = {}) {
+export function createApp({ deployment, rpcUrl, strategy, onramp, publicClient, snapshot } = {}) {
   const dep = deployment ?? loadDeployment();
   const chain = dep.chainId === arc.id ? arc : arcTestnet;
   const explorer = dep.chainId === arc.id ? "https://explorer.arc.io" : "https://explorer.testnet.arc.io";
@@ -126,11 +140,15 @@ export function createApp({ deployment, rpcUrl, strategy, onramp, publicClient }
     return client;
   };
   const getIndexer = () => {
-    indexer ??= new ArenaIndexer({
-      publicClient: getClient(),
-      factory: dep.contracts.mandateFactory,
-      fromBlock: BigInt(dep.fromBlock ?? 0),
-    });
+    if (!indexer) {
+      indexer = new ArenaIndexer({
+        publicClient: getClient(),
+        factory: dep.contracts.mandateFactory,
+        fromBlock: BigInt(dep.fromBlock ?? 0),
+      });
+      // Past logs never change: start from the saved reads and scan only what's newer.
+      indexer.seedLogs(snapshot === undefined ? loadIndexSnapshot(dep) : snapshot);
+    }
     return indexer;
   };
 

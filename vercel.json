@@ -6,7 +6,7 @@
   "outputDirectory": "app/public",
   "functions": {
     "api/index.js": {
-      "includeFiles": "{build/Mandate.json,build/MandateFactory.json,deployments/testnet.json,deployments/mandate-testnet.json,app/data/prices.json}",
+      "includeFiles": "{build/Mandate.json,build/MandateFactory.json,deployments/testnet.json,deployments/mandate-testnet.json,app/data/prices.json,app/data/index-snapshot.json}",
       "maxDuration": 60
     }
   },
