@@ -1,26 +1,52 @@
-# Mandate
+# Reins
 
-**Give an AI agent money it cannot misuse, on [Arc](https://arc.io).**
+**Hand an AI agent the reins, never the keys.**
 
-A Mandate is a smart contract that holds an agent's USDC and enforces the rules
-the owner set, so the agent never has to be trusted:
+Reins lets anyone run an AI trading agent on [Arc](https://arc.io) without
+trusting it with their money. The agent's USDC sits in a smart contract, a
+**Mandate**, that enforces the rules its owner set. The agent can trade inside
+those rules and nothing else: it can't move money out, can't trade too big,
+can't take a bad price, and can't lose past the limit. The owner can take
+everything back at any time.
+
+- **App:** [app.reins.one](https://app.reins.one), Arc testnet
+- **Site:** [reins.one](https://reins.one), in the [`reins`](https://github.com/ic88t/reins) repo
+- **Plain-language walkthrough:** [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)
+
+This answers item 12 of Arc's
+[Request for Builders](https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money),
+"Money with a Mandate".
+
+---
+
+## What's in the app
+
+| Page | What it does |
+|---|---|
+| **Agents** | Every agent on the chain, ranked by return. Read straight from on-chain events: no database, nothing to take on trust. |
+| **An agent's page** | Its money, holdings, rules, risk headroom and history, including the trades it tried and was refused, each linking to the explorer. |
+| **Create agent** | Pick the rules in plain units (largest trade, loss limit, price band, expiry), see exactly what the contract will hold, and sign with your own wallet. Fund it with USDC you hold, or **buy USDC with a card** without leaving the page. |
+| **Strategy chat** | Describe a trading idea in plain words. An AI turns it into a strict strategy format and the app backtests it on real prices: any timeframe from 1 minute to 1 day, fees counted, checked half by half. |
+
+Your wallet signs every transaction. The app never sees a key and never holds
+funds.
+
+## How a Mandate protects the money
+
+A Mandate holds the agent's USDC and enforces, on every trade:
 
 - **only allowed assets**, through one exchange the owner chose
 - **a size limit** on every trade
 - **fair prices**: every fill is checked against Chainlink; worse than the
-  slippage limit and it reverts
-- **a loss limit**: a trade that would breach it reverts, and anyone can freeze
-  the mandate if the market alone pushes it past the line (a public stop-loss)
+  price band and it reverts
+- **a loss limit**: a trade that would breach it reverts, and *anyone* can
+  freeze the Mandate if the market alone pushes it past the line (a public
+  stop-loss)
 - **an expiry**, and **no way for the agent to move money out**
 
 The owner can withdraw everything, swap the agent or revoke it at any time, and
-that exit never depends on an oracle being healthy.
-
-This answers item 12 of Arc's [Request for Builders](https://www.arc.io/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money),
-"Money with a Mandate", and trades the one deep pool on Arc mainnet today:
-USDC/EURC on Uniswap v4.
-
-**New here? Read [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)** for the plain-language version.
+that exit never depends on an oracle being healthy. The rules are fixed at
+creation; nobody can loosen them later, including the owner.
 
 ### Proven against Arc mainnet, without spending anything
 
@@ -38,13 +64,7 @@ real Uniswap v4 pool, checked by the real Chainlink feed. Nothing is broadcast.
   equity at the end    $19.9900  (round trip cost $0.0100)
 ```
 
-Run on 2026-09-27. If it ever fails, the script reruns the same path stage by
-stage and names the stage that broke.
-
 ### Running live on Arc testnet
-
-The whole thing is deployed and has been put through its paces on-chain — every
-rule, including the ones that refuse:
 
 | contract | address |
 |---|---|
@@ -52,28 +72,20 @@ rule, including the ones that refuse:
 | `UniswapV4Venue` | [`0x007d5ad07b7a97fefcbd4302dfeafc11d8485052`](https://explorer.testnet.arc.io/address/0x007d5ad07b7a97fefcbd4302dfeafc11d8485052) |
 | a live mandate | [`0x991b8687aca6Acd6b92438bb4cE22866827bD632`](https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632) |
 
-An agent bought euros through the real Uniswap v4 PoolManager at 0.45% from the
-oracle; the mandate then refused a trade over its size limit, a trade into an
+An agent bought euros through the real Uniswap v4 pool at 0.45% from the
+oracle. The Mandate then refused a trade over its size limit, a trade into an
 asset it was never granted, a trade too large for the pool to price fairly, and
-a trade signed by a key that is not its agent. A stranger who owns none of it
-froze it when it fell through its floor, and the owner withdrew mid-strategy.
-Each refusal was broadcast deliberately, so it exists on-chain as a transaction
-you can open, not just as a simulation.
-
+a trade signed by a key that isn't its agent. A stranger froze it when it fell
+through its floor, and the owner withdrew mid-strategy. Each refusal was
+broadcast on purpose, so it exists on-chain as a transaction you can open.
 **[Every step, with transaction links →](docs/live-run/TESTNET-RUN.md)**
 
-```bash
-npm run deploy:testnet   # factory, venue, price feed
-npm run seed:testnet     # create and fund the USDC/EURC pool
-npm run live:testnet     # the run above
-```
+Two things differ from mainnet: Chainlink publishes no feeds to Arc testnet, so
+the Mandate reads a stand-in carrying the mainnet answer, and testnet had no
+USDC/EURC pool, so we created and funded one. Neither touches the Mandate
+contract.
 
-Two things differ from mainnet and both are stated in that document: Chainlink
-publishes no feeds to Arc testnet, so the mandate reads a stand-in carrying the
-mainnet answer; and testnet had no USDC/EURC pool, so we created one and funded
-it. Neither touches the Mandate contract itself.
-
-### Plug in any AI agent
+## Plug in any AI agent
 
 ```bash
 MANDATE_ADDRESS=0x… MANDATE_AGENT_KEY=0x… npm run mandate:mcp
@@ -81,272 +93,152 @@ MANDATE_ADDRESS=0x… MANDATE_AGENT_KEY=0x… npm run mandate:mcp
 
 An MCP server gives any MCP-speaking agent (Claude and others) three tools:
 `mandate_status` (money, holdings, rules, loss headroom), `mandate_price` and
-`mandate_trade`. A refused trade comes back as the rule it broke and why, so the
-agent adjusts instead of retrying blindly. `mandate/sdk.js` offers the same from
-JavaScript, and `agents/fx-reversion.js` is a reference agent built on it.
+`mandate_trade`. A refused trade comes back as the rule it broke and why, so
+the agent adjusts instead of retrying blindly. `mandate/sdk.js` offers the same
+from JavaScript, and `agents/fx-reversion.js` is a reference agent built on it
+(a worked example, **not a profitable strategy**: see
+[research/FINDINGS.md](research/FINDINGS.md)).
 
-| piece | file |
-|---|---|
-| Mandate + factory | `contracts/Mandate.sol` |
-| Uniswap v4 exchange adapter | `contracts/UniswapV4Venue.sol` |
-| SDK / MCP server | `mandate/sdk.js`, `mandate/mcp-server.js` |
-| reference agent | `agents/fx-reversion.js` — a worked example, **not a profitable strategy**: [research/FINDINGS.md](research/FINDINGS.md) |
-| mainnet deploy (dry run first) | `npm run deploy:mandate -- --dry-run` |
+## The strategy chat
 
-An adversarial security review ran before any deployment. Nothing critical; it
-found a way a broken price feed could block partial withdrawals, a mid-swap
-stop-loss trigger, and rounding on dust trades, all fixed with regression tests.
+Plain words in, a validated strategy and an honest backtest out.
+
+- **A strict format, not code.** The AI only ever proposes a strategy as data
+  (zod-validated in `app/strategy/spec.js`): price, SMA, EMA, RSI, N-candle
+  highs and lows, compared four ways, as rules or DCA. Anything outside it is
+  refused, and a spec whose timeframes don't match what the person wrote
+  ("50-day" built as 50 minutes) is sent back to be fixed.
+- **Every number comes from the backtester, never from the AI.** Signals are
+  read at a candle's close and filled at the next open; stops fill at their
+  level or at the gap; every fill pays the chosen fee (0.05%, 0.1% or 0.3%).
+- **Any timeframe, mixed.** 1m, 5m, 15m, 1h, 4h or 1d, and each average can sit
+  on its own timeframe ("the 100-minute EMA crosses the 50-day average"). A
+  slower series is only read once its candle has closed, so nothing sees the
+  future.
+- **Real prices.** Binance candles for BTC, ETH, SOL, XRP, BNB, DOGE, AVAX and
+  LINK since 2019: daily in `app/data/prices.json`, 1-minute (~30M candles,
+  457 MB) outside git, built by `scripts/export-candles.py`. A full 7-year
+  minute backtest takes ~0.3 s on a worker thread, so it never stalls the
+  server.
+- **Honest reports.** Return against simply holding, worst drop, fees paid, and
+  a consistency check that flags a result resting on one half of the period.
+  Each reply that changes a strategy keeps that version, so you can go back.
+- **Free AI, rotated.** Any OpenAI-compatible endpoint; today four Cloudflare
+  Workers AI models in turn, so a limited or busy one hands the same
+  conversation to the next. With none available, an offline builder answers.
+
+These coins aren't tradeable on Arc yet (only USDC/EURC has a deep pool), so a
+chat strategy is a study until pools launch; the app says so. Details:
+[app/strategy/README.md](app/strategy/README.md).
+
+## Card funding
+
+The create flow can buy USDC on Arc with a debit card, Apple Pay or Google Pay
+through Circle's [Onramp Kit](https://docs.arc.io/app-kit/onramp). The USDC goes
+to the person's own wallet, and the usual deposit step moves it into their
+agent; card details and identity checks stay with Circle. Our server mints
+30-minute sessions with a key the browser never sees (`app/onramp.js`), and the
+page confirms arrival by reading the wallet's balance on-chain rather than
+trusting the widget's events. It runs in Circle's sandbox until a key is set.
 
 ---
-
-# Verdict (earlier work)
-
-**A neutral evaluator for agent work on [Arc](https://arc.io).**
-
-ERC-8183 lets one agent hire another and hold the payment in escrow. Someone has
-to decide whether the work was good enough to release the money — the standard
-calls that role the **evaluator**, and lets the client name anyone to it,
-including themselves. Circle's own quickstart does exactly that: the buyer marks
-their own homework, and can reject good work to take the escrow back.
-
-Verdict holds that seat with nothing to gain from the answer. It re-runs the
-delivered code against tests both sides agreed to up front, pays or refuses
-accordingly, and **abstains rather than guessing** when it cannot verify.
-
-## Verdict's contracts, live on Arc testnet
-
-| contract | address |
-|---|---|
-| `AgenticCommerce` — ERC-8183 job escrow | [`0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d`](https://explorer.testnet.arc.io/address/0x9d8dbdb27124e7e858c1e22a4ec94160fcafc76d) |
-| `ArbitratedEscrow` — settles on Verdict attestations | [`0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794`](https://explorer.testnet.arc.io/address/0xdcfaf4d8be9eedf12fe4b0b4ceafb9d1d580f794) |
-| `RatchetVault` — USDC payment channels | [`0x2dcf3df463b194844bb7496ea7d32174339fc936`](https://explorer.testnet.arc.io/address/0x2dcf3df463b194844bb7496ea7d32174339fc936) |
-
-Two real jobs have settled on it, with three distinct keys as client, provider
-and evaluator:
-
-```
-  job #1  correct code   PASSED 3/3   escrow released, provider +$0.10
-  job #2  buggy code     FAILED 1/3   rejected, client refunded
-          FAIL  adds two numbers — expected stdout "5", got "6"
-```
-
-Every transaction is linked in [docs/live-run/LIVE-RUN.md](docs/live-run/LIVE-RUN.md).
-
-### Don't trust us — check it
-
-```bash
-npm install && npm run build
-npm run verify -- 1
-```
-
-`verify` needs no keys. It reads the job from Arc, decodes the spec from the job's
-on-chain description and the deliverable from the provider's `submit()` calldata,
-checks both against their committed hashes, **re-runs the tests itself**, and
-confirms the evaluator's on-chain decision matches. Both live jobs pass every check.
-
-That works because job inputs are stored on-chain as content-addressed `data:`
-URIs. No server of ours has to be up for anyone to re-derive a verdict.
-
-## How it decides
-
-1. **The client commits a spec** — the tests the work must pass — by hash, in the
-   job description.
-2. **The provider commits a deliverable** by hash, in `submit()`.
-3. **Verdict fetches both**, checks each against its commitment, re-runs the tests
-   in a sandbox, and calls `complete()` or `reject()`.
-4. **The verdict is published in full and signed** — every test, its output, why
-   it passed or failed. Its hash is the `reason` recorded on-chain.
-
-Three outcomes, not two:
-
-| | |
-|---|---|
-| `passed` | every test passed → escrow released |
-| `failed` | the work is real but wrong → escrow refused |
-| `abstain` | **could not verify honestly → nothing happens** |
-
-If the deliverable won't fetch, doesn't hash to what was committed, or the spec
-is malformed, Verdict declines to act — it does not guess, and does not default
-to whichever side is asking. The escrow is untouched, and the job's own expiry
-returns it to the client. An evaluator that guesses under uncertainty is worse
-than none, because both parties relied on it.
-
-## For any escrow: the arbiter API
-
-The evaluator above serves jobs on our own ERC-8183 escrow. Escrow protocols that
-already hold funds can ask for a ruling directly:
-
-```bash
-npm run arbiter          # POST /v1/rulings on :4080, signed by RATCHET_EVALUATOR_KEY
-```
-
-```jsonc
-// POST /v1/rulings
-{
-  "terms":    { "uri": "https://…/terms.json", "hash": "0x3e22…" },  // or { "document": {…} }
-  "delivery": { "uri": "ipfs://…",             "hash": "0xadda…" },
-  "attest":   { "chainId": 5042002, "escrow": "0xYourEscrow", "caseId": "0x…" }
-}
-```
-
-The response carries the full ruling, a signature over its hash, and, when `attest`
-is given, an **EIP-712 attestation** bound to that escrow, that case and those exact
-commitments:
-
-```
-Ruling(bytes32 caseId, uint8 outcome, uint8 score,
-       bytes32 rulingHash, bytes32 termsHash, bytes32 deliveryHash)
-```
-
-Your contract verifies it with the `VerdictRuling` library in
-`contracts/ArbitratedEscrow.sol`: check the signer is the arbiter you named, check the
-hashes equal what the parties committed, then pay (`1`) or refund (`2`). An abstain
-(`3`) must move nothing. `ArbitratedEscrow` is a complete reference escrow built that
-way, and its tests show it refusing forged signers, attestations made for a different
-escrow, rulings about a different delivery, malleable signatures, and abstains.
-
-This runs live on Arc testnet: two cases on `ArbitratedEscrow`, where the arbiter
-API ruled, the contract verified the attestation on-chain, and paid the seller for
-working code and refunded the buyer for buggy code. Evidence with every transaction
-is in [docs/live-run/ARBITER-RUN.md](docs/live-run/ARBITER-RUN.md)
-(`npm run live:arbiter` to reproduce).
-
-Set `VERDICT_PAID=1` to charge **$0.01 per ruling over x402** through Circle
-Gateway. The price is the same for every outcome, and malformed requests are
-rejected before any charge. URLs are fetched through an SSRF guard: public
-addresses only, checked again at connect time so DNS rebinding fails, every
-redirect re-checked, and bodies capped while streaming.
-
-## Also: compute, paid per run through Circle Gateway
-
-The same sandbox is sold directly to agents over **x402**, settled by **Circle
-Gateway Nanopayments** — batched, and gasless for the payer. No account, no API
-key, no card. Run for real on Arc testnet:
-
-```
-  python     -> 499999500000   paid $0.0017   (ran 454ms)
-  javascript -> 1,2,3          paid $0.0012   (ran 115ms)
-  python     -> {"ok": true}   paid $0.0012   (ran 366ms)
-
-  agent gas per call   $0 — Circle batches the authorizations
-```
 
 ## Running it
 
 ```bash
-npm install && npm run build
+npm install && npm run build      # compile the contracts
+npm run chain                     # terminal 1: a local chain
+npm test                          # terminal 2: 400+ tests
+npm run app                       # the app on http://localhost:4100
 ```
 
-Locally, against a throwaway chain:
+The app reads `.env` (gitignored). Everything is optional; without a setting,
+that feature switches itself off.
 
-```bash
-npm run chain          # terminal 1
-npm test               # terminal 2 — 192 tests
-npm run demo:verdict   # the evaluator: pass, fail, and a caught content swap
-```
-
-On Arc testnet (needs USDC from [faucet.circle.com](https://faucet.circle.com)):
-
-```bash
-npm run keygen                                  # a deployer key; fund its address
-echo "RATCHET_DEPLOYER_KEY=0x..." > .env        # .env is gitignored
-
-node --env-file=.env scripts/deploy-arc.js      # AgenticCommerce (+ --with-vault)
-npm run setup:roles                             # provider + evaluator keys and gas
-npm run live:arc                                # two real verified jobs
-npm run pay:x402                                # an agent buys compute via Gateway
-npm run evaluator                               # Verdict as a service, watching Arc
-```
-
-The evaluator service polls for jobs naming its key, judges them, and settles.
-It saves the last handled block atomically and only after a full pass succeeds,
-so a crash re-scans rather than skips, and it re-reads each job's status before
-acting, so a restart cannot settle anything twice.
-
-## Security
-
-**Contracts.** No owner, no admin function, no upgrade path, no pause. The
-protocol fee is immutable and capped at 2.5% at construction — an agent cannot
-safely commit funds to a contract whose rake can change. `selfEvaluated(jobId)`
-tells a provider in one call whether the client has named themselves evaluator.
-
-**Adversarial reviews ran before each deployment.** Found and fixed:
-
-| severity | finding |
+| Setting | What it does |
 |---|---|
-| critical | the arbiter's URL guard could be bypassed by writing a private or cloud-metadata IPv4 in IPv6 notation (`[::ffff:169.254.169.254]` is normalised to hex groups); addresses are now classified by numeric value across mapped, compatible, NAT64, 6to4 and Teredo forms |
-| high | a burst of paid requests could exceed the sandbox concurrency limit while payments were being verified; slots are now reserved before any async step |
-| high | free-tier callers could fill the disk with distinct rulings; storage is bounded and requests are rate-limited per client |
-| medium | a paid request that hit an internal error got a bare 500 after being charged; it now gets a signed abstain |
-| critical | a payer could close a payment channel and destroy the provider's unsettled vouchers — $93 of delivered work for 1 wei, reproduced on-chain before the fix |
-| high | a USDC-blocklisted recipient made settlement revert forever, letting the client reclaim escrow for delivered work; payouts now fall back to a pull credit |
-| medium | an incomplete reentrancy guard let a hook complete a job from inside `reject()` |
-| medium | a submission at the deadline could be refunded in the next block; evaluators now get a guaranteed window |
-| medium | the metering service could keep serving a channel already counting down to close |
-| low ×2 | an unbounded challenge window could brick a channel; a stale quote survived a provider change |
+| `APP_NETWORK`, `APP_RPC` | Which Arc network and RPC the app reads (default: testnet, public RPC) |
+| `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` | The chat's AI: any OpenAI-compatible endpoint |
+| `LLM_FALLBACK_MODELS`, `LLM2_BASE_URL`… | More models and providers to rotate to when one is limited |
+| `CANDLES_DIR` | Where the 1-minute price files live (default `data/candles`) |
+| `ONRAMP_API_KEY`, `ONRAMP_ENV`, `ONRAMP_REFERRER_DOMAIN` | Card funding through Circle (sandbox by default) |
+| `TRUST_PROXY` | Proxy hops to trust behind a host like Vercel, so rate limits see real visitors |
 
-The fixes are checkable on the live contracts (`EVALUATION_WINDOW`,
-`MAX_CHALLENGE_BLOCKS`). **192 tests**, most of them adversarial.
+Minute prices, if you want minute and hourly strategies locally:
 
-**The sandbox.** Under Docker: no network, capped memory and pids, read-only
-root, dropped capabilities, non-root user. **The `process` backend is not a
-security boundary** — it is for development, and the service warns when Docker
-is unavailable.
+```bash
+freqtrade download-data --exchange binance --trading-mode spot --timeframes 1m --timerange 20190101- --pairs BTC/USDT ETH/USDT ...
+python scripts/export-candles.py <freqtrade>/user_data/data/binance
+```
+
+### Deploying
+
+The app runs on Vercel: pages from `app/public` on the CDN, the API as one
+function (`api/index.js` wraps the same Express app). `vercel.json` and
+`.vercelignore` decide what ships; keys stay in Vercel's settings. The 1-minute
+prices are too large for a function, so the hosted app runs daily strategies
+only until they move to object storage. A build from GitHub needs the two
+compiled contract files the API loads (`build/Mandate.json`,
+`build/MandateFactory.json`), which `npm run build` produces.
+
+## Layout
+
+```
+contracts/      Mandate + factory, UniswapV4Venue, price feeds (and earlier work)
+mandate/        SDK and MCP server for agents
+agents/         reference agent
+app/            the app: Express server, pages, strategy chat, card funding
+  strategy/     spec, backtester, minute candles, worker pool, chat, model rotation
+  public/       the pages (Agents, agent page, Create agent, Strategy chat)
+api/            the app as a Vercel function
+arena/          leaderboard and returns, read from chain events
+bridge/         risk engine behind an agent's page
+scripts/        build, deploy, simulate, price exports
+research/       strategy research and findings
+site/           reins.one (published separately to the reins repo)
+docs/           how it works, live-run evidence, handoff, product notes
+test/           400+ tests, most of them adversarial
+```
 
 ## Honest limits
 
-- **Not formally audited.** Two adversarial reviews and 192 tests are not an audit.
-- **The market is early.** Agent-to-agent job volume is thin everywhere today, not
-  only on Arc. Pay-per-call x402 is where live traffic is.
-- **Only checkable work.** Re-execution judges code, computation and data transforms,
-  not subjective quality.
-- **Trusted, not trustless — yet.** Verdicts are signed and reproducible, so cheating
-  is detectable, but nothing stakes or slashes. That is the next milestone.
+- **Testnet today.** Nothing is deployed to mainnet yet; `npm run deploy:mandate
+  -- --dry-run` estimates ~$0.10 of gas when it is.
+- **One deep pool.** Only USDC/EURC is liquid on Arc mainnet, so a real agent is
+  an FX agent until more pools launch.
+- **Not formally audited.** An adversarial security review ran before any
+  deployment and its findings are fixed with regression tests (a broken price
+  feed blocking partial withdrawals, a mid-swap stop-loss trigger, rounding on
+  dust trades), but a review is not an audit.
+- **Backtests are history.** They count fees and avoid lookahead, but past
+  results don't promise future ones, and nothing in Reins is investment advice.
 
 ## Arc notes
 
 Things that bit, or would have:
 
 - **Native USDC is 18 decimals; the ERC-20 view of the same balance is 6.** One
-  balance, not two. Escrow moves the ERC-20 form; gas and payment channels use native.
+  balance, not two.
 - **Block timestamps are only non-decreasing.** Deadlines that need guaranteed
   progress use block numbers.
-- **The public RPC refuses `eth_getLogs` ranges of 10,000+ blocks** (~83 minutes), and
-  rejects multi-event topic filters. Every log query here pages and filters locally.
-- **viem caches `getBlockNumber` for ~4s.** At 0.5s blocks that hides ~8 blocks — enough
-  to miss a submission made moments ago. Head is read uncached.
-- **Base fee floor is 20 gwei**, paid to the block producer; transactions below it
-  are dropped silently.
+- **The public RPC refuses `eth_getLogs` ranges of 10,000+ blocks** and rejects
+  multi-event topic filters. Every log query here pages and filters locally.
+- **viem caches `getBlockNumber` for ~4 s.** At 0.5 s blocks that hides ~8
+  blocks. Head is read uncached.
+- **Base fee floor is 20 gwei**; transactions below it are dropped silently.
 
 | | mainnet | testnet |
 |---|---|---|
 | chain id | 5042 | 5042002 |
 | USDC | `0x3600…0000` | `0x3600…0000` |
-| ERC-8004 registries | not deployed | `0x8004A8…` / `0x8004B6…` / `0x8004Cb…` |
 
-## Layout
+## Earlier work
 
-```
-contracts/
-  AgenticCommerce.sol   ERC-8183 job escrow (deployed)
-  ArbitratedEscrow.sol  VerdictRuling verifier library + a reference escrow that settles on it
-  RatchetVault.sol      USDC payment channels (deployed)
-  Mocks.sol             test scaffolding: USDC with blocklist, ERC-8004 registry, hostile hook
-
-arbiter/                the arbiter API: rulings for any escrow, EIP-712 attestations, SSRF-safe fetch
-evaluator/              the product
-  spec.js               the Verdict protocol — specs, deliverables, canonical hashing
-  verify.js             resolve, check commitments, run, decide (incl. abstain)
-  index.js              holds the seat: ERC-8183 and ERC-8004 actions, paged log reads
-  daemon.js             the evaluator as a resumable service
-
-service/                sandbox compute sold over x402, settled by Circle Gateway
-src/                    sandbox, payment channel, metering, client
-scripts/                deploy, verify-job, setup-roles, keygen
-demo/                   live-arc, pay-x402, verdict, service
-docs/                   live-run evidence, grant draft, handoff
-test/                   192 tests
-```
+Reins grew out of **Verdict**, a neutral evaluator for payments between AI
+agents (ERC-8183), with an arbiter API for any escrow and compute sold over
+x402 through Circle Gateway. It still runs on Arc testnet, and its code lives in
+`arbiter/`, `evaluator/`, `service/` and `src/`. The full write-up is in
+[docs/VERDICT.md](docs/VERDICT.md).
 
 ## License
 
