@@ -10,7 +10,7 @@ can't take a bad price, and can't lose past the limit. The owner can take
 everything back at any time.
 
 - **App:** [app.reins.one](https://app.reins.one), Arc testnet
-- **Site:** [reins.one](https://reins.one), in the [`reins`](https://github.com/ic88t/reins) repo
+- **Site:** [reins.one](https://reins.one), in the [`reins`](https://github.com/onreins/reins) repo
 - **Plain-language walkthrough:** [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md)
 
 This answers item 12 of Arc's
