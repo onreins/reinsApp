@@ -199,6 +199,8 @@ footer .fine { margin-top: 14px; font-size: 13px; color: var(--ink-3); max-width
   scrollbar-width: none;
 }
 .carousel::-webkit-scrollbar { display: none; }
+/* With the heading above it hidden, the first row keeps the tape's spacing. */
+#deck { margin-top: clamp(40px, 6vw, 72px); scroll-margin-top: 90px; }
 .car-nav { display: flex; justify-content: flex-end; gap: 10px; max-width: 80rem; margin: 0 auto 14px; padding-inline: clamp(16px, 7vw, 104px); }
 .car-btn { width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(20,23,58,.12); background: #fff; color: #14173a; cursor: pointer; display: grid; place-items: center; box-shadow: 0 6px 16px rgba(16,20,60,.08); transition: transform .16s ease, opacity .16s ease; }
 .car-btn:hover:not(:disabled) { transform: scale(1.07); }
@@ -444,6 +446,156 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Benefit panels, after Frontier Traders: a photographic dark panel (drawn in
+   SVG: light beams, brushed streaks where the light falls, vignette, grain) and
+   one composed widget of white tiles on it: 2px apart, no shadows, 16px
+   corners, small tracked labels over medium-weight values. Everything is
+   visible at rest; with motion allowed, each panel plays once on arrival. */
+.bens { display: grid; gap: clamp(64px, 9vw, 120px); padding-block: clamp(8px, 2vw, 20px) clamp(24px, 4vw, 48px); }
+.ben { display: grid; gap: clamp(22px, 3vw, 32px); scroll-margin-top: 90px; }
+.ben-art {
+  position: relative; overflow: hidden; isolation: isolate; border-radius: 16px; background: #05061a;
+  min-height: clamp(540px, 54vw, 680px); display: grid; place-items: center; padding: clamp(40px, 6vw, 80px) 16px;
+}
+.bn-bg { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; }
+.ben-art::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .11; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+@media (prefers-reduced-motion: no-preference) {
+  .bn-beams { animation: bnDrift 16s ease-in-out infinite alternate; transform-box: view-box; }
+  .b2 .bn-beams { animation-duration: 20s; animation-direction: alternate-reverse; }
+}
+@keyframes bnDrift { from { transform: translateX(-40px); } to { transform: translateX(40px); } }
+
+/* The widget: Frontier's measurements. */
+.bn-stack { width: min(440px, 100%); display: grid; gap: 2px; }
+.bn-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+.bn-row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.bn-t { min-width: 0; background: #fff; color: #151513; border-radius: 16px; padding: 18px 20px; }
+.bn-l { display: block; font: 400 12px/1 var(--sans); letter-spacing: 1px; text-transform: uppercase; color: #514f4b; }
+.bn-v { display: block; margin-top: 10px; font: 500 24px/28px var(--sans); letter-spacing: -.01em; color: #151513; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bn-v.up { color: #1a8a4a; }
+
+.bn-head { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.bn-head b { flex: 1; min-width: 0; font: 500 18px var(--sans); letter-spacing: -.01em; color: #151513; }
+.bn-av { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex: none; background: #14173a; color: #fff; box-shadow: 0 0 0 1px rgba(21, 21, 19, .08); }
+.bn-av svg { width: 16px; height: 16px; fill: currentColor; }
+.bn-av.ai { background: linear-gradient(140deg, #8a6dff, #3d6bf3); }
+.bn-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding-inline: 11px; border-radius: 999px; background: #f3f2ef; font: 500 12.5px var(--sans); color: #3b3a37; }
+.bn-chip i { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; }
+.bn-chip.mcp { background: #f0ecff; color: #4b33b5; }
+@media (prefers-reduced-motion: no-preference) { .bn-chip i { animation: bnLive 1.8s ease-out infinite; } }
+@keyframes bnLive { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, .55); } 70%, 100% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } }
+
+.bn-feed { padding: 18px 8px 8px; }
+.bn-fh { display: flex; justify-content: space-between; padding: 0 12px 12px; font: 400 12px/1 var(--sans); letter-spacing: 1px; text-transform: uppercase; color: #514f4b; }
+.bn-ev { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; color: inherit; text-decoration: none; transition: background .15s ease; }
+.bn-ev + .bn-ev { box-shadow: 0 -1px 0 #f0efeb; }
+.bn-ev:hover { background: #f7f6f3; box-shadow: none; }
+.bn-ev:hover + .bn-ev { box-shadow: none; }
+.bn-e { display: grid; gap: 2px; min-width: 0; }
+.bn-e b { font: 450 15px/1.3 var(--sans); font-weight: 500; color: #151513; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bn-e small { font: 400 12.5px/1.3 var(--sans); color: #6f6d68; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bn-go { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; color: #8d8b86; transition: background .15s ease, color .15s ease; }
+.bn-go svg { width: 12px; height: 12px; }
+.bn-ev:hover .bn-go { background: #fff; color: #151513; }
+.bn-b { display: inline-grid; place-items: center; height: 26px; min-width: 88px; padding-inline: 10px; border-radius: 8px; font: 500 12.5px var(--sans); }
+.bn-b.ok { background: #e6f6ec; color: #1a8a4a; }
+.bn-b.no { background: #fdeceb; color: #c23a2b; }
+
+.bn-say p { margin-top: 10px; font: 400 15.5px/1.45 var(--sans); color: #151513; }
+.bn-call { display: grid; gap: 10px; }
+.bn-ch { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.bn-ch code { font: 500 13px var(--mono); color: #4b33b5; }
+.bn-cr { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.bn-args { font: 500 18px/1.2 var(--sans); color: #151513; font-variant-numeric: tabular-nums; }
+.bn-call small { font: 400 12.5px var(--sans); color: #6f6d68; }
+
+.ben-copy { max-width: 60ch; }
+.ben-copy h3 { font: 500 clamp(24px, 2.6vw, 32px)/1.15 var(--display); letter-spacing: -.025em; color: #14173a; text-wrap: balance; }
+.ben-copy p { margin-top: 12px; color: var(--ink-2); font-size: 17px; line-height: 1.55; }
+.ben-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; color: var(--ink-3); font: 500 15px var(--sans); text-decoration: none; transition: color .15s ease, gap .2s var(--ease); }
+.ben-link:hover { color: #14173a; gap: 9px; }
+.ben-link svg { width: 12px; height: 12px; }
+
+/* Played once: armed panels hold their tiles back, then they arrive in order. */
+@media (prefers-reduced-motion: no-preference) {
+  .ben-art.arm .bn-t { opacity: 0; translate: 0 18px; }
+  .ben-art.arm .bn-ev { opacity: 0; translate: 0 6px; }
+  .ben-art.arm .bn-b { scale: .7; }
+  .ben-art.go .bn-t { opacity: 1; translate: 0 0; transition: opacity .55s ease, translate 1s var(--sp-soft); transition-delay: calc(var(--i) * 120ms); }
+  .ben-art.go .bn-ev { opacity: 1; translate: 0 0; transition: opacity .45s ease, translate .7s var(--sp-soft); transition-delay: calc(700ms + var(--j) * 240ms); }
+  .ben-art.go .bn-b { scale: 1; transition: scale .6s var(--sp-pop); }
+  .ben-art.go .bn-ev .bn-b { transition-delay: calc(820ms + var(--j) * 240ms); }
+  .ben-art.go .bn-call .bn-b { transition-delay: calc(var(--i) * 120ms + 320ms); }
+}
+@media (max-width: 560px) {
+  .ben-art { min-height: 0; padding: 32px 10px; border-radius: 14px; }
+  .bn-t { padding: 14px 14px; }
+  .bn-v { font-size: 19px; line-height: 24px; }
+  .bn-row.three .bn-v { font-size: 17px; }
+  .bn-head b { font-size: 16px; }
+  .bn-args { font-size: 16px; }
+  .bn-l, .bn-fh { font-size: 11px; letter-spacing: .5px; }
+  .bn-ev { gap: 10px; padding: 10px 8px; }
+  .bn-b { min-width: 80px; padding-inline: 8px; font-size: 12px; }
+  .bn-e b, .bn-e small { white-space: normal; }
+  .bn-go { display: none; }
+}
+
+/* v3: each widget gets its own character. Rules: a dark header and a tiny
+   diagram per rule. AI: your message in blue on the right, tool calls as dark
+   code tiles, and a tilted toast over the corner. */
+.bn-head.ink { background: #14173a; }
+.bn-head.ink b { color: #fff; }
+.bn-head.ink .bn-av { background: #fff; color: #14173a; box-shadow: none; }
+.bn-head.ink .bn-chip { background: rgba(255, 255, 255, .1); color: #d9def7; }
+.bn-viz { display: block; width: 100%; height: 22px; margin-top: 12px; overflow: visible; }
+.bn-b { gap: 5px; grid-auto-flow: column; }
+.bn-b svg { width: 11px; height: 11px; }
+
+.bn-say.me { justify-self: end; width: 82%; background: #e9efff; }
+.bn-say.me .bn-l { color: #3d55b3; }
+.bn-call.dark { background: #0e0f22; color: #e8e9f5; }
+.bn-call.dark .bn-l { color: #8f93b8; }
+.bn-call.dark code { color: #b9a6ff; }
+.bn-call.dark .bn-args { color: #fff; font-family: var(--mono); font-size: 15px; font-weight: 500; }
+.bn-call.dark small { color: #9a9dbd; }
+.bn-call.dark .bn-b.no { background: rgba(229, 83, 61, .16); color: #ff9a87; }
+.bn-call.dark .bn-b.ok { background: rgba(26, 138, 74, .2); color: #7fe0a6; }
+
+.bn-stack { position: relative; }
+.bn-toast {
+  position: absolute; right: -150px; top: 230px; z-index: 2; display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px 11px 12px; border-radius: 14px; background: #fff; rotate: 4deg;
+  box-shadow: 0 22px 50px rgba(4, 4, 20, .45);
+}
+.bn-toast b { display: block; font: 500 13.5px var(--sans); color: #151513; }
+.bn-toast small { display: block; font: 400 12px var(--mono); color: #c23a2b; }
+.bn-tdot { width: 26px; height: 26px; border-radius: 50%; background: #fdeceb; flex: none; position: relative; }
+.bn-tdot::before, .bn-tdot::after { content: ""; position: absolute; left: 50%; top: 50%; width: 11px; height: 2px; border-radius: 2px; background: #c23a2b; translate: -50% -50%; rotate: 45deg; }
+.bn-tdot::after { rotate: -45deg; }
+@media (max-width: 900px) { .bn-toast { display: none; } }
+
+@media (prefers-reduced-motion: no-preference) {
+  .ben-art.arm .bn-grow { transform: scaleX(0); }
+  .ben-art.arm .bn-over { opacity: 0; transform: translateX(-10px); }
+  .ben-art.arm .bn-draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .ben-art.arm .bn-dot { transform: translateX(26px); opacity: 0; }
+  .ben-art.arm .bn-toast { opacity: 0; translate: 0 14px; scale: .9; }
+  .bn-grow, .bn-over, .bn-dot { transform-box: fill-box; transform-origin: left center; }
+  .ben-art.go .bn-grow { transform: scaleX(1); transition: transform .9s var(--sp-soft) .5s; }
+  .ben-art.go .bn-over { opacity: 1; transform: none; transition: opacity .3s ease 1.25s, transform .6s var(--sp-pop) 1.25s; }
+  .ben-art.go .bn-draw { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 1.2s ease .55s; }
+  .ben-art.go .bn-dot { transform: none; opacity: 1; transition: transform .9s var(--sp-pop) .7s, opacity .3s ease .7s; }
+  .ben-art.go .bn-toast { opacity: 1; translate: 0 0; scale: 1; transition: opacity .4s ease 1.1s, translate .8s var(--sp-pop) 1.1s, scale .8s var(--sp-pop) 1.1s; }
+}
+
+/* Card rows can be dragged with a mouse: a grab hand, and no text selection mid-drag. */
+@media (hover: hover) and (pointer: fine) { .carousel { cursor: grab; } .carousel.dragging { cursor: grabbing; } }
+.carousel.dragging, .carousel.dragging * { user-select: none; }
 </style>
 
 <div class="wrap">
@@ -473,7 +625,7 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
     <div>
       <p class="kicker">Where agents trade under rules</p>
       <h1>Hand an agent the <em>reins</em>, never the keys</h1>
-      <a class="pillbtn" href="#cards">See how it holds</a>
+      <a class="pillbtn" href="#deck">See how it holds</a>
       <p class="fine">Live on Arc testnet &middot; 324 tests &middot; ~$0.01 a trade</p>
     </div>
   </header>
@@ -510,7 +662,8 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 
 <main>
 <div class="wrap">
-<section class="statement center" id="cards">
+<!-- Hidden for now so the cards come straight after the hero; remove `hidden` to bring it back. -->
+<section class="statement center" id="cards" hidden>
   <h2>Rules an agent
     <span class="glyph" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="M6 14.5c0-5 2.2-8 5-8 1.8 0 3 1 3 2.6 0 3-4.6 3.2-4.6 3.2"/></svg></span>
     can&rsquo;t break</h2>
@@ -637,90 +790,109 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
 </section>
 </div>
 
-<div class="carousel" data-deck>
-  <article class="ph-card mist">
-    <h3>Deposit into your own contract. Nobody else holds it.</h3>
-    <p class="sr">An agent can trade it inside rules you set, and nothing else. Every move is on-chain. A trade that breaks a rule is refused.</p>
-    <div class="art ill" aria-hidden="true">
-      <span class="shape st" style="--x:4%;--y:-3%;--w:17cqw;--r:-16deg;--c:#ffc53d;--k:0"><svg><use href="#i-star"/></svg></span>
-      <span class="shape" style="--x:28%;--y:-2%;--w:4.6cqw;--c:#ff6b4a;--k:1"></span>
-      <span class="shape" style="--x:86%;--y:26%;--w:11cqw;--h:18cqw;--r:24deg;--c:#aac4ff;--k:2;--t:6s"></span>
-      <span class="shape" style="--x:10%;--y:66%;--w:14cqw;--c:#3d6bf3;--k:3"></span>
-      <span class="shape" style="--x:52%;--y:82%;--w:60cqw;--c:#14173a;--k:4;--t:7s"></span>
-      <span class="shape" style="--x:40%;--y:-4%;--w:2.8cqw;--h:12cqw;--br:2cqw;--r:-26deg;--c:#ff8a6b;--k:5"></span>
-      <span class="shape st" style="--x:88%;--y:62%;--w:7cqw;--c:#3d6bf3;--k:6"><svg><use href="#i-star"/></svg></span>
-      <span class="tile" style="background:#14173a"><svg><use href="#i-lock2"/></svg></span>
-      <span class="pill" style="--x:54%;--y:7%;--r:-12deg;--k:1"><span class="cn"><svg><use href="#sym-usdc"/></svg></span>USDC in</span>
-      <span class="pill" style="--x:2%;--y:39%;--r:10deg;--k:2"><svg style="color:#0a7d3e"><use href="#i-check"/></svg>$2 &rarr; EURC</span>
-      <span class="pill bad knock" style="--x:44%;--y:62%;--r:-11deg;--k:3"><svg><use href="#i-x"/></svg><s>$50 trade</s></span>
+<!-- Two benefit panels after Frontier Traders' "Benefits": a photographic dark
+     panel with one composed widget of white tiles from the product, then a
+     heading, a line and a link. The first replays the real testnet run
+     (docs/live-run/TESTNET-RUN.md); the backdrops are drawn in SVG. -->
+<div class="wrap">
+<div class="bens" id="see">
+  <article class="ben" id="rules">
+    <div class="ben-art b1" data-ben>
+      <svg class="bn-bg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="bb1-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="46"/></filter>
+          <filter id="bb1-brush" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.0016 0.11" numOctaves="3" seed="7"/>
+            <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.9 0.9 0.9 0 -1.05"/>
+          </filter>
+          <mask id="bb1-light"><g filter="url(#bb1-blur)"><ellipse cx="300" cy="250" rx="560" ry="76.8" fill="#fff" opacity="0.8800000000000001" transform="rotate(-28 300 250)"/><ellipse cx="760" cy="430" rx="520" ry="52.8" fill="#fff" opacity="0.512" transform="rotate(-28 760 430)"/><ellipse cx="980" cy="170" rx="300" ry="36" fill="#fff" opacity="0.44800000000000006" transform="rotate(-28 980 170)"/><ellipse cx="600" cy="820" rx="620" ry="252" fill="#fff" opacity="1" transform="rotate(-28 600 820)"/></g></mask>
+          <radialGradient id="bb1-vig" cx="50%" cy="45%" r="70%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>
+        </defs>
+        <rect width="1200" height="720" fill="#05061a"/>
+        <g class="bn-beams" filter="url(#bb1-blur)"><ellipse cx="300" cy="250" rx="560" ry="64" fill="#a9c1ff" opacity="0.55" transform="rotate(-28 300 250)"/><ellipse cx="760" cy="430" rx="520" ry="44" fill="#ffffff" opacity="0.32" transform="rotate(-28 760 430)"/><ellipse cx="980" cy="170" rx="300" ry="30" fill="#cfe0ff" opacity="0.28" transform="rotate(-28 980 170)"/><ellipse cx="600" cy="820" rx="620" ry="210" fill="#2f5cf0" opacity="0.7" transform="rotate(-28 600 820)"/></g>
+        <g mask="url(#bb1-light)"><rect x="-400" y="-400" width="2000" height="1520" filter="url(#bb1-brush)" transform="rotate(-28 600 360)" opacity=".4"/></g>
+        <rect width="1200" height="720" fill="url(#bb1-vig)"/>
+      </svg>
+      <div class="bn-stack">
+        <div class="bn-t bn-head ink" style="--i:0">
+          <span class="bn-av"><svg><use href="#i-r"/></svg></span>
+          <b>fx reversion</b>
+          <span class="bn-chip"><i></i>Testnet</span>
+        </div>
+        <div class="bn-row">
+          <div class="bn-t" style="--i:1"><span class="bn-l">Who holds it</span><span class="bn-v">Your contract</span></div>
+          <div class="bn-t" style="--i:1"><span class="bn-l">Withdraw</span><span class="bn-v up">Anytime</span></div>
+        </div>
+        <div class="bn-row three">
+          <div class="bn-t" style="--i:2"><span class="bn-l">Per trade</span><span class="bn-v">$2.00</span>
+            <svg class="bn-viz" viewBox="0 0 100 24" aria-hidden="true"><rect x="0" y="9" width="100" height="6" rx="3" fill="#efeeea"/><rect class="bn-grow" x="0" y="9" width="62" height="6" rx="3" fill="#14173a"/><rect class="bn-over" x="62" y="9" width="16" height="6" rx="3" fill="#e5533d"/><line x1="64" y1="3" x2="64" y2="21" stroke="#14173a" stroke-width="1.4" stroke-dasharray="2 2"/></svg></div>
+          <div class="bn-t" style="--i:2"><span class="bn-l">Loss limit</span><span class="bn-v">&minus;10%</span>
+            <svg class="bn-viz" viewBox="0 0 100 24" aria-hidden="true"><line x1="0" y1="19" x2="100" y2="19" stroke="#e5533d" stroke-width="1.4" stroke-dasharray="3 3"/><path class="bn-draw" pathLength="1" d="M2 6 C18 4 26 9 38 8 S58 14 70 13 86 18 96 18" fill="none" stroke="#14173a" stroke-width="1.8" stroke-linecap="round"/><circle cx="96" cy="18" r="2.6" fill="#e5533d"/></svg></div>
+          <div class="bn-t" style="--i:2"><span class="bn-l">Price band</span><span class="bn-v">&plusmn;1%</span>
+            <svg class="bn-viz" viewBox="0 0 100 24" aria-hidden="true"><rect x="0" y="6" width="100" height="12" rx="6" fill="#e9f0ff"/><line x1="50" y1="3" x2="50" y2="21" stroke="#3d6bf3" stroke-width="1.4"/><circle class="bn-dot" cx="58" cy="12" r="3.4" fill="#1a8a4a"/></svg></div>
+        </div>
+        <div class="bn-t bn-feed" style="--i:3">
+          <div class="bn-fh"><span>Activity</span><span>Arc testnet</span></div>
+          <a class="bn-ev" style="--j:0" href="https://explorer.testnet.arc.io/tx/0xe95e9c7d667af65799cbd3303a7cdc33ab64258fd6c5244a60f6f40782fb86ec" target="_blank" rel="noopener"><span class="bn-b ok"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2.5 6.3 2.3 2.2 4.7-4.9"/></svg>Filled</span><span class="bn-e"><b>Bought 0.4374 EURC</b><small>For 0.50 USDC &middot; 0.45% from the oracle</small></span><span class="bn-go"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 8 4M4.5 4H8v3.5"/></svg></span></a>
+          <a class="bn-ev" style="--j:1" href="https://explorer.testnet.arc.io/tx/0x685d4a906aefb333041798a22bcef2b95c100d60970307407e860225a486cc5e" target="_blank" rel="noopener"><span class="bn-b no"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 3 6 6M9 3 3 9"/></svg>Refused</span><span class="bn-e"><b>$2.50 of EURC</b><small>Over the $2 cap</small></span><span class="bn-go"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 8 4M4.5 4H8v3.5"/></svg></span></a>
+          <a class="bn-ev" style="--j:2" href="https://explorer.testnet.arc.io/tx/0x5c50decbafeee6dcf4ddb98ab6567f8abc0e383d29a9705fd97d10db2305dc5d" target="_blank" rel="noopener"><span class="bn-b no"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 3 6 6M9 3 3 9"/></svg>Refused</span><span class="bn-e"><b>$1 of USYC</b><small>Never an allowed asset</small></span><span class="bn-go"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 8 4M4.5 4H8v3.5"/></svg></span></a>
+          <a class="bn-ev" style="--j:3" href="https://explorer.testnet.arc.io/tx/0x48b35a907b745397ceeaee5343d0ce56c4e30f36071cf5caa1ae85cec560a752" target="_blank" rel="noopener"><span class="bn-b no"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 3 6 6M9 3 3 9"/></svg>Refused</span><span class="bn-e"><b>A stranger&rsquo;s key</b><small>Not this agent</small></span><span class="bn-go"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 8 4M4.5 4H8v3.5"/></svg></span></a>
+        </div>
+      </div>
+    </div>
+    <div class="ben-copy">
+      <h3>Rules nobody can change. Not us, not even you.</h3>
+      <p>Your USDC sits in your own contract. The per-trade cap, the loss limit, the price band and the assets it may touch are set once, when the agent is created, and nobody can loosen them later. Every fill and every refusal lands on-chain, so you see exactly where the money goes, and you can withdraw whenever you like.</p>
+      <a class="ben-link" href="https://explorer.testnet.arc.io/address/0x991b8687aca6Acd6b92438bb4cE22866827bD632" target="_blank" rel="noopener">Open this agent on the explorer <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 2.5 3.5 3.5-3.5 3.5"/></svg></a>
     </div>
   </article>
 
-  <article class="ph-card ink" id="rules">
-    <h3>Rules nobody can change. Not us, not even you.</h3>
-    <p class="sr">Per-trade cap, loss limit, price band, allowed assets. Set once when the agent is created. Nobody can loosen them later. You can always withdraw.</p>
-    <div class="art" aria-hidden="true">
-      <div class="phone"><div class="screen">
-        <div class="bar"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg><span>Rules</span><span class="gap"></span></div>
-        <h4 class="ttl">Locked at creation</h4>
-        <div class="rl">
-          <div class="rl-row" style="--i:0"><span>Per trade</span><b>$2.00</b><svg viewBox="0 0 14 14"><rect x="2.5" y="6" width="9" height="6.5" rx="1.6"/><path class="sh" d="M4.5 6V4.6a2.5 2.5 0 0 1 5 0V6"/></svg></div>
-          <div class="rl-row" style="--i:1"><span>Loss limit</span><b>&minus;10%</b><svg viewBox="0 0 14 14"><rect x="2.5" y="6" width="9" height="6.5" rx="1.6"/><path class="sh" d="M4.5 6V4.6a2.5 2.5 0 0 1 5 0V6"/></svg></div>
-          <div class="rl-row" style="--i:2"><span>Price band</span><b>&plusmn;1%</b><svg viewBox="0 0 14 14"><rect x="2.5" y="6" width="9" height="6.5" rx="1.6"/><path class="sh" d="M4.5 6V4.6a2.5 2.5 0 0 1 5 0V6"/></svg></div>
-          <div class="rl-row" style="--i:3"><span>May trade</span><b>USDC, EURC</b><svg viewBox="0 0 14 14"><rect x="2.5" y="6" width="9" height="6.5" rx="1.6"/><path class="sh" d="M4.5 6V4.6a2.5 2.5 0 0 1 5 0V6"/></svg></div>
+  <article class="ben" id="ai">
+    <div class="ben-art b2" data-ben>
+      <svg class="bn-bg" viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <defs>
+          <filter id="bb2-blur" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="46"/></filter>
+          <filter id="bb2-brush" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.0016 0.11" numOctaves="3" seed="3"/>
+            <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.9 0.9 0.9 0 -1.05"/>
+          </filter>
+          <mask id="bb2-light"><g filter="url(#bb2-blur)"><ellipse cx="880" cy="240" rx="560" ry="72" fill="#fff" opacity="0.8" transform="rotate(24 880 240)"/><ellipse cx="420" cy="450" rx="520" ry="50.4" fill="#fff" opacity="0.48" transform="rotate(24 420 450)"/><ellipse cx="220" cy="160" rx="300" ry="33.6" fill="#fff" opacity="0.384" transform="rotate(24 220 160)"/><ellipse cx="600" cy="830" rx="620" ry="252" fill="#fff" opacity="1" transform="rotate(24 600 830)"/></g></mask>
+          <radialGradient id="bb2-vig" cx="50%" cy="45%" r="70%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/></radialGradient>
+        </defs>
+        <rect width="1200" height="720" fill="#0a0618"/>
+        <g class="bn-beams" filter="url(#bb2-blur)"><ellipse cx="880" cy="240" rx="560" ry="60" fill="#c9b8ff" opacity="0.5" transform="rotate(24 880 240)"/><ellipse cx="420" cy="450" rx="520" ry="42" fill="#ffffff" opacity="0.3" transform="rotate(24 420 450)"/><ellipse cx="220" cy="160" rx="300" ry="28" fill="#ffe7a3" opacity="0.24" transform="rotate(24 220 160)"/><ellipse cx="600" cy="830" rx="620" ry="210" fill="#6a4cf0" opacity="0.7" transform="rotate(24 600 830)"/></g>
+        <g mask="url(#bb2-light)"><rect x="-400" y="-400" width="2000" height="1520" filter="url(#bb2-brush)" transform="rotate(24 600 360)" opacity=".4"/></g>
+        <rect width="1200" height="720" fill="url(#bb2-vig)"/>
+      </svg>
+      <div class="bn-stack">
+        <div class="bn-t bn-head" style="--i:0">
+          <span class="bn-av ai"><svg viewBox="0 0 24 24"><use href="#i-star"/></svg></span>
+          <b>Your AI agent</b>
+          <span class="bn-chip mcp">Reins MCP</span>
         </div>
-      </div></div>
-      <div class="tst no late"><span class="ti"><svg viewBox="0 0 14 14"><path d="M4 4l6 6M10 4l-6 6"/></svg></span>setRules(): no such function</div>
-      <span class="spk" style="--x:8%;--y:4%;--w:4.6cqw;--k:0"><svg><use href="#i-star"/></svg></span>
-      <span class="spk" style="--x:86%;--y:20%;--w:3.2cqw;--k:1"><svg><use href="#i-star"/></svg></span>
+        <div class="bn-toast" aria-hidden="true"><span class="bn-tdot"></span><span><b>Refused on-chain</b><small>TradeTooLarge &middot; $50 &gt; $2 cap</small></span></div>
+        <div class="bn-t bn-say me" style="--i:1"><span class="bn-l">You</span><p>Put everything into EURC. All $50.</p></div>
+        <div class="bn-t bn-call dark" style="--i:2">
+          <div class="bn-ch"><span class="bn-l">Tool call</span><code>mandate_trade</code></div>
+          <div class="bn-cr"><span class="bn-args">USDC &rarr; EURC &middot; 50.00</span><span class="bn-b no">Refused</span></div>
+          <small>Over the $2 cap set when the agent was created</small>
+        </div>
+        <div class="bn-t bn-say" style="--i:3"><span class="bn-l">Agent</span><p>That&rsquo;s over your $2 cap, so the contract refused it. I&rsquo;ll buy $2 at a time instead.</p></div>
+        <div class="bn-t bn-call dark" style="--i:4">
+          <div class="bn-ch"><span class="bn-l">Tool call</span><code>mandate_trade</code></div>
+          <div class="bn-cr"><span class="bn-args">USDC &rarr; EURC &middot; 2.00</span><span class="bn-b ok">Filled</span></div>
+          <small>Received 1.7550 EURC</small>
+        </div>
+      </div>
     </div>
-  </article>
-
-  <article class="ph-card sky" id="see">
-    <h3>See exactly where the money goes.</h3>
-    <p class="sr">Most pools don&rsquo;t show you how they trade. Every Reins strategy shows its holdings, its trades and its rules, read straight from the chain.</p>
-    <div class="art" aria-hidden="true">
-      <div class="phone"><div class="screen">
-        <div class="bar"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg><span>fx reversion</span><span class="live-chip"><i></i>Live</span></div>
-        <div class="amt sm"><span class="cu">$</span><span class="num">1.75</span></div>
-        <div class="sub gain">+0.04% since funding</div>
-        <svg class="chart2" viewBox="0 0 300 120" preserveAspectRatio="none">
-          <defs><linearGradient id="ag2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f9bff" stop-opacity=".35"/><stop offset="1" stop-color="#6f9bff" stop-opacity="0"/></linearGradient></defs>
-          <path class="ar" d="M0 78 C30 70 44 88 70 80 S110 52 140 58 186 84 214 66 262 30 300 26 V120 H0 Z" fill="url(#ag2)"/>
-          <path class="ln" pathLength="1" d="M0 78 C30 70 44 88 70 80 S110 52 140 58 186 84 214 66 262 30 300 26"/>
-          <g class="dot"><circle class="lring" cx="296" cy="26" r="5" fill="none" stroke="#6f9bff" stroke-width="1.6"/><circle cx="296" cy="26" r="5" fill="#6f9bff"/></g>
-        </svg>
-        <div class="feed">
-          <div style="--i:0"><span>Traded 0.50 USDC for 0.4374 EURC</span><span>0x3cafe3&hellip;</span></div>
-          <div style="--i:1"><span>Owner added 2 USDC</span><span>0x5c50de&hellip;</span></div>
-        </div>
-      </div></div>
-      <div class="tst late"><span class="ti"><svg viewBox="0 0 14 14"><path d="M3 7.5 5.8 10 11 4"/></svg></span>Every trade is on-chain</div>
-      <span class="spk" style="--x:10%;--y:4%;--w:5cqw;--k:0"><svg><use href="#i-star"/></svg></span>
-      <span class="spk" style="--x:85%;--y:19%;--w:3.4cqw;--k:1"><svg><use href="#i-star"/></svg></span>
-    </div>
-  </article>
-
-  <article class="ph-card blue" id="ai">
-    <h3>Give any AI a budget it can&rsquo;t run off with.</h3>
-    <p class="sr">When it asks for something the rules forbid, the contract says no, in plain words, and the agent adjusts.</p>
-    <div class="art" aria-hidden="true">
-      <div class="phone"><div class="screen">
-        <div class="bar"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg><span>Your agent</span><span class="gap"></span></div>
-        <div class="msgs">
-          <div class="cb me" style="--i:0">Buy $2 of EURC</div>
-          <div class="tl ok" style="--i:1">&check; trade: 2 USDC &rarr; EURC</div>
-          <div class="cb me" style="--i:2">Now put everything in, $50</div>
-          <div class="tl no" style="--i:3">&cross; refused: over the $2 cap</div>
-          <div class="cb ai" style="--i:4">That&rsquo;s over the $2 cap you set, so I can&rsquo;t. I&rsquo;ll keep each trade at $2 or less.</div>
-        </div>
-      </div></div>
-      <span class="spk" style="--x:9%;--y:5%;--w:5cqw;--k:0"><svg><use href="#i-star"/></svg></span>
-      <span class="spk" style="--x:86%;--y:18%;--w:3.4cqw;--k:1"><svg><use href="#i-star"/></svg></span>
+    <div class="ben-copy">
+      <h3>Give any AI a budget it can&rsquo;t run off with.</h3>
+      <p>Connect Claude, or any agent that speaks MCP, to a Reins contract. When it asks for something the rules forbid, the contract refuses on-chain and says why in plain words, so the agent adjusts instead of retrying blindly. It trades with its own key and never holds yours.</p>
+      <a class="ben-link" href="https://github.com/onreins/reins-mcp" target="_blank" rel="noopener">Get the MCP server <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 2.5 3.5 3.5-3.5 3.5"/></svg></a>
     </div>
   </article>
 </div>
-
+</div>
 <div class="wrap">
     <!-- ----------------------------------------------------------- trust -->
     <section class="center">
@@ -915,9 +1087,9 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
   if ("IntersectionObserver" in window) {
     // Phantom's deck, on every row marked data-deck: the cards wait stacked in
     // the middle of the row, fanned a little, then spring apart into their
-    // places once the row is well up the screen, and stack again when it drops
-    // back below. Each card then plays its own moment (rolling number, toast,
-    // pills, rows) when it is mostly in view, so the arrows bring fresh ones in.
+    // places once the row is well up the screen, and stay apart from then on.
+    // Each card then plays its own moment (rolling number, toast, pills, rows)
+    // when it is mostly in view, so the arrows bring fresh ones in.
     function deck(row) {
       var cards = Array.prototype.slice.call(row.querySelectorAll(".ph-card"));
       if (!cards.length) return;
@@ -963,11 +1135,13 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
       stack();
       // The top card of the stack comes alive as soon as the row appears.
       new IntersectionObserver(function (entries) { if (entries[0].isIntersecting) play(0); }).observe(row);
-      new IntersectionObserver(function (entries) {
-        var e = entries[0];
-        if (e.isIntersecting) fan();
-        else if (e.boundingClientRect.top > 0) stack();
-      }, { rootMargin: "0px 0px -38% 0px" }).observe(row);
+      // Fans out once. Scrolling back up past it leaves the cards where they landed.
+      var deckIO = new IntersectionObserver(function (entries) {
+        if (!entries[0].isIntersecting) return;
+        fan();
+        deckIO.disconnect();
+      }, { rootMargin: "0px 0px -38% 0px" });
+      deckIO.observe(row);
       var playIO = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
           var i = cards.indexOf(e.target);
@@ -998,5 +1172,93 @@ footer .legal p { font-size: 12px; line-height: 1.7; color: var(--ink-3); max-wi
     eco.forEach(function (a) { ecoIO.observe(a); });
   }
 
+})();
+</script>
+<script>
+/* Benefit panels play once: armed (tiles held back) only when the script can
+   also release them, then released when the panel is well into view. Without
+   motion or IntersectionObserver they simply stay as they are, fully visible. */
+(function () {
+  "use strict";
+  var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still || !("IntersectionObserver" in window)) return;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add("go");
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: "0px 0px -25% 0px" });
+  document.querySelectorAll("[data-ben]").forEach(function (art) {
+    // Already on screen at load (a deep link to #rules): show it as it is.
+    if (art.getBoundingClientRect().top < innerHeight * 0.75) return;
+    art.classList.add("arm");
+    io.observe(art);
+  });
+})();
+</script>
+<script>
+/* Click and drag to scroll a card row with a mouse (touch already swipes).
+   Snapping is off while dragging; on release the row glides to the card
+   nearest where the throw would land. A drag never counts as a click. */
+(function () {
+  "use strict";
+  var smooth = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+  document.querySelectorAll(".carousel").forEach(function (row) {
+    var down = false, moved = false, id = null, startX = 0, startLeft = 0, lastX = 0, lastT = 0, v = 0;
+
+    row.addEventListener("pointerdown", function (e) {
+      // Mouse only, left button, and not while the deck is still stacked.
+      if (e.pointerType !== "mouse" || e.button !== 0 || row.classList.contains("deck")) return;
+      down = true; moved = false; id = e.pointerId;
+      startX = lastX = e.clientX; startLeft = row.scrollLeft; lastT = e.timeStamp; v = 0;
+    });
+
+    row.addEventListener("pointermove", function (e) {
+      if (!down || e.pointerId !== id) return;
+      var dx = e.clientX - startX;
+      if (!moved && Math.abs(dx) < 6) return; // a click wobbles a little; that isn't a drag
+      if (!moved) {
+        moved = true;
+        row.setPointerCapture(id);
+        row.classList.add("nosnap", "dragging");
+      }
+      row.scrollLeft = startLeft - dx;
+      var dt = e.timeStamp - lastT;
+      if (dt > 0) v = (e.clientX - lastX) / dt;
+      lastX = e.clientX; lastT = e.timeStamp;
+      e.preventDefault();
+    });
+
+    function release(e) {
+      if (!down || e.pointerId !== id) return;
+      down = false;
+      if (!moved) return;
+      row.classList.remove("dragging");
+      // Carry the throw a little, then settle on the nearest card's snap point:
+      // the first card sits at scroll 0, every other one at its distance from it.
+      var cards = row.querySelectorAll(".ph-card"), first = cards[0] ? cards[0].offsetLeft : 0;
+      var aim = row.scrollLeft - v * 240, best = row.scrollLeft, bestD = Infinity;
+      Array.prototype.forEach.call(cards, function (c) {
+        var left = c.offsetLeft - first, d = Math.abs(left - aim);
+        if (d < bestD) { bestD = d; best = left; }
+      });
+      best = Math.max(0, Math.min(best, row.scrollWidth - row.clientWidth));
+      row.scrollTo({ left: best, behavior: smooth });
+      setTimeout(function () { if (!down) row.classList.remove("nosnap"); }, 500);
+    }
+    row.addEventListener("pointerup", release);
+    row.addEventListener("pointercancel", release);
+
+    // The click that ends a drag isn't a click on a card or a link.
+    row.addEventListener("click", function (e) {
+      if (!moved) return;
+      e.preventDefault();
+      e.stopPropagation();
+      moved = false;
+    }, true);
+    // No ghost images or links trailing the cursor.
+    row.addEventListener("dragstart", function (e) { e.preventDefault(); });
+  });
 })();
 </script>
