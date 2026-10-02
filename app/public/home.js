@@ -130,7 +130,7 @@ window.ReinsHome = (function () {
         '<span class="t">' + U.coins(s.universe, "sm") + "<b>" + esc(s.name) + "</b>" +
         '<span class="tagp' + (valid ? " ok" : "") + '">' + (valid ? "Validated" : "Candidate") + "</span></span>" +
         '<span class="big ' + U.dirOf(st.cagr_since_2024 * 100) + '">' + U.pct(st.cagr_since_2024 * 100, 0) + "</span>" +
-        '<span class="lbl">APR since 2024, backtested</span>' +
+        '<span class="lbl">Annual return since 2024, backtested</span>' +
         '<span class="ch">' + U.areaSvg(pts, { smooth: true }) + "</span>" +
         '<span class="ft"><span>Worst drop <b>' + U.pct(st.max_drawdown * 100, 0) + "</b></span><span>" + U.coinCount(s.universe) + " coins</span></span></a>";
     }).join("");
