@@ -240,7 +240,7 @@
     $("about").innerHTML = [
       ["State", '<span class="state ' + st[0] + '"><i aria-hidden="true"></i>' + st[1] + "</span>"],
       ["Owner", '<span class="mono">' + short(d.owner) + "</span>"],
-      ["Trading key", ZERO.test(d.agent || "") ? "Revoked" : '<span class="mono">' + short(d.agent) + "</span>"],
+      ["Trading key", ZERO.test(d.agent || "") ? "None set yet" : '<span class="mono">' + short(d.agent) + "</span>"],
       ["Funded", since || "—"],
       ["Expires", fmtDate(d.expiresAt)],
       ["May trade", assets || "—"],

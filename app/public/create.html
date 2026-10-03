@@ -8,89 +8,122 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
 <link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/home.css">
+<link rel="stylesheet" href="/create.css">
 
 <a class="skip" href="#main">Skip to content</a>
 <aside id="side"></aside>
 <header id="top"></header>
 
 <main id="main">
-  <header class="page-head">
+  <section class="hm-hero cr-head" aria-labelledby="h">
     <div>
-      <h1>Create an agent</h1>
-      <p class="sub">Give an AI agent a USDC budget and rules it cannot break. The rules are written into the contract; your wallet signs every step.</p>
+      <p class="hm-kick"><i class="pulse" aria-hidden="true"></i>Create an agent</p>
+      <h1 id="h">Hand an agent <em>the reins</em></h1>
+      <p class="hm-lede">Fund it, set its limits, give it a name. You choose every number; the contract enforces them on every trade, and you can take your money back at any time.</p>
+      <ol class="cr-trail">
+        <li><a href="#st1" id="t-1"><b>1</b>Fund it</a></li>
+        <li><a href="#st2" id="t-2"><b>2</b>Set its limits</a></li>
+        <li><a href="#st3" id="t-3"><b>3</b>Name and key</a></li>
+      </ol>
     </div>
-  </header>
-  <div class="notice" id="template" hidden style="margin-top:24px"></div>
+  </section>
 
-  <form class="cgrid" id="form" novalidate>
-    <div style="display:grid;gap:16px">
-      <section class="fcard" aria-labelledby="s1">
-        <h2 id="s1">Who trades</h2>
-        <p class="lead">Your bot trades with its own key, inside your rules. That key has no function that moves money out.</p>
-        <div class="field">
-          <label for="f-name">Name<small>Public, shown on Agents</small></label>
-          <input id="f-name" type="text" maxlength="64" value="my first agent" autocomplete="off">
+  <div class="cr-grid">
+    <form class="cr-form" id="form" novalidate>
+      <section class="cr-step" id="st1" aria-labelledby="h1">
+        <header><span class="cr-n">1</span><div><h2 id="h1">Fund it</h2><p>USDC goes into the agent’s own contract, not to us and not to the bot.</p></div></header>
+        <div class="cr-money">
+          <label class="cr-amount"><span aria-hidden="true">$</span><span class="sr-only">Amount in USDC</span>
+            <input id="f-deposit" type="number" inputmode="decimal" min="0" step="0.01" value="50"></label>
+          <div class="cr-chips" id="amounts" role="group" aria-label="Quick amounts"></div>
         </div>
-        <div class="field">
-          <label for="f-agent">Trading key<small>The address your bot trades with. Not your own wallet.</small></label>
-          <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" aria-describedby="f-agent-err">
-          <div class="err" id="f-agent-err" aria-live="polite"></div>
+        <div class="cr-wallet">
+          <div><span id="w-usdc">Connect a wallet to see its USDC</span><small id="w-short" aria-live="polite"></small></div>
+          <button class="chip" id="buy" type="button">Buy USDC with a card</button>
         </div>
       </section>
 
-      <section class="fcard" aria-labelledby="s2">
-        <h2 id="s2">Money</h2>
-        <p class="lead">USDC goes into the agent’s contract, not to us or the bot. You can take it back at any time.</p>
-        <div class="field-row">
-          <div class="field"><label for="f-deposit">Fund with, USDC<small>Deposited right after creation</small></label>
-            <input id="f-deposit" type="number" inputmode="decimal" min="0" step="0.01" value="5"></div>
-          <div class="field"><label for="f-trade">Largest trade, USDC<small>No single trade above this</small></label>
-            <input id="f-trade" type="number" inputmode="decimal" min="0" step="0.01" value="2"></div>
+      <section class="cr-step" id="st2" aria-labelledby="h2">
+        <header><span class="cr-n">2</span><div><h2 id="h2">Set its limits</h2><p>Drag any of them. A preset is just a starting point.</p></div></header>
+        <div class="notice" id="template" hidden style="margin-top:16px"></div>
+        <div class="cr-presets">
+          <span>Start from</span>
+          <div class="cr-chips" id="presets" role="group" aria-label="Start from a preset"></div>
         </div>
-        <div class="fundline">
-          <div class="fundline-t">
-            <span id="w-usdc">Connect a wallet to see its USDC</span>
-            <small id="w-short" aria-live="polite"></small>
+
+        <div class="cr-limit">
+          <div class="cr-limit-h"><label for="l-loss">Stop-loss</label><output for="l-loss" id="o-loss"></output></div>
+          <input type="range" id="l-loss" min="1" max="60" step="1" aria-describedby="h-loss">
+          <p class="cr-hint" id="h-loss"></p>
+        </div>
+        <div class="cr-limit">
+          <div class="cr-limit-h"><label for="l-trade">Largest single trade</label><output for="l-trade" id="o-trade"></output></div>
+          <input type="range" id="l-trade" min="5" max="100" step="5" aria-describedby="h-trade">
+          <p class="cr-hint" id="h-trade"></p>
+        </div>
+        <div class="cr-limit">
+          <div class="cr-limit-h"><label for="l-band">Price protection</label><output for="l-band" id="o-band"></output></div>
+          <input type="range" id="l-band" min="0.1" max="5" step="0.1" aria-describedby="h-band">
+          <p class="cr-hint" id="h-band"></p>
+        </div>
+        <div class="cr-limit">
+          <div class="cr-limit-h"><span id="l-days-l">How long it runs</span><output id="o-days"></output></div>
+          <div class="cr-chips" id="durations" role="group" aria-labelledby="l-days-l"></div>
+        </div>
+
+        <details class="cr-fine">
+          <summary>More settings</summary>
+          <div class="grid">
+            <div class="cr-field"><label for="f-days">Runs for, days<small>Any length from 1 day to 10 years</small></label>
+              <input id="f-days" type="number" min="1" max="3650" step="1" value="90"></div>
+            <div class="cr-field"><label for="f-age">Oldest price it accepts, hours<small>An older price pauses trading</small></label>
+              <input id="f-age" type="number" min="1" max="168" step="1" value="24"></div>
           </div>
-          <button class="btn-ghost" id="buy" type="button">Buy USDC with card</button>
-        </div>
+        </details>
       </section>
 
-      <section class="fcard" aria-labelledby="s3">
-        <h2 id="s3">Safety</h2>
-        <p class="lead">Enforced by the contract on every trade. Nobody can loosen them later, including you.</p>
-        <div class="field-row">
-          <div class="field"><label for="f-loss">Loss limit, %<small>Fall this far and anyone can freeze it</small></label>
-            <input id="f-loss" type="number" min="0.01" max="100" step="0.5" value="10"></div>
-          <div class="field"><label for="f-slip">Price band, %<small>Worse fills than this revert</small></label>
-            <input id="f-slip" type="number" min="0" max="10" step="0.1" value="1"></div>
+      <section class="cr-step" id="st3" aria-labelledby="h3">
+        <header><span class="cr-n">3</span><div><h2 id="h3">Name it, and choose who trades</h2><p>The name is public on Agents. The trading key can trade, and never withdraw.</p></div></header>
+        <div class="cr-name">
+          <div class="cr-field"><label for="f-name">Name</label><input id="f-name" type="text" maxlength="64" autocomplete="off"></div>
+          <button class="cr-dice" id="dice" type="button" aria-label="Suggest another name" title="Suggest another name"></button>
         </div>
-        <div class="field-row">
-          <div class="field"><label for="f-age">Max price age, hours<small>Refuse staler prices</small></label>
-            <input id="f-age" type="number" min="1" max="168" step="1" value="24"></div>
-          <div class="field"><label for="f-days">Runs for, days<small>It expires by itself after this</small></label>
-            <input id="f-days" type="number" min="1" max="3650" step="1" value="30"></div>
+        <div class="cr-keys" id="keys" role="radiogroup" aria-label="Who trades">
+          <button type="button" class="cr-key" role="radio" data-key="later" aria-checked="true"><b>Connect a bot later</b><small>Create and fund it now. Add a trading key from its page when your bot is ready.</small></button>
+          <button type="button" class="cr-key" role="radio" data-key="own" aria-checked="false"><b>I have a bot’s address</b><small>Paste the key your bot trades with. Never your own wallet.</small></button>
+        </div>
+        <div class="cr-field cr-keybox" id="keybox" hidden>
+          <label for="f-agent">Bot’s trading address</label>
+          <input id="f-agent" type="text" placeholder="0x…" autocomplete="off" spellcheck="false" aria-describedby="f-agent-err">
+          <div class="cr-err" id="f-agent-err" aria-live="polite"></div>
         </div>
       </section>
-    </div>
+    </form>
 
-    <aside class="card summary" aria-label="What you are signing">
-      <h2><span id="preview-av"></span><span id="preview-name">Your agent</span></h2>
-      <dl class="kv" id="plain"></dl>
-      <div class="rhead" id="risk"></div>
+    <aside class="hm-hero cr-card" aria-labelledby="card-name">
+      <div class="who"><span id="card-av"></span><div><b id="card-name">Your agent</b><small id="card-sub"></small></div></div>
+      <p class="start">Starts with</p>
+      <div class="big" id="card-big">$0.00</div>
+      <div class="cr-floor" aria-hidden="true">
+        <div class="bar"><i id="floor-fill"></i><s id="floor-mark"></s></div>
+        <p id="floor-text"></p>
+      </div>
+      <ul class="cr-rules" id="card-rules"></ul>
       <div class="notice warn" id="notice" role="alert" hidden></div>
-      <button class="btn-white wide" id="go" type="submit">Connect Wallet</button>
+      <button class="btn-white wide" id="go" type="button">Connect wallet to create</button>
       <div class="steps" id="steps" role="status" aria-live="polite"></div>
+      <p class="cr-fineprint">Once it’s live, its limits are locked so nobody, the bot included, can loosen them. Want different limits later? Withdraw and create a new agent; it takes a minute.</p>
       <details>
         <summary>What the contract will hold</summary>
         <div class="compiled" id="compiled"></div>
       </details>
     </aside>
-  </form>
+  </div>
 
   <footer class="foot">
     <span>Your wallet signs every step. This page never sees a key.</span>
-    <span>Not investment advice</span>
+    <span>Testnet · Not investment advice</span>
   </footer>
 </main>
 
@@ -98,188 +131,7 @@
 <script src="/ui.js"></script>
 <script src="/vendor/onramp-kit.js"></script>
 <script src="/onramp.js"></script>
-<script>
-(function () {
-  "use strict";
-  var U = window.ReinsUI, W = window.ReinsWallet;
-  var $ = function (id) { return document.getElementById(id); };
-  var esc = U.esc, money = U.money;
-  var cfg = null, busy = false;
-
-  U.topbar("create");
-
-  function readForm() {
-    return {
-      name: $("f-name").value.trim(),
-      agent: $("f-agent").value.trim(),
-      deposit: Number($("f-deposit").value),
-      rules: {
-        maxTradeUsd: Number($("f-trade").value),
-        maxLossPercent: Number($("f-loss").value),
-        maxSlippagePercent: Number($("f-slip").value),
-        maxPriceAgeSeconds: Math.round(Number($("f-age").value) * 3600),
-        expiryDays: Number($("f-days").value),
-      },
-    };
-  }
-
-  function preview() {
-    var f = readForm(), r = f.rules;
-    var expires = new Date(Date.now() + r.expiryDays * 86400000);
-    var risk = U.riskOf({ rules: r });
-    $("plain").innerHTML =
-      "<div><dt>Starts with</dt><dd>" + money(f.deposit) + "</dd></div>" +
-      "<div><dt>Largest trade</dt><dd>" + money(r.maxTradeUsd) + "</dd></div>" +
-      "<div><dt>Freezes below</dt><dd>" + money(f.deposit * (1 - r.maxLossPercent / 100)) + "</dd></div>" +
-      "<div><dt>Worst fill</dt><dd>" + r.maxSlippagePercent + "% off the oracle</dd></div>" +
-      "<div><dt>Ends</dt><dd>" + expires.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) + "</dd></div>" +
-      "<div><dt>Withdraw</dt><dd>You, any time</dd></div>";
-    // Its avatar, as it will look on Agents: the colour comes from the name here, from the address once live.
-    var pseudo = "0x" + (f.name || "reins").split("").map(function (c) { return c.charCodeAt(0).toString(16); }).join("").slice(0, 40);
-    $("preview-av").innerHTML = U.avatar({ address: pseudo, name: f.name || "R" });
-    $("preview-name").textContent = f.name || "Your agent";
-    $("risk").innerHTML = risk ? '<span class="muted">Risk, set by the loss limit</span>' + risk.html : "";
-    $("compiled").innerHTML =
-      '<span class="k">maxTradeValue</span> ' + Math.round(r.maxTradeUsd * 1e6).toLocaleString("en-US") + "<br>" +
-      '<span class="k">maxDrawdownBps</span> ' + Math.round(r.maxLossPercent * 100) + "<br>" +
-      '<span class="k">maxSlippageBps</span> ' + Math.round(r.maxSlippagePercent * 100) + "<br>" +
-      '<span class="k">maxPriceAge</span> ' + r.maxPriceAgeSeconds.toLocaleString("en-US") + " s<br>" +
-      '<span class="k">expiresAt</span> ' + Math.floor(expires.getTime() / 1000) + "<br>" +
-      '<span class="k">withdraw()</span> owner only';
-  }
-
-  function step(html, cls) {
-    var div = document.createElement("div");
-    if (cls) div.className = cls;
-    div.innerHTML = html;
-    $("steps").appendChild(div);
-  }
-  function notice(msg) { $("notice").hidden = false; $("notice").textContent = msg; }
-  var link = function (h) { return '<a href="' + cfg.explorer + "/tx/" + h + '" target="_blank" rel="noopener">' + h.slice(0, 10) + "…</a>"; };
-
-  async function waitCreated(hash) {
-    for (var i = 0; i < 60; i++) {
-      // A failed read is a hiccup, not a verdict: the transaction is already sent.
-      var res = await U.getJson("/api/tx/created?hash=" + hash).catch(function () { return { status: "pending" }; });
-      if (res.status === "success") return res.mandate;
-      if (res.status === "reverted") throw new Error("The create transaction reverted.");
-      await new Promise(function (r) { setTimeout(r, 2000); });
-    }
-    throw new Error("Timed out waiting for the transaction.");
-  }
-
-  function setAgentError(msg) {
-    $("f-agent").setAttribute("aria-invalid", msg ? "true" : "false");
-    $("f-agent-err").textContent = msg;
-    if (msg) $("f-agent").focus();
-    return !msg;
-  }
-
-  async function create(ev) {
-    ev.preventDefault();
-    if (busy) return;
-    if (!W.account) {
-      try { await U.connect(); } catch (err) { notice(W.explain(err)); }
-      return;
-    }
-    var f = readForm();
-    if (!setAgentError(!/^0x[0-9a-fA-F]{40}$/.test(f.agent)
-      ? "Enter a full 0x address, 42 characters. It’s the key your bot will trade with."
-      : f.agent.toLowerCase() === W.account.toLowerCase()
-        ? "The trading key can’t be your own wallet. The contract refuses it, so use a separate key."
-        : "")) return;
-
-    busy = true;
-    $("go").disabled = true;
-    $("go").setAttribute("aria-busy", "true");
-    $("notice").hidden = true;
-    $("steps").innerHTML = "";
-    try {
-      $("go").textContent = "Check your wallet…";
-      await W.ensureChain();
-      var h1 = await W.send(await W.post("/api/tx/create", { name: f.name, agent: f.agent, rules: f.rules }));
-      step("Create sent · " + link(h1));
-      var mandate = await waitCreated(h1);
-      step("Agent is live at " + mandate.slice(0, 10) + "…", "ok");
-      if (f.deposit > 0) {
-        var dep = await W.post("/api/tx/deposit", { mandate: mandate, amountUsd: f.deposit });
-        for (var i = 0; i < dep.txs.length; i++) {
-          $("go").textContent = dep.txs[i].label + ": check your wallet…";
-          step(esc(dep.txs[i].label) + " · " + link(await W.send(dep.txs[i])));
-        }
-        step("Funded with " + money(f.deposit), "ok");
-      }
-      step("Done. Opening your agent.", "ok");
-      location.href = "/mandate.html?a=" + mandate;
-    } catch (err) {
-      step(esc(W.explain(err)), "err");
-      notice(W.explain(err));
-      $("go").disabled = false;
-      $("go").textContent = "Create agent";
-    } finally {
-      busy = false;
-      $("go").removeAttribute("aria-busy");
-    }
-  }
-
-  U.onAccount(function () { $("go").textContent = "Create agent"; });
-
-  // ------------------------------------------------------ card funding
-  // What the wallet holds, and a way to buy USDC into it with a card (Circle).
-  var O = window.ReinsOnramp, walletUsdc = null;
-  function shortfall() {
-    var need = Number($("f-deposit").value) - (walletUsdc || 0);
-    $("w-short").textContent = walletUsdc != null && need > 0.005 ? "You need " + money(need) + " more to fund this." : "";
-  }
-  function showBalance(v) {
-    walletUsdc = v;
-    $("w-usdc").textContent = v == null ? "Couldn’t read your wallet’s USDC" : "Your wallet holds " + money(v);
-    shortfall();
-  }
-  async function readWallet() {
-    if (W.account) showBalance(await O.usdcOf(W.account));
-  }
-  U.onAccount(readWallet);
-  $("f-deposit").addEventListener("input", shortfall);
-  O.status().then(function (st) {
-    if (st.enabled) return;
-    $("buy").disabled = true;
-    $("buy").textContent = "Card top-ups: soon";
-    $("buy").title = "Buying USDC with a card switches on once the Circle key is set up.";
-  });
-  $("buy").addEventListener("click", async function () {
-    if (!W.account) {
-      try { await U.connect(); } catch (err) { notice(W.explain(err)); return; }
-    }
-    O.open({ address: W.account, onFunded: showBalance });
-  });
-  ["f-name", "f-agent", "f-deposit", "f-trade", "f-loss", "f-slip", "f-age", "f-days"].forEach(function (id) { $(id).addEventListener("input", preview); });
-  $("f-agent").addEventListener("input", function () { if ($("f-agent").getAttribute("aria-invalid") === "true") setAgentError(""); });
-  $("form").addEventListener("submit", create);
-  W.config().then(function (c) {
-    cfg = c;
-    if (!W.available) notice("No wallet detected. You can still look around; creating an agent needs a browser wallet.");
-  });
-  preview();
-
-  // Opened from a strategy page (?s=id): name it after the strategy, set the loss limit a
-  // little beyond its worst backtested drop, and the largest trade to a fifth of the deposit.
-  var template = new URLSearchParams(location.search).get("s");
-  if (template) {
-    U.getJson("/data/strategies.json").then(function (d) {
-      var s = (d.strategies || []).filter(function (x) { return x.id === template; })[0];
-      if (!s) return;
-      var dd = Math.abs(s.stats.max_drawdown) * 100;
-      $("f-name").value = s.name.toLowerCase() + " agent";
-      $("f-loss").value = Math.min(50, Math.max(10, Math.ceil((Math.round(dd * 1e6) / 1e6 + 5) / 5) * 5)); // rounded: 0.15 * 100 isn't exactly 15
-      $("f-trade").value = Math.max(1, Number($("f-deposit").value) / 5).toFixed(2);
-      $("f-days").value = 90;
-      $("template").innerHTML = "Template: <b>" + esc(s.name) + "</b>. The rules below are filled in from its backtest (worst drop " + Math.round(dd) + "%); change any of them. " +
-        esc(s.onArc) + ' <a href="/strategy.html?s=' + encodeURIComponent(s.id) + '">See the strategy</a>';
-      $("template").hidden = false;
-      preview();
-    }).catch(function () { /* the plain form still works */ });
-  }
-})();
-</script>
+<script src="/strategy-math.js"></script>
+<script src="/create-math.js"></script>
+<script src="/create-page.js"></script>
 </html>

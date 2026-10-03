@@ -121,6 +121,14 @@ describe("encoding a create", () => {
     assert.equal(feeds[0].toLowerCase(), deployment.contracts.pinnedFeed.toLowerCase());
   });
 
+  test("an agent can be created with no trading key yet, to be set from its page", async () => {
+    const zero = "0x0000000000000000000000000000000000000000";
+    const { status, body } = await post("/api/tx/create", { name: "Calm Heron", agent: zero, rules: goodRules });
+    assert.equal(status, 200);
+    const { args } = decodeFunctionData({ abi: FACTORY.abi, data: body.data });
+    assert.equal(args[1], zero);
+  });
+
   test("refuses a loss limit the contract would refuse, with a reason", async () => {
     for (const maxLossPercent of [0, 101, -5]) {
       const { status, body } = await post("/api/tx/create", {
