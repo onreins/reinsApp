@@ -31,8 +31,13 @@
     "app": "node --env-file=.env app/server.js",
     "feed:publish": "node --env-file=.env scripts/publish-feed.js",
     "snapshot:index": "node scripts/snapshot-index.js",
+    "runner": "node --env-file=.env runner/start.js run",
+    "runner:key": "node --env-file=.env runner/start.js key",
+    "runner:admin": "node --env-file=.env runner/start.js admin",
+    "arb:testnet": "node --env-file=.env scripts/arb-testnet-pool.js",
     "bridge": "node --env-file=.env bridge/server.js",
-    "build:onramp": "esbuild scripts/onramp-client.js --bundle --format=iife --global-name=CircleOnramp --platform=browser --target=es2019 --minify --legal-comments=eof --outfile=app/public/vendor/onramp-kit.js"
+    "build:onramp": "esbuild scripts/onramp-client.js --bundle --format=iife --global-name=CircleOnramp --platform=browser --target=es2019 --minify --legal-comments=eof --outfile=app/public/vendor/onramp-kit.js",
+    "build:charts": "esbuild scripts/vela-client.js --bundle --format=iife --global-name=ReinsVela --platform=browser --target=es2020 --minify --legal-comments=eof --outfile=app/public/vendor/vela-workspace.js \"--banner:js=/*! Vela charting library, Copyright (c) 2026 LuxAlgo, https://velacharts.dev. Licensed under the Apache License 2.0: https://www.apache.org/licenses/LICENSE-2.0 */\""
   },
   "license": "MIT",
   "description": "A neutral evaluator for ERC-8183 agent jobs on Arc, built on a metered code sandbox.",
@@ -74,6 +79,7 @@
     "node": ">=20"
   },
   "devDependencies": {
+    "@luxalgo/vela": "^0.8.1",
     "esbuild": "0.25.10"
   }
 }

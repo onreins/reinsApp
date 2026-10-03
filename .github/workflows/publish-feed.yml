@@ -10,6 +10,11 @@
 # the deployer key: a fresh key with a little testnet USDC for gas, handed the
 # role with PinnedFeed.setPublisher, so CI never holds the deployer.
 #
+# Then, if an ARB_WALLET_KEY secret is set, it moves the testnet USDC/EURC pool
+# back to the new price (scripts/arb-testnet-pool.js). On testnet nobody else
+# arbitrages, and a pool left behind the oracle makes agents' price bands refuse
+# honest trades. That key needs a few dollars of both USDC and EURC, nothing more.
+#
 # GitHub runs scheduled workflows from the default branch only.
 name: Refresh testnet price feed
 
@@ -46,3 +51,12 @@ jobs:
             exit 0
           fi
           node scripts/publish-feed.js
+      - name: Move the testnet pool back to the oracle
+        env:
+          RATCHET_DEPLOYER_KEY: ${{ secrets.ARB_WALLET_KEY }}
+        run: |
+          if [ -z "$RATCHET_DEPLOYER_KEY" ]; then
+            echo "::notice::ARB_WALLET_KEY is not set, so the pool was left as it is."
+            exit 0
+          fi
+          node scripts/arb-testnet-pool.js

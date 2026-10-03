@@ -212,6 +212,23 @@ export class MandateClient {
         chain: this.wallet.chain,
       });
     } catch (err) {
+      // Only two failures prove nothing was sent: the simulation hit a rule (a
+      // revert), or the key couldn't pay for gas. Anything else, a timeout or a
+      // dropped connection, may have happened after the transaction went out,
+      // so it is marked maybeSent and must never be retried blind.
+      const has = (name) => typeof err?.walk === "function" && !!err.walk((c) => c?.name === name);
+      if (has("InsufficientFundsError")) {
+        const e = new Error("trade not sent: the trading key has no gas");
+        e.mandate = { rule: "NoGas", reason: "the trading key has no gas to pay for the trade" };
+        e.cause = err;
+        throw e;
+      }
+      if (!has("ContractFunctionRevertedError")) {
+        const e = new Error(`trade may or may not have been sent: ${err.shortMessage ?? err.message}`);
+        e.maybeSent = true;
+        e.cause = err;
+        throw e;
+      }
       // Refused before it was ever sent: the simulation hit a rule.
       const e = new Error(`trade refused: ${explain(err).reason}`);
       e.mandate = explain(err);
