@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>Charts · Reins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/charts.css">
+
+<body class="tm">
+<a class="skip" href="#chart">Skip to the chart</a>
+
+<header class="tm-top">
+  <a class="tm-brand" id="brand" href="/" aria-label="Reins home"></a>
+  <nav class="tm-nav" id="nav" aria-label="Main"></nav>
+  <div class="tm-top-r">
+    <span class="tm-live" id="live"><i></i><span>Connecting</span></span>
+    <a class="btn-white tm-cta" href="/create.html">Create agent</a>
+  </div>
+</header>
+
+<section class="tm-bar" id="bar">
+  <div class="tm-sym"><span class="tm-coin" id="b-coin"></span><div><b id="b-name">…</b><small id="b-venue"></small></div></div>
+  <dl class="tm-stats" id="b-stats"></dl>
+</section>
+
+<aside class="tm-markets" id="markets" aria-label="Markets">
+  <label class="tm-search"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.3-4.3"/></svg>
+    <span class="sr-only">Search markets</span><input id="q" type="search" placeholder="Search markets" autocomplete="off" spellcheck="false"></label>
+  <div class="tm-venues" role="tablist" aria-label="Exchange" id="venues">
+    <button type="button" role="tab" data-v="fav" aria-selected="false" title="Starred markets">★</button>
+    <button type="button" role="tab" data-v="all" aria-selected="true">All</button>
+    <button type="button" role="tab" data-v="hyperliquid" aria-selected="false"><i class="vd hyperliquid"></i>Hyperliquid</button>
+    <button type="button" role="tab" data-v="binance" aria-selected="false"><i class="vd binance"></i>Binance</button>
+    <button type="button" role="tab" data-v="coinbase" aria-selected="false"><i class="vd coinbase"></i>Coinbase</button>
+  </div>
+  <div class="tm-cols" id="cols">
+    <button type="button" data-k="name">Market</button>
+    <button type="button" data-k="last">Price</button>
+    <button type="button" data-k="change">24h</button>
+  </div>
+  <ol class="tm-list" id="list" aria-busy="true"></ol>
+  <p class="tm-count" id="count"></p>
+</aside>
+
+<div class="tm-chart">
+  <div id="chart" class="tm-chart-in" aria-label="Price chart" tabindex="-1"></div>
+  <p class="tm-msg" id="msg" hidden></p>
+</div>
+
+<div class="tm-tabs" role="tablist" aria-label="Panels" id="tabs">
+  <button type="button" role="tab" data-p="thesis" aria-selected="true">Thesis</button>
+  <button type="button" role="tab" data-p="hot" aria-selected="false">Hot</button>
+  <button type="button" role="tab" data-p="markets" aria-selected="false">Markets</button>
+  <span class="tm-round" id="x-round"></span>
+</div>
+
+<section class="tm-thesis" id="thesis" aria-labelledby="t-h">
+  <div class="tm-panel-h">
+    <h2 id="t-h">Agent thesis</h2>
+    <span class="tm-sample" title="Hosted agents will write these every 4 hours. Until then, rules read the same live data.">Sample</span>
+    <span class="tm-round" id="t-round"></span>
+  </div>
+  <div id="t-body"><p class="tm-empty">Pick a market to read its thesis.</p></div>
+</section>
+
+<aside class="tm-hot" id="hot" aria-labelledby="h-h">
+  <div class="tm-hot-h">
+    <div class="tm-hot-t"><h2 id="h-h">Hot this round</h2><span class="tm-sample" title="Hosted agents will publish these every 4 hours. Until then, rules read the same live data.">Sample</span></div>
+    <p id="h-sub">Three agents read every market, every 4 hours.</p>
+    <span class="tm-round" id="h-round"></span>
+  </div>
+  <ol class="tm-hotlist" id="hot-list"><li class="tm-empty">Reading the markets…</li></ol>
+  <div class="tm-panel-h tm-sub"><h2>Cooling off</h2></div>
+  <ol class="tm-hotlist" id="cold-list"></ol>
+  <p class="tm-fine">A sample of what hosted agents will publish every 4 hours: rules reading live exchange data, not advice. Charts by <a href="https://velacharts.dev" target="_blank" rel="noopener">Vela</a> from LuxAlgo.</p>
+</aside>
+
+<script src="/wallet.js"></script>
+<script src="/ui.js"></script>
+<script src="/markets.js"></script>
+<script src="/vendor/vela-workspace.js"></script>
+<script src="/charts.js"></script>
+</body>
+</html>

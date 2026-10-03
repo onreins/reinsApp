@@ -84,6 +84,7 @@ window.ReinsUI = (function () {
     agent: '<circle cx="12" cy="9" r="3.5"/><path d="M5.5 19.5c1.2-3.2 3.6-4.8 6.5-4.8s5.3 1.6 6.5 4.8"/>',
     freeze: '<path d="M12 3.5v17M4.6 7.8l14.8 8.4M4.6 16.2l14.8-8.4M9.5 4.8 12 7l2.5-2.2M9.5 19.2 12 17l2.5 2.2"/>',
     exit: '<path d="M14 4.5h4.5v15H14M10 16l4-4-4-4M14 12H4"/>',
+    charts: '<path d="M4 19.5h16"/><path d="M7 15.5v-5M7 8v-1.5"/><rect x="5.5" y="10" width="3" height="5.5" rx=".6"/><path d="M12 13v-6M12 17.5V16"/><rect x="10.5" y="7" width="3" height="9" rx=".6"/><path d="M17 11V9M17 17.5V16"/><rect x="15.5" y="11" width="3" height="5" rx=".6"/>',
     wallet: '<rect x="3.5" y="6" width="17" height="13" rx="2.5"/><path d="M3.5 9.5h17M16 14h.01"/>',
   };
   var ALIAS = { external: "ext", chev: "right", sort: "updown", trend: "strategies", gauge: "shield", coins: "wallet" };
@@ -132,11 +133,11 @@ window.ReinsUI = (function () {
   // The Reins mark: a rounded lowercase r and its dot, white on the dark sidebar.
   var MARK = '<svg width="26" height="26" viewBox="256 256 512 512" aria-hidden="true"><g fill="#fff"><rect x="307" y="327" width="130" height="368" rx="65"/><path d="M430 396C452 352 494 327 540 327a50.5 50.5 0 0 1 0 101c-58 0-103 34-103 96H415V396z"/><circle cx="670" cy="378" r="47"/></g></svg>';
   var NAV = [
-    [null, [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["chat", "Strategy chat", "/chat.html"], ["create", "Create agent", "/create.html"]]],
+    [null, [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["chat", "Strategy chat", "/chat.html"], ["charts", "Charts", "/charts.html"], ["create", "Create agent", "/create.html"]]],
     ["ARC", [["window", "Block explorer", "#", "nav-explorer"]]],
   ];
   // On a phone the sidebar is hidden, so the main pages move to a bar along the bottom.
-  var TABS = [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["chat", "Chat", "/chat.html"], ["create", "Create", "/create.html"]];
+  var TABS = [["explore", "Agents", "/"], ["strategies", "Strategies", "/#strategies"], ["charts", "Charts", "/charts.html"], ["chat", "Chat", "/chat.html"], ["create", "Create", "/create.html"]];
   function topbar(page) {
     var nav = NAV.map(function (g) {
       return (g[0] ? '<div class="grp">' + g[0] + "</div>" : "") + g[1].map(function (it) {
@@ -162,13 +163,7 @@ window.ReinsUI = (function () {
       '<input id="gsearch" type="search" placeholder="Search agents and strategies" autocomplete="off"><kbd>/</kbd></label>' +
       '<div class="top-r"><span class="net" id="net"><i></i><span id="net-text">Arc</span></span>' +
       '<button class="btn-white" id="wallet" type="button">Connect Wallet</button></div>';
-    var tabbar = document.createElement("nav");
-    tabbar.className = "tabbar";
-    tabbar.setAttribute("aria-label", "Main");
-    tabbar.innerHTML = TABS.map(function (t) {
-      return '<a href="' + t[2] + '"' + (t[0] === page ? ' aria-current="page"' : "") + ">" + icon(t[0]) + "<span>" + t[1] + "</span></a>";
-    }).join("");
-    document.body.appendChild(tabbar);
+    tabbar(page);
     if ($("promo-x")) $("promo-x").addEventListener("click", function () {
       $("promo").remove();
       try { localStorage.setItem("reins-promo", "hidden"); } catch (e) { /* storage off */ }
@@ -189,6 +184,15 @@ window.ReinsUI = (function () {
       $("nav-explorer").href = c.explorer;
       setNet(true, "Arc " + c.network);
     }).catch(function () { setNet(false, "Offline"); });
+  }
+  function tabbar(page) {
+    var bar = document.createElement("nav");
+    bar.className = "tabbar";
+    bar.setAttribute("aria-label", "Main");
+    bar.innerHTML = TABS.map(function (t) {
+      return '<a href="' + t[2] + '"' + (t[0] === page ? ' aria-current="page"' : "") + ">" + icon(t[0]) + "<span>" + t[1] + "</span></a>";
+    }).join("");
+    document.body.appendChild(bar);
   }
   function setNet(ok, text) {
     $("net").classList.toggle("off", !ok);
@@ -494,7 +498,7 @@ window.ReinsUI = (function () {
   return {
     FLAT: FLAT, esc: esc, short: short, money: money, compact: compact, bigMoneyHtml: bigMoneyHtml, dirOf: dirOf,
     pct: pct, pctHtml: pctHtml, stateOf: stateOf, riskOf: riskOf, icon: icon, avatar: avatar, coins: coins, coinCount: coinCount, ring: ring, RANGES: RANGES,
-    topbar: topbar, setNet: setNet, connect: connect, onAccount: onAccount,
+    topbar: topbar, tabbar: tabbar, TABS: TABS, MARK: MARK, setNet: setNet, connect: connect, onAccount: onAccount,
     change: change, periodReturns: periodReturns, combine: combine, areaSvg: areaSvg, Chart: Chart, getJson: getJson,
     curvePoints: curvePoints, pseudoAddress: pseudoAddress, strategyRisk: strategyRisk, spark: spark, indexOf: indexOf, windowed: windowed,
   };

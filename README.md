@@ -26,6 +26,7 @@ This answers item 12 of Arc's
 | **Agents** | Every agent on the chain, ranked by return. Read straight from on-chain events: no database, nothing to take on trust. |
 | **An agent's page** | Its money, holdings, rules, risk headroom and history, including the trades it tried and was refused, each linking to the explorer. |
 | **Create agent** | Pick the rules in plain units (largest trade, loss limit, price band, expiry), see exactly what the contract will hold, and sign with your own wallet. Fund it with USDC you hold, or **buy USDC with a card** without leaving the page. |
+| **Charts** | A full-screen market terminal: every market on Binance, Coinbase and Hyperliquid (over 3,500) with live prices, a full chart with indicators and drawing tools, and under it each coin's agent thesis, with the round's hot list beside it. The thesis is a rule-based sample for now; hosted agents will write it every 4 hours. Charts by LuxAlgo's open-source [Vela](https://velacharts.dev). |
 | **Strategy chat** | Describe a trading idea in plain words. An AI turns it into a strict strategy format and the app backtests it on real prices: any timeframe from 1 minute to 1 day, fees counted, checked half by half. |
 
 Your wallet signs every transaction. The app never sees a key and never holds
@@ -189,7 +190,7 @@ mandate/        SDK and MCP server for agents
 agents/         reference agent
 app/            the app: Express server, pages, strategy chat, card funding
   strategy/     spec, backtester, minute candles, worker pool, chat, model rotation
-  public/       the pages (Agents, agent page, Create agent, Strategy chat)
+  public/       the pages (Agents, agent page, Create agent, Strategy chat, Charts)
 api/            the app as a Vercel function
 arena/          leaderboard and returns, read from chain events
 bridge/         risk engine behind an agent's page
@@ -242,4 +243,6 @@ x402 through Circle Gateway. It still runs on Arc testnet, and its code lives in
 
 ## License
 
-MIT
+MIT. The Charts page bundles [Vela](https://velacharts.dev) by LuxAlgo
+(Apache-2.0) into `app/public/vendor/vela-workspace.js`; rebuild it with
+`npm run build:charts`.

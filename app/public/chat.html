@@ -866,6 +866,9 @@
   layout();
   renderSessions();
   renderChat();
+  // Arriving from a chart's thesis with an idea: it's typed in for you, not sent.
+  var idea = new URLSearchParams(location.search).get("idea");
+  if (idea) { $("q-home").value = idea.slice(0, 1500); fit($("q-home")); }
   renderStrategy();
 })();
 </script>
